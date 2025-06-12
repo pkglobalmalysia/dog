@@ -61,7 +61,7 @@ export default function HomePage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <BookOpen className="h-8 w-8 text-primary" />
-              <span className="ml-2 text-xl font-bold text-gradient">EduLMS</span>
+              <span className="ml-2 text-xl font-bold text-gradient">PKIBS</span>
             </div>
             <div className="flex items-center space-x-4">
               <Button variant="ghost" asChild>
@@ -107,7 +107,7 @@ export default function HomePage() {
       <section className="py-20 bg-white/50 dark:bg-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose EduLMS?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose PKIBS?</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Powerful features designed to enhance the learning experience for everyone
             </p>
@@ -312,7 +312,7 @@ export default function HomePage() {
             <div>
               <div className="flex items-center mb-4">
                 <BookOpen className="h-8 w-8 text-primary" />
-                <span className="ml-2 text-xl font-bold">EduLMS</span>
+                <span className="ml-2 text-xl font-bold">PKIBS</span>
               </div>
               <p className="text-gray-400">
                 Empowering education through innovative technology and modern learning experiences.
@@ -380,7 +380,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 EduLMS. All rights reserved.</p>
+            <p>&copy; 2024 PKIBS. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -94,7 +94,7 @@ export default function CoursesPage() {
               title: course.title,
               description: course.description,
               scheduled_time: course.scheduled_time,
-              teacher_name: course.profiles?.full_name || "No Teacher Assigned",
+              teacher_name: course.profiles?.[0]?.full_name || "No Teacher Assigned",
               enrollment_count: Array.isArray(course.enrollments) ? course.enrollments.length : 0,
               max_students: course.max_students || 30,
               status: course.status,

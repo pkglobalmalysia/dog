@@ -161,7 +161,7 @@ export function Sidebar({ role }: SidebarProps) {
       case "student":
         return "Student Portal"
       default:
-        return "EduLMS"
+        return "PKIBS"
     }
   }
 
@@ -202,7 +202,7 @@ export function Sidebar({ role }: SidebarProps) {
                 <BookOpen className="h-6 w-6" />
               </div>
               <div className="ml-3">
-                <div className="text-xl font-bold">EduLMS</div>
+                <div className="text-xl font-bold">PKIBS</div>
                 <div className={cn("text-xs font-medium", getRoleColor())}>{getRoleTitle()}</div>
               </div>
             </Link>
@@ -269,7 +269,7 @@ export function Sidebar({ role }: SidebarProps) {
                   <BookOpen className="h-6 w-6" />
                 </div>
                 <div className="ml-3">
-                  <div className="text-xl font-bold">EduLMS</div>
+                  <div className="text-xl font-bold">PKIBS</div>
                   <div className={cn("text-xs font-medium", getRoleColor())}>{getRoleTitle()}</div>
                 </div>
               </Link>

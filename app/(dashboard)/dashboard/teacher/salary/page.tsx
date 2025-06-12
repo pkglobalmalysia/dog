@@ -125,7 +125,7 @@ export default function TeacherSalary() {
     } finally {
       setLoading(false)
     }
-  }, [user, supabase])
+  }, [user, supabase,classAttendance, monthlySalaries])
 
   useEffect(() => {
     fetchData()

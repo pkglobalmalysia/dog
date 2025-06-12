@@ -188,7 +188,7 @@ export default function AdminCalendar() {
                 .single()
               course_title = courseData?.title || ""
             } catch (error) {
-              console.warn("Could not fetch course data for event:", event.id)
+              console.warn("Could not fetch course data for event:", event.id, error)
             }
           }
 
@@ -201,7 +201,7 @@ export default function AdminCalendar() {
                 .single()
               teacher_name = teacherData?.full_name || ""
             } catch (error) {
-              console.warn("Could not fetch teacher data for event:", event.id)
+              console.warn("Could not fetch teacher data for event:", event.id, error)
             }
           }
 

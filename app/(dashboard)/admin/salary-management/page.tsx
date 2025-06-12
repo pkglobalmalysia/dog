@@ -164,7 +164,7 @@ export default function AdminSalaryManagement() {
                 if (lectureData) {
                   event_title = lectureData.title || "Unknown Lecture"
                   event_start_time = lectureData.date || ""
-                  course_title = lectureData.courses?.title || "Unknown Course"
+                  course_title = lectureData.courses?.[0]?.title || "Unknown Course"
                 }
               }
 
@@ -252,7 +252,7 @@ export default function AdminSalaryManagement() {
               if (lectureData) {
                 event_title = lectureData.title || "Unknown Lecture"
                 event_start_time = lectureData.date || ""
-                course_title = lectureData.courses?.title || "Unknown Course"
+                course_title = lectureData.courses?.[0]?.title || "Unknown Course"
               }
             }
 

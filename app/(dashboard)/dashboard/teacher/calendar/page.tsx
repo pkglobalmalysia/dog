@@ -24,18 +24,13 @@ type CalendarEvent = {
   attendance_id?: string
 }
 
-type DailyEarning = {
-  date: string
-  amount: number
-  classes: number
-}
+
 
 export default function TeacherCalendar() {
   const { user } = useAuth()
   const [todayEvents, setTodayEvents] = useState<CalendarEvent[]>([])
   const [pastCompletedEvents, setPastCompletedEvents] = useState<CalendarEvent[]>([])
   const [holidayEvents, setHolidayEvents] = useState<CalendarEvent[]>([])
-  const [setDailyEarnings] = useState<DailyEarning[]>([])
   const [loading, setLoading] = useState(true)
   const [totalMonthlyEarnings, setTotalMonthlyEarnings] = useState(0)
   const [totalApprovedClasses, setTotalApprovedClasses] = useState(0)
@@ -223,7 +218,6 @@ export default function TeacherCalendar() {
           classes: data.classes,
         }))
 
-        setDailyEarnings(formattedEarnings)
 
         const total = formattedEarnings.reduce((sum, earning) => sum + earning.amount, 0)
         const totalClasses = formattedEarnings.reduce((sum, earning) => sum + earning.classes, 0)
@@ -406,7 +400,7 @@ export default function TeacherCalendar() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Today's Classes ({format(new Date(), "MMMM d, yyyy")})
+            Todays Classes ({format(new Date(), "MMMM d, yyyy")})
           </CardTitle>
         </CardHeader>
         <CardContent>

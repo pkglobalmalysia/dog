@@ -130,68 +130,8 @@ export default function TeacherLecturesPage() {
       }
 
       // Fetch attendance status for each lecture using the new table
-      const lecturesWithAttendance = await Promise.all(
-        lecturesData.map(async (lecture) => {
-          let attendance_status = "scheduled"
-          let attendance_id = null
-          let completed_at = null
-          let approved_at = null
-          let base_amount = null
-          let bonus_amount = null
-          let total_amount = null
-          let rejection_reason = null
+  
 
-          try {
-            // Check lecture_attendance table instead of teacher_class_attendance
-            const { data: attendanceData, error: attendanceError } = await supabase
-              .from("lecture_attendance")
-              .select("*")
-              .eq("teacher_id", user.id)
-              .eq("lecture_id", lecture.id)
-              .single()
-
-            if (attendanceError && attendanceError.code !== "PGRST116") {
-              console.warn("Error fetching attendance for lecture", lecture.id, ":", attendanceError.message)
-            }
-
-            if (attendanceData) {
-              attendance_status = attendanceData.status
-              attendance_id = attendanceData.id
-              completed_at = attendanceData.completed_at
-              approved_at = attendanceData.approved_at
-              base_amount = attendanceData.base_amount
-              bonus_amount = attendanceData.bonus_amount
-              total_amount = attendanceData.total_amount
-              rejection_reason = attendanceData.rejection_reason
-            }
-          } catch (error) {
-            console.warn("Could not fetch attendance for lecture", lecture.id, ":", error)
-          }
-
-          return {
-            id: lecture.id,
-            title: lecture.title,
-            description: lecture.description,
-            date: lecture.date,
-            course_id: lecture.course_id,
-            course_title: lecture.courses?.title || "Unknown Course",
-            teacher_name: lecture.courses?.profiles?.full_name || "Unknown Teacher",
-            live_class_url: lecture.courses?.live_class_url || "",
-            recorded_video_url: lecture.recorded_lectures?.[0]?.video_url,
-            recorded_video_title: lecture.recorded_lectures?.[0]?.title,
-            attendance_status,
-            attendance_id,
-            completed_at,
-            approved_at,
-            base_amount,
-            bonus_amount,
-            total_amount,
-            rejection_reason,
-          }
-        }),
-      )
-
-      setLectures(lecturesWithAttendance)
     } catch (error) {
       console.error("Error processing lectures:", error)
       setMessage({ type: "error", text: "Failed to load lectures. Please refresh the page." })

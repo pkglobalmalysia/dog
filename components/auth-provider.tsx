@@ -41,6 +41,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
+        if (!supabase) {
+          console.error("Supabase client is not initialized.")
+          return null
+        }
         const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single()
 
         if (error) {
@@ -115,6 +119,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initializeAuth = async () => {
       try {
+        if (!supabase) {
+          console.error("Supabase client is not initialized.")
+          return
+        }
         const {
           data: { session },
         } = await supabase.auth.getSession()
@@ -134,32 +142,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeAuth()
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return
+    let subscription: { unsubscribe: () => void } | null = null
 
-      if (event === "SIGNED_OUT") {
-        setSession(null)
-        setUser(null)
-        setProfile(null)
-        profileCache.clear()
-        router.replace("/login")
-      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        await handleAuthStateChange(session)
-      }
+    if (supabase) {
+      const {
+        data: { subscription: sub },
+      } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!mounted) return
 
-      setIsLoading(false)
-    })
+        if (event === "SIGNED_OUT") {
+          setSession(null)
+          setUser(null)
+          setProfile(null)
+          profileCache.clear()
+          router.replace("/login")
+        } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          await handleAuthStateChange(session)
+        }
+
+        setIsLoading(false)
+      })
+      subscription = sub
+    }
 
     return () => {
       mounted = false
-      subscription.unsubscribe()
+      if (subscription) {
+        subscription.unsubscribe()
+      }
     }
   }, [supabase, handleAuthStateChange, router])
 
   const signIn = async (email: string, password: string) => {
     try {
+      if (!supabase) {
+        console.error("Supabase client is not initialized.")
+        return { error: "Supabase client is not initialized." }
+      }
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -179,6 +198,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, userData: Partial<Profile>) => {
     try {
+      if (!supabase) {
+        console.error("Supabase client is not initialized.")
+        return { error: "Supabase client is not initialized." }
+      }
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -199,7 +222,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut()
+      if (supabase) {
+        await supabase.auth.signOut()
+      } else {
+        console.error("Supabase client is not initialized.")
+      }
     } catch (error) {
       console.error("Sign out error:", error)
     }
@@ -216,7 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refreshProfile,
     }),
-    [user, profile, session, isLoading, initialized, refreshProfile],
+    [user, profile, session, isLoading, initialized, refreshProfile, signIn, signUp, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -116,10 +116,10 @@ export default function TeacherDashboard() {
 
         if (studentsData) {
           const formattedStudents = studentsData.map((enrollment) => ({
-            id: enrollment.profiles?.id || "",
-            full_name: enrollment.profiles?.full_name || "",
-            email: enrollment.profiles?.email || "",
-            course_title: enrollment.courses?.title || "",
+            id: enrollment.profiles?.[0]?.id || "",
+            full_name: enrollment.profiles?.[0]?.full_name || "",
+            email: enrollment.profiles?.[0]?.email || "",
+            course_title: enrollment.courses?.[0]?.title || "",
             enrollment_date: enrollment.requested_at,
           }))
           setStudents(formattedStudents)
@@ -143,9 +143,9 @@ export default function TeacherDashboard() {
             id: assignment.id,
             title: assignment.title,
             due_date: assignment.due_date,
-            course_title: assignment.courses?.title || "",
+            course_title: assignment.courses?.[0]?.title || "",
             submissions_count: assignment.assignment_submissions?.length || 0,
-            total_students: formattedCourses.find((c) => c.title === assignment.courses?.title)?.student_count || 0,
+            total_students: formattedCourses.find((c) => c.title === assignment.courses?.[0]?.title)?.student_count || 0,
           }))
           setAssignments(formattedAssignments)
         }

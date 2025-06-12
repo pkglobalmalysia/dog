@@ -10,18 +10,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CheckCircle, XCircle, Clock, AlertCircle, Users } from "lucide-react"
 import { format } from "date-fns"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-
+import { useCallback } from "react"
 type Course = {
   id: string
   title: string
   student_count: number
 }
 
-type Student = {
-  id: string
-  full_name: string
-  email: string
-}
+
 
 type AttendanceRecord = {
   id?: string
@@ -39,7 +35,6 @@ type Message = {
 export default function TeacherAttendancePage() {
   const { user } = useAuth()
   const [courses, setCourses] = useState<Course[]>([])
-  const [students, setStudents] = useState<Student[]>([])
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
   const [selectedCourse, setSelectedCourse] = useState("")
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"))
@@ -52,15 +47,6 @@ export default function TeacherAttendancePage() {
     supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   })
 
-  useEffect(() => {
-    fetchCourses()
-  }, [user])
-
-  useEffect(() => {
-    if (selectedCourse) {
-      fetchStudentsAndAttendance()
-    }
-  }, [selectedCourse, selectedDate])
 
   useEffect(() => {
     if (message) {
@@ -69,108 +55,113 @@ export default function TeacherAttendancePage() {
     }
   }, [message])
 
-  const fetchCourses = async () => {
-    if (!user) return
+const fetchCourses = useCallback(async () => {
+  if (!user) return;
 
-    try {
-      setLoading(true)
+  try {
+    setLoading(true);
 
-      // Get courses with student counts
-      const { data: coursesData, error: coursesError } = await supabase
-        .from("courses")
-        .select(`
-          id, 
-          title,
-          enrollments(count)
-        `)
-        .eq("teacher_id", user.id)
+    const { data: coursesData, error: coursesError } = await supabase
+      .from("courses")
+      .select(`
+        id, 
+        title,
+        enrollments(count)
+      `)
+      .eq("teacher_id", user.id);
 
-      if (coursesError) {
-        console.error("Error fetching courses:", coursesError)
-        throw coursesError
-      }
-
-      const coursesWithCounts =
-        coursesData?.map((course) => ({
-          id: course.id,
-          title: course.title,
-          student_count: course.enrollments?.[0]?.count || 0,
-        })) || []
-
-      setCourses(coursesWithCounts)
-
-      if (coursesWithCounts.length > 0) {
-        setSelectedCourse(coursesWithCounts[0].id)
-      }
-    } catch (error: any) {
-      console.error("Error fetching courses:", error)
-      setMessage({ type: "error", text: error.message || "Failed to load courses" })
-    } finally {
-      setLoading(false)
+    if (coursesError) {
+      console.error("Error fetching courses:", coursesError);
+      throw coursesError;
     }
-  }
 
-  const fetchStudentsAndAttendance = async () => {
-    if (!selectedCourse || !selectedDate) return
+    const coursesWithCounts =
+      coursesData?.map((course) => ({
+        id: course.id,
+        title: course.title,
+        student_count: course.enrollments?.[0]?.count || 0,
+      })) || [];
 
-    try {
-      setAttendanceLoading(true)
+    setCourses(coursesWithCounts);
 
-      // First, get all enrolled students for this course
-      const { data: enrollmentData, error: enrollmentError } = await supabase
-        .from("enrollments")
-        .select(`
-          student_id,
-          profiles!inner(id, full_name, email)
-        `)
-        .eq("course_id", selectedCourse)
-
-      if (enrollmentError) {
-        console.error("Error fetching enrollments:", enrollmentError)
-        throw enrollmentError
-      }
-
-      const studentsData =
-        enrollmentData?.map((enrollment) => ({
-          id: enrollment.profiles.id,
-          full_name: enrollment.profiles.full_name || "Unknown",
-          email: enrollment.profiles.email || "No email",
-        })) || []
-
-      setStudents(studentsData)
-
-      // Then get attendance records for the selected date
-      const { data: attendanceData, error: attendanceError } = await supabase
-        .from("attendance")
-        .select("*")
-        .eq("course_id", selectedCourse)
-        .eq("date", selectedDate)
-
-      if (attendanceError) {
-        console.error("Error fetching attendance:", attendanceError)
-        throw attendanceError
-      }
-
-      // Create attendance records for all students
-      const allStudentAttendance: AttendanceRecord[] = studentsData.map((student) => {
-        const existingRecord = attendanceData?.find((record) => record.student_id === student.id)
-        return {
-          id: existingRecord?.id,
-          student_id: student.id,
-          student_name: student.full_name,
-          student_email: student.email,
-          status: (existingRecord?.status as "present" | "absent" | "late") || "absent",
-        }
-      })
-
-      setAttendance(allStudentAttendance)
-    } catch (error: any) {
-      console.error("Error fetching students and attendance:", error)
-      setMessage({ type: "error", text: error.message || "Failed to load attendance data" })
-    } finally {
-      setAttendanceLoading(false)
+    if (coursesWithCounts.length > 0) {
+      setSelectedCourse(coursesWithCounts[0].id);
     }
+  } catch (error: any) {
+    console.error("Error fetching courses:", error);
+    setMessage({ type: "error", text: error.message || "Failed to load courses" });
+  } finally {
+    setLoading(false);
   }
+}, [user, supabase]);
+
+useEffect(() => {
+  fetchCourses();
+}, [user, fetchCourses]);
+
+const fetchStudentsAndAttendance = useCallback(async () => {
+  if (!selectedCourse || !selectedDate) return;
+
+  try {
+    setAttendanceLoading(true);
+
+    const { data: enrollmentData, error: enrollmentError } = await supabase
+      .from("enrollments")
+      .select(`
+        student_id,
+        profiles!inner(id, full_name, email)
+      `)
+      .eq("course_id", selectedCourse);
+
+    if (enrollmentError) {
+      console.error("Error fetching enrollments:", enrollmentError);
+      throw enrollmentError;
+    }
+
+    const studentsData =
+      enrollmentData?.map((enrollment) => ({
+        id: enrollment.profiles?.[0]?.id,
+        full_name: enrollment.profiles?.[0]?.full_name || "Unknown",
+        email: enrollment.profiles?.[0]?.email || "No email",
+      })) || [];
+
+
+    const { data: attendanceData, error: attendanceError } = await supabase
+      .from("attendance")
+      .select("*")
+      .eq("course_id", selectedCourse)
+      .eq("date", selectedDate);
+
+    if (attendanceError) {
+      console.error("Error fetching attendance:", attendanceError);
+      throw attendanceError;
+    }
+
+    const allStudentAttendance: AttendanceRecord[] = studentsData.map((student) => {
+      const existingRecord = attendanceData?.find((record) => record.student_id === student.id);
+      return {
+        id: existingRecord?.id,
+        student_id: student.id,
+        student_name: student.full_name,
+        student_email: student.email,
+        status: (existingRecord?.status as "present" | "absent" | "late") || "absent",
+      };
+    });
+
+    setAttendance(allStudentAttendance);
+  } catch (error: any) {
+    console.error("Error fetching students and attendance:", error);
+    setMessage({ type: "error", text: error.message || "Failed to load attendance data" });
+  } finally {
+    setAttendanceLoading(false);
+  }
+}, [selectedCourse, selectedDate, supabase]); 
+
+   useEffect(() => {
+    if (selectedCourse) {
+      fetchStudentsAndAttendance()
+    }
+  }, [selectedCourse, selectedDate, fetchStudentsAndAttendance])
 
   const updateAttendance = async (studentId: string, status: "present" | "absent" | "late") => {
     if (!user || !selectedCourse) return
@@ -287,7 +278,7 @@ export default function TeacherAttendancePage() {
           <CardContent className="pt-6 text-center">
             <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-lg font-medium">No Courses Assigned</p>
-            <p className="text-muted-foreground">You don't have any courses assigned to you yet.</p>
+            <p className="text-muted-foreground">You dont have any courses assigned to you yet.</p>
           </CardContent>
         </Card>
       </div>
@@ -451,7 +442,7 @@ export default function TeacherAttendancePage() {
                 <div className="text-center py-8">
                   <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-lg font-medium">No Students Enrolled</p>
-                  <p className="text-muted-foreground">This course doesn't have any enrolled students yet.</p>
+                  <p className="text-muted-foreground">This course does not have any enrolled students yet.</p>
                 </div>
               )}
             </CardContent>

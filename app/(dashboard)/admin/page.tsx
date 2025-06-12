@@ -1,13 +1,26 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useCallback } from "react"
-import { useAuth } from "@/components/auth-provider"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
+import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "@/components/auth-provider";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   BookOpen,
   DollarSign,
@@ -18,56 +31,59 @@ import {
   Video,
   UserCheck,
   FileText,
-} from "lucide-react"
-import { format } from "date-fns"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+} from "lucide-react";
+import { format } from "date-fns";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type DashboardStats = {
-  totalStudents: number
-  totalTeachers: number
-  approvedTeachers: number
-  pendingTeachers: number
-  totalCourses: number
-  totalLectures: number
-  totalAssignments: number
-  monthlyPayments: number
+  totalStudents: number;
+  totalTeachers: number;
+  approvedTeachers: number;
+  pendingTeachers: number;
+  totalCourses: number;
+  totalLectures: number;
+  totalAssignments: number;
+  monthlyPayments: number;
+};
+interface Profile {
+  full_name: string;
 }
-
 type Course = {
-  id: string
-  title: string
-  description: string
-  scheduled_time: string
-  teacher_name: string
-  enrollment_count: number
-}
+  id: string;
+  title: string;
+  description: string;
+  scheduled_time: string;
+  teacher_name: string;
+  enrollment_count: number;
+  profiles?: Profile[] | Profile | null;
+};
 
 type UpcomingLecture = {
-  id: string
-  title: string
-  course_title: string
-  date: string
-  teacher_name: string
-}
+  id: string;
+  title: string;
+  course_title: string;
+  date: string;
+  teacher_name: string;
+};
 
 type RecentAssignment = {
-  id: string
-  title: string
-  course_title: string
-  due_date: string
-  teacher_name: string
-  submission_count: number
-}
+  id: string;
+  title: string;
+  course_title: string;
+  due_date: string;
+  teacher_name: string;
+  submission_count: number;
+};
 
 type PendingApproval = {
-  id: string
-  full_name: string
-  email: string
-  created_at: string
-}
+  id: string;
+  full_name: string;
+  email: string;
+  created_at: string;
+};
 
 export default function AdminDashboard() {
-  const { profile } = useAuth()
+  const { profile } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalStudents: 0,
     totalTeachers: 0,
@@ -77,21 +93,28 @@ export default function AdminDashboard() {
     totalLectures: 0,
     totalAssignments: 0,
     monthlyPayments: 0,
-  })
-  const [courses, setCourses] = useState<Course[]>([])
-  const [upcomingLectures, setUpcomingLectures] = useState<UpcomingLecture[]>([])
-  const [recentAssignments, setRecentAssignments] = useState<RecentAssignment[]>([])
-  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  });
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [upcomingLectures, setUpcomingLectures] = useState<UpcomingLecture[]>(
+    []
+  );
+  const [recentAssignments, setRecentAssignments] = useState<
+    RecentAssignment[]
+  >([]);
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>(
+    []
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const supabase = createClientComponentClient()
+  const supabase = createClientComponentClient();
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
+      // Run all static count queries in parallel
       const [
         studentsResult,
         allTeachersResult,
@@ -101,12 +124,20 @@ export default function AdminDashboard() {
         lecturesResult,
         assignmentsResult,
         paymentsResult,
-        approvedLecturesResult, // Add this new query
+        approvedLecturesResult,
       ] = await Promise.all([
         supabase.from("profiles").select("id").eq("role", "student"),
         supabase.from("profiles").select("id").eq("role", "teacher"),
-        supabase.from("profiles").select("id").eq("role", "teacher").eq("approved", true),
-        supabase.from("profiles").select("id").eq("role", "teacher").eq("approved", false),
+        supabase
+          .from("profiles")
+          .select("id")
+          .eq("role", "teacher")
+          .eq("approved", true),
+        supabase
+          .from("profiles")
+          .select("id")
+          .eq("role", "teacher")
+          .eq("approved", false),
         supabase.from("courses").select("id"),
         supabase.from("lectures").select("id"),
         supabase.from("assignments").select("id"),
@@ -114,15 +145,25 @@ export default function AdminDashboard() {
         supabase
           .from("lecture_attendance")
           .select("total_amount")
-          .eq("status", "approved"), // Add this
-      ])
+          .eq("status", "approved"),
+      ]);
 
+      // Aggregate payments
       const totalSalaryPayments =
-        paymentsResult.data?.reduce((sum, payment) => sum + (payment.final_amount || 0), 0) || 0
-      const totalLecturePayments =
-        approvedLecturesResult.data?.reduce((sum, lecture) => sum + (lecture.total_amount || 0), 0) || 0
-      const totalPayments = totalSalaryPayments + totalLecturePayments
+        paymentsResult.data?.reduce(
+          (sum, payment) => sum + (payment.final_amount || 0),
+          0
+        ) || 0;
 
+      const totalLecturePayments =
+        approvedLecturesResult.data?.reduce(
+          (sum, lecture) => sum + (lecture.total_amount || 0),
+          0
+        ) || 0;
+
+      const totalPayments = totalSalaryPayments + totalLecturePayments;
+
+      // Set stats
       setStats({
         totalStudents: studentsResult.data?.length || 0,
         totalTeachers: allTeachersResult.data?.length || 0,
@@ -131,142 +172,176 @@ export default function AdminDashboard() {
         totalCourses: coursesResult.data?.length || 0,
         totalLectures: lecturesResult.data?.length || 0,
         totalAssignments: assignmentsResult.data?.length || 0,
-        monthlyPayments: totalPayments, // Use combined total
-      })
+        monthlyPayments: totalPayments,
+      });
 
-      const { data: coursesData, error: coursesError } = await supabase
+      // Fetch & format recent courses
+      const { data: coursesData, error: coursesError } = (await supabase
         .from("courses")
-        .select(`
-          id,
-          title,
-          description,
-          scheduled_time,
-          profiles!courses_teacher_id_fkey(full_name)
-        `)
+        .select(
+          `
+    id,
+    title,
+    description,
+    scheduled_time,
+    profiles!courses_teacher_id_fkey(full_name)
+  `
+        )
         .order("scheduled_time", { ascending: false })
-        .limit(5)
+        .limit(5)) as { data: Course[] | null; error: unknown };
 
-      if (coursesError) throw coursesError
+      if (coursesError) throw coursesError;
 
-      const formattedCourses =
-        coursesData?.map((course) => ({
-          id: course.id,
-          title: course.title,
-          description: course.description,
-          scheduled_time: course.scheduled_time,
-          teacher_name: course.profiles?.full_name || "Unknown Teacher",
-          enrollment_count: 0,
-        })) || []
+      const formattedCourses = (coursesData || []).map((course) => ({
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        scheduled_time: course.scheduled_time,
+        teacher_name: Array.isArray(course.profiles)
+          ? course.profiles[0]?.full_name ?? "Unknown Teacher"
+          : course.profiles?.full_name ?? "Unknown Teacher",
+        enrollment_count: 0,
+      }));
 
-      setCourses(formattedCourses)
+      setCourses(formattedCourses);
 
-      const today = new Date()
+      // Fetch & format upcoming lectures
+      const today = new Date();
       const { data: lecturesData, error: lecturesError } = await supabase
         .from("lectures")
-        .select(`
-          id,
+        .select(
+          `
+        id,
+        title,
+        date,
+        courses (
           title,
-          date,
-          courses(
-            title,
-            profiles!courses_teacher_id_fkey(full_name)
-          )
-        `)
+          profiles!courses_teacher_id_fkey (full_name)
+        )
+      `
+        )
         .gte("date", today.toISOString())
         .order("date", { ascending: true })
-        .limit(5)
+        .limit(5);
 
-      if (lecturesError) throw lecturesError
+      if (lecturesError) throw lecturesError;
 
-      const formattedLectures =
-        lecturesData?.map((lecture) => ({
+      const formattedLectures = (lecturesData || []).map((lecture) => {
+        const course = Array.isArray(lecture.courses)
+          ? lecture.courses[0]
+          : lecture.courses;
+        const profile = Array.isArray(course?.profiles)
+          ? course.profiles[0]
+          : course?.profiles;
+
+        return {
           id: lecture.id,
           title: lecture.title,
-          course_title: lecture.courses?.title || "Unknown Course",
           date: lecture.date,
-          teacher_name: lecture.courses?.profiles?.full_name || "Unknown Teacher",
-        })) || []
+          course_title: course?.title || "Unknown Course",
+          teacher_name: profile?.full_name || "Unknown Teacher",
+        };
+      });
 
-      setUpcomingLectures(formattedLectures)
+      setUpcomingLectures(formattedLectures);
 
+      // Fetch & format recent assignments
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from("assignments")
-        .select(`
-          id,
+        .select(
+          `
+        id,
+        title,
+        due_date,
+        courses (
           title,
-          due_date,
-          courses(
-            title,
-            profiles!courses_teacher_id_fkey(full_name)
-          ),
-          assignment_submissions(count)
-        `)
+          profiles!courses_teacher_id_fkey (full_name)
+        ),
+        assignment_submissions(count)
+      `
+        )
         .order("created_at", { ascending: false })
-        .limit(5)
+        .limit(5);
 
-      if (assignmentsError) throw assignmentsError
+      if (assignmentsError) throw assignmentsError;
 
-      const formattedAssignments =
-        assignmentsData?.map((assignment) => ({
+      const formattedAssignments = (assignmentsData || []).map((assignment) => {
+        const course = Array.isArray(assignment.courses)
+          ? assignment.courses[0]
+          : assignment.courses;
+        const profile = Array.isArray(course?.profiles)
+          ? course.profiles[0]
+          : course?.profiles;
+
+        return {
           id: assignment.id,
           title: assignment.title,
-          course_title: assignment.courses?.title || "Unknown Course",
           due_date: assignment.due_date,
-          teacher_name: assignment.courses?.profiles?.full_name || "Unknown Teacher",
-          submission_count: assignment.assignment_submissions?.length || 0,
-        })) || []
+          course_title: course?.title || "Unknown Course",
+          teacher_name: profile?.full_name || "Unknown Teacher",
+          submission_count: assignment.assignment_submissions?.[0]?.count || 0,
+        };
+      });
 
-      setRecentAssignments(formattedAssignments)
+      setRecentAssignments(formattedAssignments);
 
+      // Fetch pending approvals
       const { data: pendingData, error: pendingError } = await supabase
         .from("profiles")
         .select("id, full_name, email, created_at")
         .eq("role", "teacher")
         .eq("approved", false)
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: false });
 
-      if (pendingError) throw pendingError
+      if (pendingError) throw pendingError;
 
-      setPendingApprovals(pendingData || [])
+      setPendingApprovals(pendingData || []);
     } catch (err: unknown) {
-      console.error("Error fetching dashboard data:", err)
-      setError((err as Error).message || "Failed to load dashboard data")
+      console.error("Error fetching dashboard data:", err);
+      setError((err as Error).message || "Failed to load dashboard data");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [supabase])
+  }, [supabase]);
 
   useEffect(() => {
     if (profile?.role === "admin") {
-      fetchDashboardData()
+      fetchDashboardData();
     }
-  }, [profile, fetchDashboardData])
+  }, [profile, fetchDashboardData]);
 
   const handleApproveTeacher = async (teacherId: string) => {
     try {
-      const { error } = await supabase.from("profiles").update({ approved: true }).eq("id", teacherId)
+      const { error } = await supabase
+        .from("profiles")
+        .update({ approved: true })
+        .eq("id", teacherId);
 
-      if (error) throw error
+      if (error) throw error;
 
-      fetchDashboardData()
+      fetchDashboardData();
     } catch (err: any) {
-      setError(err.message || "Failed to approve teacher")
+      setError(err.message || "Failed to approve teacher");
     }
-  }
+  };
 
   const handleRejectTeacher = async (teacherId: string) => {
-    if (!confirm("Are you sure you want to reject this teacher application?")) return
+    if (!confirm("Are you sure you want to reject this teacher application?"))
+      return;
 
     try {
-      const { error } = await supabase.from("profiles").delete().eq("id", teacherId)
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", teacherId);
 
-      if (error) throw error
+      if (error) throw error;
 
-      fetchDashboardData()
+      fetchDashboardData();
     } catch (err: any) {
-      setError(err.message || "Failed to reject teacher")
+      setError(err.message || "Failed to reject teacher");
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -290,16 +365,18 @@ export default function AdminDashboard() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (error || profile?.role !== "admin") {
     return (
       <Alert variant="destructive" className="max-w-md mx-auto mt-8">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{error || "You do not have permission to access this page"}</AlertDescription>
+        <AlertDescription>
+          {error || "You do not have permission to access this page"}
+        </AlertDescription>
       </Alert>
-    )
+    );
   }
 
   return (
@@ -312,13 +389,18 @@ export default function AdminDashboard() {
               Admin Dashboard <span className="text-gradient">🛡️</span>
             </h1>
             <p className="text-muted-foreground text-lg">
-              Welcome back, <span className="font-semibold text-purple-600">{profile?.full_name}</span>. Here's what's
-              happening in your LMS today.
+              Welcome back,{" "}
+              <span className="font-semibold text-purple-600">
+                {profile?.full_name}
+              </span>
+              . Here is what is happening in your LMS today.
             </p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-center p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl">
-              <div className="text-2xl font-bold text-purple-600">{stats.totalStudents + stats.totalTeachers}</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {stats.totalStudents + stats.totalTeachers}
+              </div>
               <div className="text-sm text-muted-foreground">Total Users</div>
             </div>
           </div>
@@ -331,9 +413,15 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Students</p>
-                <p className="text-3xl font-bold text-green-600">{stats.totalStudents}</p>
-                <p className="text-xs text-muted-foreground mt-1">Active learners</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Students
+                </p>
+                <p className="text-3xl font-bold text-green-600">
+                  {stats.totalStudents}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Active learners
+                </p>
               </div>
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
                 <GraduationCap className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -346,9 +434,15 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Approved Teachers</p>
-                <p className="text-3xl font-bold text-blue-600">{stats.approvedTeachers}</p>
-                <p className="text-xs text-muted-foreground mt-1">{stats.pendingTeachers} pending approval</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Approved Teachers
+                </p>
+                <p className="text-3xl font-bold text-blue-600">
+                  {stats.approvedTeachers}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.pendingTeachers} pending approval
+                </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
                 <UserCheck className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -361,9 +455,15 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Courses</p>
-                <p className="text-3xl font-bold text-purple-600">{stats.totalCourses}</p>
-                <p className="text-xs text-muted-foreground mt-1">{stats.totalLectures} lectures scheduled</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Courses
+                </p>
+                <p className="text-3xl font-bold text-purple-600">
+                  {stats.totalCourses}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.totalLectures} lectures scheduled
+                </p>
               </div>
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
                 <BookOpen className="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -376,9 +476,15 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Payments</p>
-                <p className="text-3xl font-bold text-yellow-600">RM {stats.monthlyPayments.toFixed(0)}</p>
-                <p className="text-xs text-muted-foreground mt-1">{stats.totalAssignments} assignments created</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Payments
+                </p>
+                <p className="text-3xl font-bold text-yellow-600">
+                  RM {stats.monthlyPayments.toFixed(0)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.totalAssignments} assignments created
+                </p>
               </div>
               <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
                 <DollarSign className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
@@ -398,7 +504,9 @@ export default function AdminDashboard() {
               </div>
               Pending Teacher Approvals ({pendingApprovals.length})
             </CardTitle>
-            <CardDescription>Review and approve teacher applications</CardDescription>
+            <CardDescription>
+              Review and approve teacher applications
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -407,16 +515,27 @@ export default function AdminDashboard() {
                   <TableRow className="bg-gray-50 dark:bg-gray-800/50">
                     <TableHead className="font-semibold">Name</TableHead>
                     <TableHead className="font-semibold">Email</TableHead>
-                    <TableHead className="font-semibold">Applied Date</TableHead>
-                    <TableHead className="text-right font-semibold">Actions</TableHead>
+                    <TableHead className="font-semibold">
+                      Applied Date
+                    </TableHead>
+                    <TableHead className="text-right font-semibold">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {pendingApprovals.map((teacher) => (
-                    <TableRow key={teacher.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <TableCell className="font-medium">{teacher.full_name}</TableCell>
+                    <TableRow
+                      key={teacher.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    >
+                      <TableCell className="font-medium">
+                        {teacher.full_name}
+                      </TableCell>
                       <TableCell>{teacher.email}</TableCell>
-                      <TableCell>{format(new Date(teacher.created_at), "MMM dd, yyyy")}</TableCell>
+                      <TableCell>
+                        {format(new Date(teacher.created_at), "MMM dd, yyyy")}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
@@ -451,10 +570,16 @@ export default function AdminDashboard() {
       {/* Main Content Tabs */}
       <Tabs defaultValue="courses" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-          <TabsTrigger value="courses" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800">
+          <TabsTrigger
+            value="courses"
+            className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800"
+          >
             Recent Courses
           </TabsTrigger>
-          <TabsTrigger value="lectures" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800">
+          <TabsTrigger
+            value="lectures"
+            className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800"
+          >
             Upcoming Lectures
           </TabsTrigger>
           <TabsTrigger
@@ -472,7 +597,9 @@ export default function AdminDashboard() {
                 <BookOpen className="h-5 w-5 text-purple-600" />
                 Recent Courses
               </CardTitle>
-              <CardDescription>Latest courses created in the system</CardDescription>
+              <CardDescription>
+                Latest courses created in the system
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {courses.length > 0 ? (
@@ -480,19 +607,37 @@ export default function AdminDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50 dark:bg-gray-800/50">
-                        <TableHead className="font-semibold">Course Title</TableHead>
+                        <TableHead className="font-semibold">
+                          Course Title
+                        </TableHead>
                         <TableHead className="font-semibold">Teacher</TableHead>
-                        <TableHead className="font-semibold">Scheduled Date</TableHead>
-                        <TableHead className="font-semibold">Description</TableHead>
+                        <TableHead className="font-semibold">
+                          Scheduled Date
+                        </TableHead>
+                        <TableHead className="font-semibold">
+                          Description
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {courses.map((course) => (
-                        <TableRow key={course.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                          <TableCell className="font-medium">{course.title}</TableCell>
+                        <TableRow
+                          key={course.id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                        >
+                          <TableCell className="font-medium">
+                            {course.title}
+                          </TableCell>
                           <TableCell>{course.teacher_name}</TableCell>
-                          <TableCell>{format(new Date(course.scheduled_time), "MMM dd, yyyy HH:mm")}</TableCell>
-                          <TableCell className="max-w-xs truncate">{course.description}</TableCell>
+                          <TableCell>
+                            {format(
+                              new Date(course.scheduled_time),
+                              "MMM dd, yyyy HH:mm"
+                            )}
+                          </TableCell>
+                          <TableCell className="max-w-xs truncate">
+                            {course.description}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -501,8 +646,12 @@ export default function AdminDashboard() {
               ) : (
                 <div className="text-center py-12">
                   <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium text-muted-foreground mb-2">No courses found</h3>
-                  <p className="text-sm text-muted-foreground">Courses will appear here when created</p>
+                  <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                    No courses found
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Courses will appear here when created
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -516,7 +665,9 @@ export default function AdminDashboard() {
                 <Video className="h-5 w-5 text-blue-600" />
                 Upcoming Lectures
               </CardTitle>
-              <CardDescription>Scheduled lectures for the coming days</CardDescription>
+              <CardDescription>
+                Scheduled lectures for the coming days
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {upcomingLectures.length > 0 ? (
@@ -524,19 +675,33 @@ export default function AdminDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50 dark:bg-gray-800/50">
-                        <TableHead className="font-semibold">Lecture Title</TableHead>
+                        <TableHead className="font-semibold">
+                          Lecture Title
+                        </TableHead>
                         <TableHead className="font-semibold">Course</TableHead>
                         <TableHead className="font-semibold">Teacher</TableHead>
-                        <TableHead className="font-semibold">Date & Time</TableHead>
+                        <TableHead className="font-semibold">
+                          Date & Time
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {upcomingLectures.map((lecture) => (
-                        <TableRow key={lecture.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                          <TableCell className="font-medium">{lecture.title}</TableCell>
+                        <TableRow
+                          key={lecture.id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                        >
+                          <TableCell className="font-medium">
+                            {lecture.title}
+                          </TableCell>
                           <TableCell>{lecture.course_title}</TableCell>
                           <TableCell>{lecture.teacher_name}</TableCell>
-                          <TableCell>{format(new Date(lecture.date), "MMM dd, yyyy HH:mm")}</TableCell>
+                          <TableCell>
+                            {format(
+                              new Date(lecture.date),
+                              "MMM dd, yyyy HH:mm"
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -545,8 +710,12 @@ export default function AdminDashboard() {
               ) : (
                 <div className="text-center py-12">
                   <Video className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium text-muted-foreground mb-2">No upcoming lectures</h3>
-                  <p className="text-sm text-muted-foreground">Lectures will appear here when scheduled</p>
+                  <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                    No upcoming lectures
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Lectures will appear here when scheduled
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -560,7 +729,9 @@ export default function AdminDashboard() {
                 <FileText className="h-5 w-5 text-green-600" />
                 Recent Assignments
               </CardTitle>
-              <CardDescription>Latest assignments created by teachers</CardDescription>
+              <CardDescription>
+                Latest assignments created by teachers
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {recentAssignments.length > 0 ? (
@@ -568,22 +739,41 @@ export default function AdminDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50 dark:bg-gray-800/50">
-                        <TableHead className="font-semibold">Assignment Title</TableHead>
+                        <TableHead className="font-semibold">
+                          Assignment Title
+                        </TableHead>
                         <TableHead className="font-semibold">Course</TableHead>
                         <TableHead className="font-semibold">Teacher</TableHead>
-                        <TableHead className="font-semibold">Due Date</TableHead>
-                        <TableHead className="font-semibold">Submissions</TableHead>
+                        <TableHead className="font-semibold">
+                          Due Date
+                        </TableHead>
+                        <TableHead className="font-semibold">
+                          Submissions
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {recentAssignments.map((assignment) => (
-                        <TableRow key={assignment.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                          <TableCell className="font-medium">{assignment.title}</TableCell>
+                        <TableRow
+                          key={assignment.id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                        >
+                          <TableCell className="font-medium">
+                            {assignment.title}
+                          </TableCell>
                           <TableCell>{assignment.course_title}</TableCell>
                           <TableCell>{assignment.teacher_name}</TableCell>
-                          <TableCell>{format(new Date(assignment.due_date), "MMM dd, yyyy")}</TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                            {format(
+                              new Date(assignment.due_date),
+                              "MMM dd, yyyy"
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className="bg-green-50 text-green-700 border-green-200"
+                            >
                               {assignment.submission_count} submissions
                             </Badge>
                           </TableCell>
@@ -595,8 +785,12 @@ export default function AdminDashboard() {
               ) : (
                 <div className="text-center py-12">
                   <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium text-muted-foreground mb-2">No assignments found</h3>
-                  <p className="text-sm text-muted-foreground">Assignments will appear here when created</p>
+                  <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                    No assignments found
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Assignments will appear here when created
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -604,5 +798,5 @@ export default function AdminDashboard() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

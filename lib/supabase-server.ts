@@ -1,11 +1,12 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
+import { SupabaseClient } from "@supabase/supabase-js"
 
-export const createServerClient = () => createServerComponentClient({ cookies })
+export const createServerClient = (): SupabaseClient => createServerComponentClient({ cookies })
 
 // Server-side utility functions
 export async function getServerSession() {
-  const supabase = createServerClient()
+  const supabase = createServerClient() // ✅ FIX: client was missing
   const {
     data: { session },
   } = await supabase.auth.getSession()
