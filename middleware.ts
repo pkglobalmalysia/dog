@@ -27,8 +27,8 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/login", req.url))
     }
 
-    // Public routes that don't need auth
-    const publicRoutes = ["/", "/login", "/signup"]
+    // Public routes that don't need auth - UPDATED to include about, courses, and events
+    const publicRoutes = ["/", "/login", "/signup", "/about", "/events", "/programs"]
     const isPublicRoute = publicRoutes.some(
       (route) => req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route + "/"),
     )

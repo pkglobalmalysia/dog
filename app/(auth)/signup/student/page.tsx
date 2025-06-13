@@ -1,6 +1,8 @@
 "use client"
 
 import type React from "react"
+import Navbar from "@/components/navbar"
+import Image from "next/image"
 
 import { useState } from "react"
 import Link from "next/link"
@@ -85,6 +87,9 @@ export default function StudentSignupPage() {
 
   if (success) {
     return (
+
+      <><Navbar />
+
       <div className="min-h-screen flex flex-col md:flex-row">
         <div className="w-full md:w-1/2 bg-[#121212] p-8 md:p-16 flex flex-col justify-center">
           <div className="max-w-md mx-auto w-full">
@@ -112,7 +117,7 @@ export default function StudentSignupPage() {
             <p className="text-yellow-100">Your account has been created</p>
 
             <div className="absolute bottom-0 right-0 transform translate-y-1/4">
-              <img src="/placeholder.svg?height=400&width=400" alt="Students illustration" className="opacity-90" />
+              <Image src="/placeholder.svg?height=400&width=400" height={400} width={400} alt="Students illustration" className="opacity-90" />
             </div>
           </div>
 
@@ -123,11 +128,16 @@ export default function StudentSignupPage() {
           </div>
         </div>
       </div>
+      </>
     )
+    
   }
 
   return (
+    <><Navbar />
     <div className="min-h-screen flex flex-col md:flex-row">
+
+      
       {/* Left side - Dark panel with signup form */}
       <div className="w-full md:w-1/2 bg-[#121212] p-8 md:p-16 flex flex-col justify-center">
         <div className="max-w-md mx-auto w-full">
@@ -261,7 +271,7 @@ export default function StudentSignupPage() {
           <p className="text-yellow-100">Create your student account</p>
 
           <div className="absolute bottom-0 right-0 transform translate-y-1/4">
-            <img src="/placeholder.svg?height=400&width=400" alt="Students illustration" className="opacity-90" />
+            <Image src="/placeholder.svg?height=400&width=400" height={400} width={400 } alt="Students illustration" className="opacity-90" />
           </div>
         </div>
 
@@ -272,5 +282,6 @@ export default function StudentSignupPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

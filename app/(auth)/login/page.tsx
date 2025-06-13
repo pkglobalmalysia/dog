@@ -1,6 +1,8 @@
 "use client"
 
 import type React from "react"
+import Navbar from "@/components/navbar"
+import Image from "next/image"
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
@@ -57,16 +59,19 @@ export default function LoginPage() {
 
   if (authLoading) {
     return (
+      <><Navbar />
       <div className="min-h-screen flex items-center justify-center bg-[#121212]">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
           <p className="text-gray-400">Loading...</p>
         </div>
       </div>
+      </>
     )
   }
 
   return (
+    <><Navbar  />
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left side - Dark panel with login form */}
       <div className="w-full md:w-1/2 bg-[#121212] p-8 md:p-16 flex flex-col justify-center">
@@ -151,7 +156,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-gray-400">Don't have an account? </p>
+            <p className="text-gray-400">Do not have an account? </p>
             <div className="flex justify-center gap-3 mt-2">
               <Link href="/signup/student" className="text-yellow-400 hover:text-yellow-300">
                 Student
@@ -177,7 +182,7 @@ export default function LoginPage() {
           <p className="text-yellow-100">Login to access your account</p>
 
           <div className="absolute bottom-0 right-0 transform translate-y-1/4">
-            <img src="/placeholder.svg?height=400&width=400" alt="Students illustration" className="opacity-90" />
+            <Image src="/placeholder.svg?height=400&width=400" height={400} width={400} alt="Students illustration" className="opacity-90" />
           </div>
         </div>
 
@@ -188,5 +193,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

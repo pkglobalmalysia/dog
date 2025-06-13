@@ -1,6 +1,8 @@
 "use client"
 
 import type React from "react"
+import Navbar from "@/components/navbar"
+import Image from "next/image"
 
 import { useState } from "react"
 import Link from "next/link"
@@ -69,6 +71,7 @@ export default function TeacherSignupPage() {
 
   if (success) {
     return (
+      <><Navbar />
       <div className="min-h-screen flex flex-col md:flex-row">
         <div className="w-full md:w-1/2 bg-[#121212] p-8 md:p-16 flex flex-col justify-center">
           <div className="max-w-md mx-auto w-full">
@@ -116,7 +119,7 @@ export default function TeacherSignupPage() {
             <p className="text-yellow-100">Your account is pending approval</p>
 
             <div className="absolute bottom-0 right-0 transform translate-y-1/4">
-              <img src="/placeholder.svg?height=400&width=400" alt="Teacher illustration" className="opacity-90" />
+              <Image src="/placeholder.svg?height=400&width=400" alt="Teacher illustration" className="opacity-90" />
             </div>
           </div>
 
@@ -127,10 +130,12 @@ export default function TeacherSignupPage() {
           </div>
         </div>
       </div>
+      </>
     )
   }
 
   return (
+    <><Navbar />
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left side - Dark panel with signup form */}
       <div className="w-full md:w-1/2 bg-[#121212] p-8 md:p-16 flex flex-col justify-center">
@@ -264,10 +269,6 @@ export default function TeacherSignupPage() {
           <h2 className="text-5xl font-bold mb-4">Welcome to</h2>
           <h3 className="text-5xl font-bold mb-6">teacher portal</h3>
           <p className="text-yellow-100">Create your teacher account</p>
-
-          <div className="absolute bottom-0 right-0 transform translate-y-1/4">
-            <img src="/placeholder.svg?height=400&width=400" alt="Teacher illustration" className="opacity-90" />
-          </div>
         </div>
 
         {/* Background shapes */}
@@ -277,5 +278,7 @@ export default function TeacherSignupPage() {
         </div>
       </div>
     </div>
+  )
+  </>
   )
 }
