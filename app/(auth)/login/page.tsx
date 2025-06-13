@@ -8,9 +8,8 @@ import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, CheckCircle, Loader2, BookOpen, Eye, EyeOff } from "lucide-react"
+import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 
 export default function LoginPage() {
@@ -58,135 +57,135 @@ export default function LoginPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-[#121212]">
         <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+          <p className="text-gray-400">Loading...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
-              <BookOpen className="h-6 w-6 text-primary-foreground" />
+    <div className="min-h-screen flex flex-col md:flex-row">
+      {/* Left side - Dark panel with login form */}
+      <div className="w-full md:w-1/2 bg-[#121212] p-8 md:p-16 flex flex-col justify-center">
+        <div className="max-w-md mx-auto w-full">
+          <h1 className="text-3xl font-bold text-white mb-2">Login</h1>
+          <p className="text-gray-400 mb-8">Enter your account details</p>
+
+          {error && (
+            <Alert variant="destructive" className="mb-6 bg-red-900/20 border-red-800">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {message && (
+            <Alert className="mb-6 bg-green-900/20 border-green-800 text-green-200">
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-300">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+                className="bg-[#1e1e1e] border-[#333] text-white focus:border-yellow-500 focus:ring-yellow-500"
+                placeholder="Enter your email"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-gray-300">
+                  Password
+                </Label>
+                <Link href="/forgot-password" className="text-sm text-yellow-400 hover:text-yellow-300">
+                  Forgot Password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  className="bg-[#1e1e1e] border-[#333] text-white focus:border-yellow-500 focus:ring-yellow-500 pr-10"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2 h-12"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                "Login"
+              )}
+            </Button>
+          </form>
+
+          <div className="mt-8 text-center">
+            <p className="text-gray-400">Don't have an account? </p>
+            <div className="flex justify-center gap-3 mt-2">
+              <Link href="/signup/student" className="text-yellow-400 hover:text-yellow-300">
+                Student
+              </Link>
+              <span className="text-gray-500">|</span>
+              <Link href="/signup/teacher" className="text-yellow-400 hover:text-yellow-300">
+                Teacher
+              </Link>
+              <span className="text-gray-500">|</span>
+              <Link href="/signup/admin" className="text-yellow-400 hover:text-yellow-300">
+                Admin
+              </Link>
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gradient">PKIBS</h1>
-          <p className="text-muted-foreground">Learning Management System</p>
+        </div>
+      </div>
+
+      {/* Right side - yellow panel with illustration */}
+      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-yellow-600 to-yellow-800 p-16 items-center justify-center relative overflow-hidden">
+        <div className="relative z-10 text-white max-w-lg">
+          <h2 className="text-5xl font-bold mb-4">Welcome to</h2>
+          <h3 className="text-5xl font-bold mb-6">student portal</h3>
+          <p className="text-yellow-100">Login to access your account</p>
+
+          <div className="absolute bottom-0 right-0 transform translate-y-1/4">
+            <img src="/placeholder.svg?height=400&width=400" alt="Students illustration" className="opacity-90" />
+          </div>
         </div>
 
-        <Card className="border-0 shadow-2xl glass-effect">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-            <CardDescription className="text-base">Sign in to your account to continue learning</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {message && (
-                <Alert className="bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200">
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>{message}</AlertDescription>
-                </Alert>
-              )}
-
-              {error && (
-                <Alert
-                  variant="destructive"
-                  className="bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
-                >
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">
-                    Email Address
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={isLoading}
-                    className="h-11 bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-sm font-medium">
-                      Password
-                    </Label>
-                    <Link
-                      href="/forgot-password"
-                      className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                      className="h-11 bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-primary pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full h-11 gradient-bg text-white font-medium" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4 pt-4">
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-200 dark:border-gray-700" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Don not have an account?</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 w-full">
-              <Button variant="outline" asChild className="h-10">
-                <Link href="/signup/student">Student Signup</Link>
-              </Button>
-              <Button variant="outline" asChild className="h-10">
-                <Link href="/signup/teacher">Teacher Signup</Link>
-              </Button>
-            </div>
-          </CardFooter>
-        </Card>
+        {/* Background shapes */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-10">
+          <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-white"></div>
+          <div className="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-yellow-300"></div>
+        </div>
       </div>
     </div>
   )

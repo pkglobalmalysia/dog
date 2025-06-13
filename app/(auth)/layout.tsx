@@ -1,18 +1,5 @@
-import type React from "react"
-import { Navbar } from "@/components/navbar"
-import { AuthGuard } from "@/components/auth-guard"
+import type { ReactNode } from "react"
 
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <AuthGuard>
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">{children}</main>
-      </div>
-    </AuthGuard>
-  )
+export default function AuthLayout({ children }: { children: ReactNode }) {
+  return <main className="min-h-screen bg-[#121212]">{children}</main>
 }
