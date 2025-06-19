@@ -86,59 +86,68 @@ export default function TeacherLecturesPage() {
     }
   }, [user, supabase])
 
-  const fetchLectures = useCallback(async () => {
-    if (!user || courses.length === 0) return
-
-    try {
-      setLoading(true)
-      const courseIds = courses.map((course) => course.id)
-
-      // Fetch lectures with recorded lecture info
-      const { data: lecturesData, error: lecturesError } = await supabase
-        .from("lectures")
-        .select(`
-        id,
-        title,
-        description,
-        date,
-        course_id,
-        courses (
-          title,
-          live_class_url,
-          profiles (
-            full_name
-          )
-        ),
-        recorded_lectures (
-          video_url,
-          title,
-          description
-        )
-      `)
-        .in("course_id", courseIds)
-        .order("date", { ascending: true })
-
-      if (lecturesError) {
-        console.error("Error fetching lectures:", lecturesError)
-        setMessage({ type: "error", text: "Failed to load lectures. Please refresh the page." })
-        return
-      }
-
-      if (!lecturesData || lecturesData.length === 0) {
-        setLectures([])
-        return
-      }
-
-      // Fetch attendance status for each lecture using the new table
   
+const fetchLectures = useCallback(async () => {
+  if (!user || courses.length === 0) return
 
-    } catch (error) {
-      console.error("Error processing lectures:", error)
+  try {
+    setLoading(true)
+    const courseIds = courses.map((course) => course.id)
+
+    const { data: lecturesData, error: lecturesError } = await supabase
+      .from("lectures")
+      .select("*")
+      .in("course_id", courseIds)
+      .order("date", { ascending: true })
+
+    if (lecturesError) {
+      console.error("Error fetching lectures:", lecturesError)
       setMessage({ type: "error", text: "Failed to load lectures. Please refresh the page." })
-    } finally {
-      setLoading(false)
+      return
     }
-  }, [user, courses, supabase])
+
+    const enrichedLectures = await Promise.all(
+      (lecturesData || []).map(async (lecture) => {
+        const [courseRes, recordingRes, attendanceRes] = await Promise.all([
+          supabase.from("courses").select("title, live_class_url").eq("id", lecture.course_id).single(),
+          supabase.from("recorded_lectures").select("video_url, title, description").eq("lecture_id", lecture.id).single(),
+          supabase
+            .from("lecture_attendance")
+            .select("status, id, completed_at, approved_at, rejection_reason, base_amount, bonus_amount, total_amount")
+            .eq("lecture_id", lecture.id)
+            .eq("teacher_id", user.id)
+            .single(),
+        ])
+
+        return {
+          ...lecture,
+          course_title: courseRes.data?.title || "Untitled",
+          live_class_url: courseRes.data?.live_class_url || "",
+          recorded_video_url: recordingRes.data?.video_url || "",
+          recorded_video_title: recordingRes.data?.title || "",
+          attendance_status: attendanceRes.data?.status || "scheduled",
+          attendance_id: attendanceRes.data?.id || null,
+          completed_at: attendanceRes.data?.completed_at || null,
+          approved_at: attendanceRes.data?.approved_at || null,
+          base_amount: attendanceRes.data?.base_amount || null,
+          bonus_amount: attendanceRes.data?.bonus_amount || null,
+          total_amount: attendanceRes.data?.total_amount || null,
+          rejection_reason: attendanceRes.data?.rejection_reason || null,
+        }
+      })
+    )
+
+    setLectures(enrichedLectures)
+  } catch (error) {
+    console.error("Error processing lectures:", error)
+    setMessage({ type: "error", text: "Failed to load lectures. Please refresh the page." })
+  } finally {
+    setLoading(false)
+  }
+}, [user, courses, supabase])
+
+
+
 
   const handleRecordedLectureSubmit = async () => {
     try {

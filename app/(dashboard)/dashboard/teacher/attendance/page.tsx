@@ -105,25 +105,35 @@ const fetchStudentsAndAttendance = useCallback(async () => {
   try {
     setAttendanceLoading(true);
 
-    const { data: enrollmentData, error: enrollmentError } = await supabase
-      .from("enrollments")
-      .select(`
-        student_id,
-        profiles!inner(id, full_name, email)
-      `)
-      .eq("course_id", selectedCourse);
+ const { data: enrollmentData, error: enrollmentError } = await supabase
+  .from("enrollments")
+  .select("student_id")
+  .eq("course_id", selectedCourse)
 
-    if (enrollmentError) {
-      console.error("Error fetching enrollments:", enrollmentError);
-      throw enrollmentError;
-    }
+if (enrollmentError) {
+  console.error("Error fetching enrollments:", enrollmentError)
+  throw enrollmentError
+}
 
-    const studentsData =
-      enrollmentData?.map((enrollment) => ({
-        id: enrollment.profiles?.[0]?.id,
-        full_name: enrollment.profiles?.[0]?.full_name || "Unknown",
-        email: enrollment.profiles?.[0]?.email || "No email",
-      })) || [];
+const studentIds = enrollmentData.map((e) => e.student_id)
+
+const { data: profilesData, error: profilesError } = await supabase
+  .from("profiles")
+  .select("id, full_name, email")
+  .in("id", studentIds)
+
+if (profilesError) {
+  console.error("Error fetching profiles:", profilesError)
+  throw profilesError
+}
+
+const studentsData =
+  profilesData?.map((student) => ({
+    id: student.id,
+    full_name: student.full_name,
+    email: student.email,
+  })) || []
+
 
 
     const { data: attendanceData, error: attendanceError } = await supabase

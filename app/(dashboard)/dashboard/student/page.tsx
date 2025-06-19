@@ -1,91 +1,97 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useCallback } from "react"
-import { useAuth } from "@/components/auth-provider"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import Link from "next/link"
-import { StatCard } from "@/components/dashboard/stat-card"
-import { ProgressCircle } from "@/components/dashboard/progress-circle"
-import { UpcomingClassCard } from "@/components/dashboard/upcoming-class-card"
-import { CourseProgressRow } from "@/components/dashboard/course-progress-row"
-import { BookOpen, Clock, FileText, Video, CheckCircle, X } from "lucide-react"
-import { isFuture, format } from "date-fns"
+import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "@/components/auth-provider";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
+import { StatCard } from "@/components/dashboard/stat-card";
+import { ProgressCircle } from "@/components/dashboard/progress-circle";
+import { UpcomingClassCard } from "@/components/dashboard/upcoming-class-card";
+import { CourseProgressRow } from "@/components/dashboard/course-progress-row";
+import { BookOpen, Clock, FileText, Video, CheckCircle, X } from "lucide-react";
+import { isFuture, format } from "date-fns";
 
 type Course = {
-  id: string
-  title: string
-  description: string
-  scheduled_time: string
-  live_class_url: string
-  teacher_id: string
-  teacher_name: string
-  totalAssignments: number
-  completedAssignments: number
-  progress: number
-}
+  id: string;
+  title: string;
+  description: string;
+  scheduled_time: string;
+  live_class_url: string;
+  teacher_id: string;
+  teacher_name: string;
+  totalAssignments: number;
+  completedAssignments: number;
+  progress: number;
+};
 
 type Assignment = {
-  id: string
-  title: string
-  due_date: string
-  max_points: number
-  course_title: string
+  id: string;
+  title: string;
+  due_date: string;
+  max_points: number;
+  course_title: string;
   submission?: {
-    grade?: number
-    submitted_at: string
-  }
-}
+    grade?: number;
+    submitted_at: string;
+  };
+};
 
 type AttendanceRecord = {
-  date: string
-  status: string
-  course_title: string
-}
+  date: string;
+  status: string;
+  course_title: string;
+};
 
 type GradeStats = {
-  totalAssignments: number
-  completedAssignments: number
-  averageGrade: number
-  totalPoints: number
-  earnedPoints: number
-}
+  totalAssignments: number;
+  completedAssignments: number;
+  averageGrade: number;
+  totalPoints: number;
+  earnedPoints: number;
+};
 
 export default function StudentDashboard() {
-  const { user, profile } = useAuth()
-  const [courses, setCourses] = useState<Course[]>([])
-  const [assignments, setAssignments] = useState<Assignment[]>([])
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
+  const { user, profile } = useAuth();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [gradeStats, setGradeStats] = useState<GradeStats>({
     totalAssignments: 0,
     completedAssignments: 0,
     averageGrade: 0,
     totalPoints: 0,
     earnedPoints: 0,
-  })
-  const [loading, setLoading] = useState(true)
-  const [enrollmentStatus, setEnrollmentStatus] = useState<"enrolled" | "pending" | "none">("none")
+  });
+  const [loading, setLoading] = useState(true);
+  const [enrollmentStatus, setEnrollmentStatus] = useState<
+    "enrolled" | "pending" | "none"
+  >("none");
 
-  const supabase = createClientComponentClient()
+  const supabase = createClientComponentClient();
 
   // Wrap fetchStudentData with useCallback to fix the dependency issue
   const fetchStudentData = useCallback(async () => {
-    if (!user) return
+    if (!user) return;
 
     try {
       // Get enrolled courses
-      const { data: enrollments } = await supabase.from("enrollments").select("course_id").eq("student_id", user.id)
+      const { data: enrollments } = await supabase
+        .from("enrollments")
+        .select("course_id")
+        .eq("student_id", user.id);
 
       if (enrollments && enrollments.length > 0) {
-        const courseIds = enrollments.map((e) => e.course_id)
+        const courseIds = enrollments.map((e) => e.course_id);
 
         // Fetch courses with teacher info
         const { data: coursesData } = await supabase
           .from("courses")
-          .select(`
+          .select(
+            `
             id,
             title,
             description,
@@ -93,14 +99,16 @@ export default function StudentDashboard() {
             live_class_url,
             teacher_id,
             profiles(full_name)
-          `)
+          `
+          )
           .in("id", courseIds)
-          .order("scheduled_time", { ascending: true })
+          .order("scheduled_time", { ascending: true });
 
         // Fetch assignments for each course to calculate real progress
         const { data: assignmentsData } = await supabase
           .from("assignments")
-          .select(`
+          .select(
+            `
             id,
             title,
             due_date,
@@ -112,73 +120,91 @@ export default function StudentDashboard() {
               submitted_at,
               student_id
             )
-          `)
+          `
+          )
           .in("course_id", courseIds)
-          .order("due_date", { ascending: false })
+          .order("due_date", { ascending: false });
 
         if (coursesData) {
           // Calculate real progress for each course based on assignments
-        const formattedCourses = coursesData.map((course) => {
-  const courseAssignments = assignmentsData?.filter((a) => a.course_id === course.id) || [];
-  const courseSubmissions = courseAssignments.filter((a) =>
-    a.assignment_submissions?.some((sub) => sub.student_id === user.id),
-  );
+          const formattedCourses = coursesData.map((course) => {
+            const courseAssignments =
+              assignmentsData?.filter((a) => a.course_id === course.id) || [];
+            const courseSubmissions = courseAssignments.filter((a) =>
+              a.assignment_submissions?.some(
+                (sub) => sub.student_id === user.id
+              )
+            );
 
-  const totalAssignments = courseAssignments.length;
-  const completedAssignments = courseSubmissions.length;
-  const progress = totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
+            const totalAssignments = courseAssignments.length;
+            const completedAssignments = courseSubmissions.length;
+            const progress =
+              totalAssignments > 0
+                ? Math.round((completedAssignments / totalAssignments) * 100)
+                : 0;
 
-  // Fix profiles array access
-  const teacherProfile = Array.isArray(course.profiles) ? course.profiles[0] : course.profiles;
+            // Fix profiles array access
+            const teacherProfile = Array.isArray(course.profiles)
+              ? course.profiles[0]
+              : course.profiles;
 
-  return {
-    id: course.id,
-    title: course.title,
-    description: course.description,
-    scheduled_time: course.scheduled_time,
-    live_class_url: course.live_class_url,
-    teacher_id: course.teacher_id,
-    teacher_name: teacherProfile?.full_name || "Unknown Teacher",
-    totalAssignments,
-    completedAssignments,
-    progress,
-  };
-});
+            return {
+              id: course.id,
+              title: course.title,
+              description: course.description,
+              scheduled_time: course.scheduled_time,
+              live_class_url: course.live_class_url,
+              teacher_id: course.teacher_id,
+              teacher_name: teacherProfile?.full_name || "Unknown Teacher",
+              totalAssignments,
+              completedAssignments,
+              progress,
+            };
+          });
 
-          setCourses(formattedCourses)
+          setCourses(formattedCourses);
         }
 
         if (assignmentsData) {
           const formattedAssignments = assignmentsData.map((assignment) => {
-  const course = Array.isArray(assignment.courses) ? assignment.courses[0] : assignment.courses;
+            const course = Array.isArray(assignment.courses)
+              ? assignment.courses[0]
+              : assignment.courses;
 
-  return {
-    id: assignment.id,
-    title: assignment.title,
-    due_date: assignment.due_date,
-    max_points: assignment.max_points,
-    course_title: course?.title || "Unknown Course",
-    submission: assignment.assignment_submissions?.find((sub) => sub.student_id === user.id) || undefined,
-  };
-});
-          setAssignments(formattedAssignments)
+            return {
+              id: assignment.id,
+              title: assignment.title,
+              due_date: assignment.due_date,
+              max_points: assignment.max_points,
+              course_title: course?.title || "Unknown Course",
+              submission:
+                assignment.assignment_submissions?.find(
+                  (sub) => sub.student_id === user.id
+                ) || undefined,
+            };
+          });
+          setAssignments(formattedAssignments);
 
           // Calculate grade statistics from real data
-          const totalAssignments = formattedAssignments.length
-          const completedAssignments = formattedAssignments.filter((a) => a.submission).length
+          const totalAssignments = formattedAssignments.length;
+          const completedAssignments = formattedAssignments.filter(
+            (a) => a.submission
+          ).length;
           const gradedAssignments = formattedAssignments.filter(
-            (a) => a.submission?.grade !== null && a.submission?.grade !== undefined,
-          )
+            (a) =>
+              a.submission?.grade !== null && a.submission?.grade !== undefined
+          );
 
-          let totalPoints = 0
-          let earnedPoints = 0
+          let totalPoints = 0;
+          let earnedPoints = 0;
 
           gradedAssignments.forEach((assignment) => {
-            totalPoints += assignment.max_points
-            earnedPoints += assignment.submission?.grade || 0
-          })
+            totalPoints += assignment.max_points;
+            earnedPoints += assignment.submission?.grade || 0;
+          });
 
-          const averageGrade = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0
+          const averageGrade =
+            totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
 
           setGradeStats({
             totalAssignments,
@@ -186,53 +212,61 @@ export default function StudentDashboard() {
             averageGrade,
             totalPoints,
             earnedPoints,
-          })
+          });
         }
 
         // Fetch attendance records
         const { data: attendanceData } = await supabase
           .from("attendance")
-          .select(`
+          .select(
+            `
             date,
             status,
             courses(title)
-          `)
+          `
+          )
           .eq("student_id", user.id)
           .in("course_id", courseIds)
           .order("date", { ascending: false })
-          .limit(10)
+          .limit(10);
 
         if (attendanceData) {
           const formattedAttendance = attendanceData.map((record) => {
-    const course = Array.isArray(record.courses) ? record.courses[0] : record.courses;
+            const course = Array.isArray(record.courses)
+              ? record.courses[0]
+              : record.courses;
 
-    return {
-      date: record.date,
-      status: record.status,
-      course_title: course?.title || "Unknown Course",
-    };
-  });
-          setAttendance(formattedAttendance)
+            return {
+              date: record.date,
+              status: record.status,
+              course_title: course?.title || "Unknown Course",
+            };
+          });
+          setAttendance(formattedAttendance);
         }
       }
     } catch (error) {
-      console.error("Error fetching student data:", error)
+      console.error("Error fetching student data:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [user, supabase])
+  }, [user, supabase]);
 
   // Wrap checkEnrollmentStatus with useCallback to fix the dependency issue
   const checkEnrollmentStatus = useCallback(async () => {
-    if (!user) return
+    if (!user) return;
 
     try {
       // Check if student has any approved enrollments
-      const { data: enrollments } = await supabase.from("enrollments").select("id").eq("student_id", user.id).limit(1)
+      const { data: enrollments } = await supabase
+        .from("enrollments")
+        .select("id")
+        .eq("student_id", user.id)
+        .limit(1);
 
       if (enrollments && enrollments.length > 0) {
-        setEnrollmentStatus("enrolled")
-        return
+        setEnrollmentStatus("enrolled");
+        return;
       }
 
       // Check if student has pending enrollment requests
@@ -241,41 +275,47 @@ export default function StudentDashboard() {
         .select("id")
         .eq("student_id", user.id)
         .eq("status", "pending")
-        .limit(1)
+        .limit(1);
 
       if (requests && requests.length > 0) {
-        setEnrollmentStatus("pending")
+        setEnrollmentStatus("pending");
       } else {
-        setEnrollmentStatus("none")
+        setEnrollmentStatus("none");
       }
     } catch (error) {
-      console.error("Error checking enrollment status:", error)
+      console.error("Error checking enrollment status:", error);
     }
-  }, [user, supabase])
+  }, [user, supabase]);
 
   // Fixed useEffect with proper dependencies
   useEffect(() => {
     if (user) {
-      checkEnrollmentStatus()
-      fetchStudentData()
+      checkEnrollmentStatus();
+      fetchStudentData();
     }
-  }, [user, checkEnrollmentStatus, fetchStudentData])
+  }, [user, checkEnrollmentStatus, fetchStudentData]);
 
   const getUpcomingClasses = () => {
     return courses
       .filter((course) => isFuture(new Date(course.scheduled_time)))
-      .sort((a, b) => new Date(a.scheduled_time).getTime() - new Date(b.scheduled_time).getTime())
-  }
+      .sort(
+        (a, b) =>
+          new Date(a.scheduled_time).getTime() -
+          new Date(b.scheduled_time).getTime()
+      );
+  };
 
   const getAttendancePercentage = () => {
-    if (attendance.length === 0) return 0
-    const presentCount = attendance.filter((record) => record.status === "present").length
-    return Math.round((presentCount / attendance.length) * 100)
-  }
+    if (attendance.length === 0) return 0;
+    const presentCount = attendance.filter(
+      (record) => record.status === "present"
+    ).length;
+    return Math.round((presentCount / attendance.length) * 100);
+  };
 
-  const upcomingClasses = getUpcomingClasses()
-  const attendancePercentage = getAttendancePercentage()
-  const completionRate = Math.round(gradeStats.averageGrade)
+  const upcomingClasses = getUpcomingClasses();
+  const attendancePercentage = getAttendancePercentage();
+  const completionRate = Math.round(gradeStats.averageGrade);
 
   if (loading) {
     return (
@@ -295,7 +335,7 @@ export default function StudentDashboard() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -304,8 +344,9 @@ export default function StudentDashboard() {
       <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-center justify-between">
         <div>
           <p className="text-green-800 dark:text-green-200">
-            Great effort so far {profile?.full_name}&#33; Keep up the hard work, and with a bit more focus on your
-            attendance, you&apos;re sure to reach your full potential&#33;
+            Great effort so far {profile?.full_name}&#33; Keep up the hard work,
+            and with a bit more focus on your attendance, you&apos;re sure to
+            reach your full potential&#33;
           </p>
         </div>
         <Button variant="ghost" size="sm">
@@ -327,8 +368,8 @@ export default function StudentDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-900 dark:text-blue-100">
-                  You haven not enrolled in any courses yet. Browse our available courses and request enrollment to get
-                  started!
+                  You haven not enrolled in any courses yet. Browse our
+                  available courses and request enrollment to get started!
                 </p>
               </div>
               <Button asChild className="bg-blue-600 hover:bg-blue-700">
@@ -354,8 +395,8 @@ export default function StudentDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-yellow-900 dark:text-yellow-100">
-                  Your enrollment requests are being reviewed by the admin. You&apos;ll receive access to your dashboard
-                  once approved.
+                  Your enrollment requests are being reviewed by the admin.
+                  You&apos;ll receive access to your dashboard once approved.
                 </p>
               </div>
               <Button asChild variant="outline">
@@ -374,7 +415,11 @@ export default function StudentDashboard() {
             <p className="text-sm text-gray-500">Course completion rate</p>
           </CardHeader>
           <CardContent className="flex justify-center pt-4">
-            <ProgressCircle value={completionRate} size={160} label="PRO LEARNER" />
+            <ProgressCircle
+              value={completionRate}
+              size={160}
+              label="PRO LEARNER"
+            />
           </CardContent>
         </Card>
 
@@ -401,10 +446,18 @@ export default function StudentDashboard() {
           />
           <StatCard
             title="Assignment done"
-            value={`${Math.round((gradeStats.completedAssignments / Math.max(gradeStats.totalAssignments, 1)) * 100)}%`}
+            value={`${Math.round(
+              (gradeStats.completedAssignments /
+                Math.max(gradeStats.totalAssignments, 1)) *
+                100
+            )}%`}
             icon={FileText}
             iconClassName="bg-purple-100 text-purple-600"
-            progress={(gradeStats.completedAssignments / Math.max(gradeStats.totalAssignments, 1)) * 100}
+            progress={
+              (gradeStats.completedAssignments /
+                Math.max(gradeStats.totalAssignments, 1)) *
+              100
+            }
           />
         </div>
       </div>
@@ -427,7 +480,11 @@ export default function StudentDashboard() {
                   joinUrl={course.live_class_url}
                 />
               ))}
-              {upcomingClasses.length === 0 && <p className="text-center text-gray-500 py-4">No upcoming classes</p>}
+              {upcomingClasses.length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  No upcoming classes
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -443,34 +500,92 @@ export default function StudentDashboard() {
           <CardContent>
             <div className="space-y-4">
               {assignments.slice(0, 3).map((assignment) => (
-                <div key={assignment.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div
+                  key={assignment.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
                       <FileText className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-sm">{assignment.title}</h4>
-                      <p className="text-xs text-gray-500">{assignment.course_title}</p>
+                      <h4 className="font-medium text-sm">
+                        {assignment.title}
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        {assignment.course_title}
+                      </p>
                     </div>
                   </div>
                   <div>
-                    {assignment.submission?.grade !== null && assignment.submission?.grade !== undefined ? (
+                    {assignment.submission?.grade !== null &&
+                    assignment.submission?.grade !== undefined ? (
                       <Badge className="bg-green-100 text-green-800">
                         {assignment.submission.grade}/{assignment.max_points}
                       </Badge>
                     ) : assignment.submission ? (
-                      <Badge className="bg-blue-100 text-blue-800">Submitted</Badge>
+                      <Badge className="bg-blue-100 text-blue-800">
+                        Submitted
+                      </Badge>
                     ) : (
-                      <Badge variant="outline">Due: {format(new Date(assignment.due_date), "MMM d")}</Badge>
+                      <Badge variant="outline">
+                        Due: {format(new Date(assignment.due_date), "MMM d")}
+                      </Badge>
                     )}
                   </div>
                 </div>
               ))}
-              {assignments.length === 0 && <p className="text-center text-gray-500 py-4">No assignments yet</p>}
+              {assignments.length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  No assignments yet
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Recent Attendance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {attendance.length > 0 ? (
+              attendance.map((record, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-3 border rounded-md shadow-sm"
+                >
+                  <div>
+                    <h4 className="font-medium text-sm">
+                      {record.course_title}
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      {format(new Date(record.date), "MMM d, yyyy")}
+                    </p>
+                  </div>
+                  <Badge
+                    className={
+                      record.status === "present"
+                        ? "bg-green-100 text-green-800"
+                        : record.status === "late"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
+                    }
+                  >
+                    {record.status.toUpperCase()}
+                  </Badge>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 py-4">
+                No attendance records yet
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Course Progress */}
       <Card>
@@ -490,10 +605,14 @@ export default function StudentDashboard() {
                 completedAssignments={course.completedAssignments}
               />
             ))}
-            {courses.length === 0 && <p className="text-center text-gray-500 py-4">No courses enrolled</p>}
+            {courses.length === 0 && (
+              <p className="text-center text-gray-500 py-4">
+                No courses enrolled
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

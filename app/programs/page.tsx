@@ -171,8 +171,8 @@ export default function ProgramsPage() {
         "Build foundational vocabulary",
         "Develop listening comprehension",
       ],
-      duration: "8 weeks",
-      price: "RM 1,200",
+      duration: "4 weeks",
+      price: "",
       image: "/placeholder.svg?height=400&width=600",
       description:
         "The foundation level program designed to help you overcome the fear of speaking English and build your confidence in everyday conversations.",
@@ -188,8 +188,8 @@ export default function ProgramsPage() {
         "Enhance presentation skills",
         "Practice meeting participation",
       ],
-      duration: "10 weeks",
-      price: "RM 1,800",
+      duration: "8 weeks",
+      price: "",
       image: "/placeholder.svg?height=400&width=600",
       description:
         "Take your English speaking skills to the next level with our intermediate program focused on fluency and professional communication.",
@@ -206,7 +206,7 @@ export default function ProgramsPage() {
         "Perfect executive communication",
       ],
       duration: "12 weeks",
-      price: "RM 2,400",
+      price: "",
       image: "/placeholder.svg?height=400&width=600",
       description:
         "Our advanced program for professionals who want to master high-level business English and leadership communication.",
@@ -223,7 +223,7 @@ export default function ProgramsPage() {
         "Safety protocols and standards",
       ],
       duration: "16 weeks",
-      price: "RM 3,200",
+      price: "",
       image: "/placeholder.svg?height=400&width=600",
       description:
         "Comprehensive training in heating, ventilation, and air conditioning systems for technical professionals.",
@@ -240,7 +240,7 @@ export default function ProgramsPage() {
         "Safety standards and compliance",
       ],
       duration: "20 weeks",
-      price: "RM 3,800",
+      price: "",
       image: "/placeholder.svg?height=400&width=600",
       description:
         "Professional training in electrical systems, including renewable energy technologies and modern electrical installations.",
@@ -257,7 +257,7 @@ export default function ProgramsPage() {
         "Industry 4.0 technologies",
       ],
       duration: "24 weeks",
-      price: "RM 4,500",
+      price: "",
       image: "/placeholder.svg?height=400&width=600",
       description:
         "Advanced training in mechatronics and industrial automation for the modern manufacturing environment.",
@@ -268,7 +268,7 @@ export default function ProgramsPage() {
   // Featured program
   const featuredProgram = {
     id: "icse-confidence",
-    title: "I Can Speak English Confidently",
+    title: "I Can Speak English Coaching",
     description:
       "Speak English 100% Confidently with our specialized courses designed for both students and adults. Join thousands of successful learners who transformed their communication skills.",
     features: [

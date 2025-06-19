@@ -173,7 +173,7 @@ const TeamMemberCard = ({ image, name, role, description }: TeamMemberCardProps)
         src={image || "/placeholder.svg"}
         alt={name}
         fill
-        className="object-cover group-hover:scale-110 transition-transform duration-500"
+        className="object-fill group-hover:scale-110 transition-transform duration-500"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
         <div className="p-4 text-white">
