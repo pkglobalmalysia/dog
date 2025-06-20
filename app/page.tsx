@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback } from "react";
+import Navbar from "@/components/navbar";
 
 import {
   BookOpen,
@@ -23,17 +24,13 @@ import {
   Twitter,
   Instagram,
   LinkedinIcon as LinkedIn,
-  Menu,
-  X,
   Award,
   Headphones,
 } from "lucide-react";
-import { useState } from "react";
 
 export default function HomePage() {
   const { user, profile, isLoading } = useAuth();
   const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const images = ["/flyer1.jpg", "/flyer2.jpg"];
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
 
@@ -83,119 +80,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-black text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <BookOpen className="h-8 w-8 text-[#ffc107]" />
-                <span className="ml-2 text-xl font-bold">PK International</span>
-              </Link>
-              <div className="hidden md:flex ml-10 space-x-8">
-                <Link
-                  href="/"
-                  className="text-white hover:text-[#ffc107] font-medium"
-                >
-                  Home
-                </Link>
-                <Link
-                  href="/about"
-                  className="text-gray-300 hover:text-[#ffc107] font-medium"
-                >
-                  About
-                </Link>
-                <Link
-                  href="/programs"
-                  className="text-gray-300 hover:text-[#ffc107] font-medium"
-                >
-                  Programs
-                </Link>
-                <Link
-                  href="/events"
-                  className="text-gray-300 hover:text-[#ffc107] font-medium"
-                >
-                  Events
-                </Link>
-              </div>
-            </div>
-            <div className="hidden md:flex items-center space-x-4">
-              <Link href="/login" className="text-white hover:text-[#ffc107]">
-                Sign In
-              </Link>
-              <Link
-                href="/signup/student"
-                className="bg-[#ffc107] hover:bg-[#e6af06] text-[#0a2540] font-bold py-3 px-6 rounded-md transition-all"
-              >
-                Get Started
-              </Link>
-            </div>
-            <div className="md:hidden">
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="text-white hover:text-[#ffc107]"
-              >
-                {mobileMenuOpen ? (
-                  <X className="h-6 w-6" />
-                ) : (
-                  <Menu className="h-6 w-6" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-black border-t border-black py-4">
-            <div className="px-4 space-y-3">
-              <Link
-                href="/"
-                className="block text-white hover:text-[#ffc107] font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Home
-              </Link>
-              <Link
-                href="/about"
-                className="block text-gray-300 hover:text-[#ffc107] font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Link
-                href="/programs"
-                className="block text-gray-300 hover:text-[#ffc107] font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Programs
-              </Link>
-              <Link
-                href="/events"
-                className="block text-gray-300 hover:text-[#ffc107] font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Events
-              </Link>
-              <div className="pt-4 flex flex-col space-y-3">
-                <Link
-                  href="/login"
-                  className="text-white hover:text-[#ffc107]"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/signup/student"
-                  className="bg-[#ffc107] hover:bg-[#e6af06] text-[#0a2540] font-bold py-3 px-6 rounded-md transition-all inline-block text-center"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Get Started
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </nav>
+   <Navbar />
 
       {/* Hero Section */}
       <section
@@ -646,30 +531,30 @@ export default function HomePage() {
               <Image
                 width={600}
                 height={400}
-                src="/4.jpg"
+                src="/pk1.jpg"
                 alt="Professional speaking"
-                className="rounded-lg shadow-lg"
+                className="rounded-lg shadow-lg object-none"
               />
               <Image
                 width={600}
                 height={400}
-                src="/5.jpg"
+                src="/pk2.jpg"
                 alt="Graduate"
                 className="rounded-lg shadow-lg mt-6"
               />
               <Image
                 width={600}
                 height={400}
-                src="/1.jpg"
+                src="/pk3.jpg"
                 alt="Business presentation"
                 className="rounded-lg shadow-lg"
               />
               <Image
                 width={600}
                 height={400}
-                src="/2.jpg"
+                src="/pk4.jpg"
                 alt="Networking"
-                className="rounded-lg shadow-lg mt-6"
+                className="rounded-lg shadow-lg mt-6 "
               />
             </div>
           </div>

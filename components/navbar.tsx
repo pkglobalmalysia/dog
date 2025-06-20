@@ -43,14 +43,14 @@ export default function Navbar() {
             </div>
           </div>
           <div className="hidden md:flex items-center space-x-4">
-            <Link href="/login" className="text-white hover:text-yellow-400 transition-colors duration-200">
-              Sign In
+            <Link href="/signup/student" className="text-white hover:text-yellow-400 transition-colors duration-200">
+              Sign Up
             </Link>
             <Link
-              href="/signup/student"
+              href="/login"
               className="bg-gradient-to-r from-yellow-400 to-yellow-400 hover:from-yellow-400 hover:to-yellow-400 text-black font-medium px-4 py-2 rounded-md transition-all duration-200 hover:shadow-lg"
             >
-              Get Started
+             Student Dashboard
             </Link>
           </div>
           <div className="md:hidden">
@@ -104,18 +104,18 @@ export default function Navbar() {
             </Link>
             <div className="pt-4 flex flex-col space-y-3">
               <Link
-                href="/login"
+                href="/signup/student"
                 className="text-white hover:text-yellow-400 transition-colors duration-200"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Sign In
+                Sign Up
               </Link>
               <Link
-                href="/signup/student"
+                href="/login"
                 className="bg-gradient-to-r from-yellow-400 to-yellow-400 hover:from-yellow-400 hover:to-yellow-400 text-black font-medium px-4 py-2 rounded-md transition-all duration-200 hover:shadow-lg inline-block text-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Get Started
+                Student Dashboard
               </Link>
             </div>
           </div>

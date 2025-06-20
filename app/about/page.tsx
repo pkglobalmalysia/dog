@@ -385,14 +385,14 @@ export default function AboutPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-yellow-400 ">
+      <section className="py-16  ">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
-            className="grid grid-cols-2 md:grid-cols-5 gap-8"
+            className="grid grid-cols-2  md:grid-cols-5 gap-8"
           >
             <motion.div variants={fadeIn}>
               <CounterAnimation target="70" suffix="%" title="Build Test Faster By" />
