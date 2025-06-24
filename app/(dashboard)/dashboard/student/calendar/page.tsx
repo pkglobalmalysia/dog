@@ -277,7 +277,7 @@ export default function StudentCalendar() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mx-6">
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg shadow p-6">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <CalendarIcon className="h-8 w-8" />

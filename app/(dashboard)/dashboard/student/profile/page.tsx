@@ -165,7 +165,7 @@ export default function StudentProfile() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mx-6">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h1 className="text-2xl font-bold">Student Profile</h1>
         <p className="text-muted-foreground mt-2">Manage your profile and view your academic progress</p>

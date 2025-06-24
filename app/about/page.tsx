@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { motion, useAnimation, useInView } from "framer-motion"
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { motion, useAnimation, useInView } from "framer-motion";
 import {
   BookOpen,
   CheckCircle,
@@ -34,13 +34,13 @@ import {
   Brain,
   BarChart,
   Lock,
-} from "lucide-react"
+} from "lucide-react";
 
 // Animation variants
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-}
+};
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -50,7 +50,7 @@ const staggerContainer = {
       staggerChildren: 0.2,
     },
   },
-}
+};
 
 const scaleIn = {
   hidden: { scale: 0.8, opacity: 0 },
@@ -63,26 +63,30 @@ const scaleIn = {
       damping: 15,
     },
   },
-}
+};
 
 // Section component with animation
 interface AnimatedSectionProps {
-  children: React.ReactNode
-  className?: string
-  delay?: number
-  id?: string
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+  id?: string;
 }
 
-const AnimatedSection = ({ children, className = "", delay = 0}: AnimatedSectionProps) => {
-  const controls = useAnimation()
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
+const AnimatedSection = ({
+  children,
+  className = "",
+  delay = 0,
+}: AnimatedSectionProps) => {
+  const controls = useAnimation();
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
 
   useEffect(() => {
     if (inView) {
-      controls.start("visible")
+      controls.start("visible");
     }
-  }, [controls, inView])
+  }, [controls, inView]);
 
   return (
     <motion.section
@@ -103,41 +107,46 @@ const AnimatedSection = ({ children, className = "", delay = 0}: AnimatedSection
     >
       {children}
     </motion.section>
-  )
-}
+  );
+};
 
 // Stats counter component
 interface CounterAnimationProps {
-  target: number | string
-  duration?: number
-  title: string
-  suffix?: string
+  target: number | string;
+  duration?: number;
+  title: string;
+  suffix?: string;
 }
 
-const CounterAnimation = ({ target, duration = 2000, title, suffix = "" }: CounterAnimationProps) => {
-  const [count, setCount] = useState(0)
-  const counterRef = useRef(null)
-  const inView = useInView(counterRef, { once: true })
+const CounterAnimation = ({
+  target,
+  duration = 2000,
+  title,
+  suffix = "",
+}: CounterAnimationProps) => {
+  const [count, setCount] = useState(0);
+  const counterRef = useRef(null);
+  const inView = useInView(counterRef, { once: true });
 
   useEffect(() => {
     if (inView) {
-      let start = 0
-      const end = Number.parseInt(String(target))
-      const increment = end / (duration / 16) // 60fps
+      let start = 0;
+      const end = Number.parseInt(String(target));
+      const increment = end / (duration / 16); // 60fps
 
       const timer = setInterval(() => {
-        start += increment
-        setCount(Math.floor(start))
+        start += increment;
+        setCount(Math.floor(start));
 
         if (start >= end) {
-          setCount(end)
-          clearInterval(timer)
+          setCount(end);
+          clearInterval(timer);
         }
-      }, 16)
+      }, 16);
 
-      return () => clearInterval(timer)
+      return () => clearInterval(timer);
     }
-  }, [inView, target, duration])
+  }, [inView, target, duration]);
 
   return (
     <div ref={counterRef} className="text-center">
@@ -151,18 +160,23 @@ const CounterAnimation = ({ target, duration = 2000, title, suffix = "" }: Count
       </div>
       <h3 className="text-lg font-semibold">{title}</h3>
     </div>
-  )
-}
+  );
+};
 
 // Team member card component
 interface TeamMemberCardProps {
-  image: string
-  name: string
-  role: string
-  description: string
+  image: string;
+  name: string;
+  role: string;
+  description: string;
 }
 
-const TeamMemberCard = ({ image, name, role, description }: TeamMemberCardProps) => (
+const TeamMemberCard = ({
+  image,
+  name,
+  role,
+  description,
+}: TeamMemberCardProps) => (
   <motion.div
     className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden group"
     whileHover={{ y: -5 }}
@@ -197,15 +211,15 @@ const TeamMemberCard = ({ image, name, role, description }: TeamMemberCardProps)
       <p className="text-gray-600 dark:text-gray-300 text-sm">{description}</p>
     </div>
   </motion.div>
-)
+);
 
 export default function AboutPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Scroll to top on page load
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
+    window.scrollTo(0, 0);
+  }, []);
 
   const stagger = {
     hidden: { opacity: 0 },
@@ -215,7 +229,7 @@ export default function AboutPage() {
         staggerChildren: 0.3,
       },
     },
-  }
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
@@ -256,7 +270,10 @@ export default function AboutPage() {
               </div>
             </div>
             <div className="hidden md:flex items-center space-x-4">
-              <Link href="/login" className="text-white hover:text-yellow-400 transition-colors duration-200">
+              <Link
+                href="/login"
+                className="text-white hover:text-yellow-400 transition-colors duration-200"
+              >
                 Sign In
               </Link>
               <Link
@@ -271,7 +288,11 @@ export default function AboutPage() {
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="text-white hover:text-yellow-400 transition-colors duration-200"
               >
-                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                {mobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
               </button>
             </div>
           </div>
@@ -336,10 +357,18 @@ export default function AboutPage() {
       </nav>
 
       {/* Hero Section */}
-    <section className="relative bg-cover bg-center h-[70vh] flex items-center">
+      <section className="relative bg-cover bg-center h-[70vh] flex items-center">
         <div className="absolute inset-0 overflow-hidden">
-          <video autoPlay muted loop className="absolute min-w-full min-h-full object-cover">
-            <source src="/placeholder.svg?height=800&width=1600" type="video/mp4" />
+          <video
+            autoPlay
+            muted
+            loop
+            className="absolute min-w-full min-h-full object-cover"
+          >
+            <source
+              src="/placeholder.svg?height=800&width=1600"
+              type="video/mp4"
+            />
           </video>
           <div className="absolute inset-0 bg-black"></div>
         </div>
@@ -359,8 +388,9 @@ export default function AboutPage() {
             </h1>
             <div className="w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-400 my-6"></div>
             <p className="text-xl text-gray-200 max-w-2xl">
-              Driving transformation, empowerment, and progress globally through innovative English language education
-              and professional development programs.
+              Driving transformation, empowerment, and progress globally through
+              innovative English language education and professional development
+              programs.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <motion.a
@@ -395,16 +425,32 @@ export default function AboutPage() {
             className="grid grid-cols-2  md:grid-cols-5 gap-8"
           >
             <motion.div variants={fadeIn}>
-              <CounterAnimation target="70" suffix="%" title="Build Test Faster By" />
+              <CounterAnimation
+                target="70"
+                suffix="%"
+                title="Build Test Faster By"
+              />
             </motion.div>
             <motion.div variants={fadeIn}>
-              <CounterAnimation target="50" suffix="%" title="Execute Test Faster By" />
+              <CounterAnimation
+                target="50"
+                suffix="%"
+                title="Execute Test Faster By"
+              />
             </motion.div>
             <motion.div variants={fadeIn}>
-              <CounterAnimation target="80" suffix="%" title="Expand Coverage By" />
+              <CounterAnimation
+                target="80"
+                suffix="%"
+                title="Expand Coverage By"
+              />
             </motion.div>
             <motion.div variants={fadeIn}>
-              <CounterAnimation target="50" suffix="%" title="Increase Quality By" />
+              <CounterAnimation
+                target="50"
+                suffix="%"
+                title="Increase Quality By"
+              />
             </motion.div>
             <motion.div variants={fadeIn}>
               <CounterAnimation target="35" suffix="%" title="Lower Cost By" />
@@ -412,6 +458,53 @@ export default function AboutPage() {
           </motion.div>
         </div>
       </section>
+
+      <AnimatedSection id="about-pkibs" className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Logo/Image block on the left */}
+            <motion.div variants={scaleIn} className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 to-yellow-400 rounded-xl blur-lg opacity-30 animate-pulse"></div>
+              <div className="relative rounded-lg overflow-hidden shadow-xl flex items-center justify-center bg-white dark:bg-slate-800 p-10">
+                <Image
+                  src="/logo.png" // 🔁 Replace this with your actual logo path
+                  alt="PKIBS Logo"
+                  width={300}
+                  height={300}
+                  className="w-auto h-40 object-contain"
+                />
+              </div>
+            </motion.div>
+
+            {/* Text content on the right */}
+            <motion.div variants={fadeIn}>
+              <h2 className="text-3xl md:text-4xl font-bold mb-2">
+                About PKIBS
+              </h2>
+              <div className="w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-400 mb-6"></div>
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                PK International Business School (PKIBS) is a premier
+                institution dedicated to empowering students and professionals
+                in Malaysia with practical English fluency and soft skills
+                tailored for corporate success.
+              </p>
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                Founded by visionary educator Sr. Anbuchuder, PKIBS pioneers
+                unique teaching frameworks like the Chaarran and PARi
+                Models—specifically designed to overcome fear, build confidence,
+                and deliver real-world communication mastery.
+              </p>
+              <p className="text-gray-700 dark:text-gray-300">
+                Our mission is to transform lives through personalized education
+                that bridges the gap between academic learning and workplace
+                communication. With an ever-growing alumni network and a
+                reputation for results, PKIBS stands as a beacon of
+                transformation in English language training.
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </AnimatedSection>
 
       {/* Our Story Section */}
       <AnimatedSection id="our-story" className="py-20">
@@ -421,19 +514,24 @@ export default function AboutPage() {
               <h2 className="text-3xl md:text-4xl font-bold mb-2">Our Story</h2>
               <div className="w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-400 mb-6"></div>
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                PK International Business School was founded with a vision to transform the way English is taught to
-                Malaysian professionals. We recognized that traditional language learning methods often fail to address
-                the specific challenges faced by corporate professionals.
+                PK International Business School was founded with a vision to
+                transform the way English is taught to Malaysian professionals.
+                We recognized that traditional language learning methods often
+                fail to address the specific challenges faced by corporate
+                professionals.
               </p>
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                Our founder, Sr. Anbuchuder, developed the revolutionary Chaarran and PARi Models after years of
-                research and practical experience in language education. These models have since helped thousands of
-                professionals overcome their fear of speaking English and achieve 100% confidence in their communication
+                Our founder, Sr. Anbuchuder, developed the revolutionary
+                Chaarran and PARi Models after years of research and practical
+                experience in language education. These models have since helped
+                thousands of professionals overcome their fear of speaking
+                English and achieve 100% confidence in their communication
                 skills.
               </p>
               <p className="text-gray-700 dark:text-gray-300">
-                Today, PK International stands as a leader in English language education, with a focus on practical,
-                confidence-building approaches that deliver real results in professional settings.
+                Today, PK International stands as a leader in English language
+                education, with a focus on practical, confidence-building
+                approaches that deliver real results in professional settings.
               </p>
             </motion.div>
             <motion.div variants={scaleIn} className="relative">
@@ -456,7 +554,9 @@ export default function AboutPage() {
       <AnimatedSection className="py-20 bg-gradient-to-r from-yellow-50 to-yellow-50 dark:from-yellow-900/20 dark:to-yellow-900/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">Chairmans Message</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              Chairmans Message
+            </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-yellow-400 mx-auto mb-6"></div>
           </motion.div>
 
@@ -465,28 +565,26 @@ export default function AboutPage() {
               <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-xl relative">
                 <div className="absolute -top-5 -left-5 w-10 h-10 text-5xl text-yellow-400 opacity-30"></div>
                 <p className="text-gray-700 dark:text-gray-300 mb-6 italic">
-                  At PK International, we believe that language is not just a tool for communication, but a gateway to
-                  personal and professional growth. Our mission is to empower individuals with the confidence and skills
-                  to express themselves effectively in English, opening doors to new opportunities and connections.
+                  At PK International, we believe that language is not just a
+                  tool for communication, but a gateway to personal and
+                  professional growth. Our mission is to empower individuals
+                  with the confidence and skills to express themselves
+                  effectively in English, opening doors to new opportunities and
+                  connections.
                 </p>
                 <p className="text-gray-700 dark:text-gray-300 mb-6">
-                  Through our innovative teaching methodologies and dedicated team of educators, we have helped
-                  thousands of professionals overcome their language barriers and achieve their full potential. We are
-                  committed to continuing this journey of transformation, one student at a time.
+                  Through our innovative teaching methodologies and dedicated
+                  team of educators, we have helped thousands of professionals
+                  overcome their language barriers and achieve their full
+                  potential. We are committed to continuing this journey of
+                  transformation, one student at a time.
                 </p>
                 <div className="flex items-center">
                   <div className="flex-1">
                     <h4 className="font-bold text-lg">Dr. Paaram Singh</h4>
-                    <p className="text-yellow-400 dark:text-yellow-400">Chairman, PK Consortium Group of Companies</p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <Image
-                      src="/placeholder.svg?height=60&width=180"
-                      alt="Chairman's signature"
-                      width={180}
-                      height={60}
-                      className="h-12 w-auto"
-                    />
+                    <p className="text-yellow-400 dark:text-yellow-400">
+                      Chairman, PK Consortium Group of Companies
+                    </p>
                   </div>
                 </div>
               </div>
@@ -513,10 +611,13 @@ export default function AboutPage() {
       <AnimatedSection className="py-20 bg-black text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">Our Mission & Vision</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              Our Mission & Vision
+            </h2>
             <div className="w-24 h-1 bg-yellow-400 mx-auto mb-6"></div>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              We are on a mission to transform English language education and empower professionals
+              We are on a mission to transform English language education and
+              empower professionals
             </p>
           </motion.div>
 
@@ -528,10 +629,14 @@ export default function AboutPage() {
               <div className="feature-icon mx-auto bg-yellow-400 w-16 h-16 rounded-full flex items-center justify-center mb-6">
                 <GraduationCap className="h-8 w-8 text-yellow-900" />
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-center">Our Mission</h3>
+              <h3 className="text-2xl font-bold mb-4 text-center">
+                Our Mission
+              </h3>
               <p className="text-gray-200">
-                To empower Malaysian professionals with 100% confidence in English communication through innovative,
-                research-backed methodologies that address the unique challenges faced in corporate environments.
+                To empower Malaysian professionals with 100% confidence in
+                English communication through innovative, research-backed
+                methodologies that address the unique challenges faced in
+                corporate environments.
               </p>
             </motion.div>
 
@@ -542,10 +647,14 @@ export default function AboutPage() {
               <div className="feature-icon mx-auto bg-yellow-400 w-16 h-16 rounded-full flex items-center justify-center mb-6">
                 <Globe className="h-8 w-8 text-yellow-900" />
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-center">Our Vision</h3>
+              <h3 className="text-2xl font-bold mb-4 text-center">
+                Our Vision
+              </h3>
               <p className="text-gray-200">
-                To be the leading English language education provider in Malaysia, recognized for our transformative
-                approach that creates confident, effective communicators who excel in their professional careers.
+                To be the leading English language education provider in
+                Malaysia, recognized for our transformative approach that
+                creates confident, effective communicators who excel in their
+                professional careers.
               </p>
             </motion.div>
           </div>
@@ -556,39 +665,50 @@ export default function AboutPage() {
       <AnimatedSection className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">PK Consortium Group of Companies</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              PK Consortium Group of Companies
+            </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-yellow-400 mx-auto mb-6"></div>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              PK INTERNATIONAL is part of the PK Consortium Group of Companies, spearheaded by Dr. Paaram Singh
+              PK INTERNATIONAL is part of the PK Consortium Group of Companies,
+              spearheaded by Dr. Paaram Singh
             </p>
           </motion.div>
 
-          <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <motion.div
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
             {[
               {
                 name: "Strength Force Security & Services Sdn Bhd",
                 icon: <Building className="h-6 w-6 text-white" />,
-                description: "Providing comprehensive security solutions for businesses and organizations.",
+                description:
+                  "Providing comprehensive security solutions for businesses and organizations.",
               },
               {
                 name: "PK Global Security Services Sdn Bhd",
                 icon: <Shield className="h-6 w-6 text-white" />,
-                description: "Specialized security services for international clients and high-profile events.",
+                description:
+                  "Specialized security services for international clients and high-profile events.",
               },
               {
                 name: "Global Strength Security Sdn Bhd",
                 icon: <Lock className="h-6 w-6 text-white" />,
-                description: "Advanced security systems and technology solutions for modern security challenges.",
+                description:
+                  "Advanced security systems and technology solutions for modern security challenges.",
               },
               {
                 name: "Randhawa Force Sdn Bhd",
                 icon: <Users className="h-6 w-6 text-white" />,
-                description: "Personnel management and security staffing solutions for various industries.",
+                description:
+                  "Personnel management and security staffing solutions for various industries.",
               },
               {
                 name: "Strength Management & Trading Sdn Bhd",
                 icon: <Briefcase className="h-6 w-6 text-white" />,
-                description: "Business management consulting and international trading services.",
+                description:
+                  "Business management consulting and international trading services.",
               },
             ].map((company, index) => (
               <motion.div
@@ -599,7 +719,9 @@ export default function AboutPage() {
                 <div className="bg-black rounded-full w-12 h-12 flex items-center justify-center mb-4">
                   {company.icon}
                 </div>
-                <h3 className="text-xl font-bold text-black mb-2">{company.name}</h3>
+                <h3 className="text-xl font-bold text-black mb-2">
+                  {company.name}
+                </h3>
                 <p className="text-black">{company.description}</p>
               </motion.div>
             ))}
@@ -611,7 +733,9 @@ export default function AboutPage() {
       <AnimatedSection className="py-20 bg-gradient-to-r from-yellow-50 to-yellow-50 dark:from-yellow-900/20 dark:to-yellow-900/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">Our Innovative Models</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              Our Innovative Models
+            </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-yellow-400 mx-auto mb-6"></div>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
               The foundation of our teaching methodology
@@ -628,26 +752,36 @@ export default function AboutPage() {
                 CHAARRAN MODEL
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                The Chaarran Model focuses on Eight Elements of Thought Systems Reinforcement, empowering communication
-                with infinite positive phrases.
+                The Chaarran Model focuses on Eight Elements of Thought Systems
+                Reinforcement, empowering communication with infinite positive
+                phrases.
               </p>
               <div className="grid grid-cols-2 gap-4">
-                {["Compassion", "Humble", "Appreciative", "Attentive", "Responsible", "Respect", "Agile", "Noble"].map(
-                  (element, index) => (
-                    <motion.div
-                      key={index}
-                      className="flex items-center"
-                      whileHover={{ x: 5 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    >
-                      <CheckCircle className="h-5 w-5 text-yellow-400 mr-2" />
-                      <span>{element}</span>
-                    </motion.div>
-                  ),
-                )}
+                {[
+                  "Compassion",
+                  "Humble",
+                  "Appreciative",
+                  "Attentive",
+                  "Responsible",
+                  "Respect",
+                  "Agile",
+                  "Noble",
+                ].map((element, index) => (
+                  <motion.div
+                    key={index}
+                    className="flex items-center"
+                    whileHover={{ x: 5 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                  >
+                    <CheckCircle className="h-5 w-5 text-yellow-400 mr-2" />
+                    <span>{element}</span>
+                  </motion.div>
+                ))}
               </div>
               <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <h4 className="font-bold mb-3">Three Intentions of Communication:</h4>
+                <h4 className="font-bold mb-3">
+                  Three Intentions of Communication:
+                </h4>
                 <ul className="space-y-2">
                   <motion.li
                     className="flex items-start"
@@ -655,7 +789,9 @@ export default function AboutPage() {
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >
                     <div className="bg-gradient-to-r from-yellow-400/20 to-yellow-400/20 rounded-full p-1 mr-3 mt-0.5">
-                      <span className="text-yellow-400 dark:text-yellow-400 font-bold text-sm">1</span>
+                      <span className="text-yellow-400 dark:text-yellow-400 font-bold text-sm">
+                        1
+                      </span>
                     </div>
                     <span>To Tell</span>
                   </motion.li>
@@ -665,7 +801,9 @@ export default function AboutPage() {
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >
                     <div className="bg-gradient-to-r from-yellow-400/20 to-yellow-400/20 rounded-full p-1 mr-3 mt-0.5">
-                      <span className="text-yellow-400 dark:text-yellow-400 font-bold text-sm">2</span>
+                      <span className="text-yellow-400 dark:text-yellow-400 font-bold text-sm">
+                        2
+                      </span>
                     </div>
                     <span>To Question</span>
                   </motion.li>
@@ -675,7 +813,9 @@ export default function AboutPage() {
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >
                     <div className="bg-gradient-to-r from-yellow-400/20 to-yellow-400/20 rounded-full p-1 mr-3 mt-0.5">
-                      <span className="text-yellow-400 dark:text-yellow-400 font-bold text-sm">3</span>
+                      <span className="text-yellow-400 dark:text-yellow-400 font-bold text-sm">
+                        3
+                      </span>
                     </div>
                     <span>To Respond</span>
                   </motion.li>
@@ -692,14 +832,20 @@ export default function AboutPage() {
                 PARi MODEL
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                The PARi Model focuses on building lasting, autopilot habits through Passionate Actions Reinforcement,
-                promoting sustainable skill mastery in English communication.
+                The PARi Model focuses on building lasting, autopilot habits
+                through Passionate Actions Reinforcement, promoting sustainable
+                skill mastery in English communication.
               </p>
               <div className="space-y-6">
-                <motion.div whileHover={{ x: 5 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+                <motion.div
+                  whileHover={{ x: 5 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
                   <h4 className="font-bold flex items-center">
                     <span className="bg-gradient-to-r from-yellow-400/20 to-yellow-400/20 p-1 rounded-full mr-2">
-                      <span className="text-yellow-400 dark:text-yellow-400">P</span>
+                      <span className="text-yellow-400 dark:text-yellow-400">
+                        P
+                      </span>
                     </span>
                     Passionate Phrases
                   </h4>
@@ -707,21 +853,32 @@ export default function AboutPage() {
                     Using passionate communication phrases in everyday roles.
                   </p>
                 </motion.div>
-                <motion.div whileHover={{ x: 5 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+                <motion.div
+                  whileHover={{ x: 5 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
                   <h4 className="font-bold flex items-center">
                     <span className="bg-gradient-to-r from-yellow-400/20 to-yellow-400/20 p-1 rounded-full mr-2">
-                      <span className="text-yellow-400 dark:text-yellow-400">A</span>
+                      <span className="text-yellow-400 dark:text-yellow-400">
+                        A
+                      </span>
                     </span>
                     Active Listening
                   </h4>
                   <p className="text-gray-600 dark:text-gray-400 ml-8">
-                    Practicing active, passionate listening to English dialogues.
+                    Practicing active, passionate listening to English
+                    dialogues.
                   </p>
                 </motion.div>
-                <motion.div whileHover={{ x: 5 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+                <motion.div
+                  whileHover={{ x: 5 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
                   <h4 className="font-bold flex items-center">
                     <span className="bg-gradient-to-r from-yellow-400/20 to-yellow-400/20 p-1 rounded-full mr-2">
-                      <span className="text-yellow-400 dark:text-yellow-400">Ri</span>
+                      <span className="text-yellow-400 dark:text-yellow-400">
+                        Ri
+                      </span>
                     </span>
                     Immersive Reading
                   </h4>
@@ -732,8 +889,9 @@ export default function AboutPage() {
               </div>
               <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <p className="text-gray-600 dark:text-gray-400">
-                  The PARi Model cultivates passionate behaviors for achieving 100% Confidence in English speaking,
-                  transforming communication into a fearless, energy-positive act.
+                  The PARi Model cultivates passionate behaviors for achieving
+                  100% Confidence in English speaking, transforming
+                  communication into a fearless, energy-positive act.
                 </p>
               </div>
             </motion.div>
@@ -745,44 +903,56 @@ export default function AboutPage() {
       <AnimatedSection className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">Our Training Programs</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              Our Training Programs
+            </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-yellow-400 mx-auto mb-6"></div>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Our skill training programs are tailored towards real-life habits and skills for income creation
+              Our skill training programs are tailored towards real-life habits
+              and skills for income creation
             </p>
           </motion.div>
 
-          <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <motion.div
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
             {[
               {
                 title: "AIR-COND SERVICING & REPAIRING",
                 icon: <Snowflake className="h-6 w-6 text-white" />,
-                description: "Learn professional air conditioning maintenance and repair techniques.",
+                description:
+                  "Learn professional air conditioning maintenance and repair techniques.",
               },
               {
                 title: "ELECTRICAL & SOLAR INSTALLATION",
                 icon: <Zap className="h-6 w-6 text-white" />,
-                description: "Master electrical systems and renewable energy installation.",
+                description:
+                  "Master electrical systems and renewable energy installation.",
               },
               {
                 title: "AUTOMOTIVE REPAIRING",
                 icon: <Car className="h-6 w-6 text-white" />,
-                description: "Develop skills in diagnosing and repairing vehicle systems.",
+                description:
+                  "Develop skills in diagnosing and repairing vehicle systems.",
               },
               {
                 title: "CUSTOMER SERVICE",
                 icon: <HeadphonesIcon className="h-6 w-6 text-white" />,
-                description: "Learn effective customer interaction and problem-solving techniques.",
+                description:
+                  "Learn effective customer interaction and problem-solving techniques.",
               },
               {
                 title: "OFFICE ADMINISTRATION",
                 icon: <FileText className="h-6 w-6 text-white" />,
-                description: "Master essential administrative skills for modern offices.",
+                description:
+                  "Master essential administrative skills for modern offices.",
               },
               {
                 title: "RETAIL OPERATION",
                 icon: <ShoppingBag className="h-6 w-6 text-white" />,
-                description: "Develop expertise in retail management and operations.",
+                description:
+                  "Develop expertise in retail management and operations.",
               },
             ].map((program, index) => (
               <motion.div
@@ -798,7 +968,9 @@ export default function AboutPage() {
                   <h3 className="text-xl font-bold mb-3 group-hover:text-yellow-400 dark:group-hover:text-yellow-400 transition-colors duration-300">
                     {program.title}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">{program.description}</p>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">
+                    {program.description}
+                  </p>
                   <div className="flex items-center text-yellow-400 dark:text-yellow-400 font-medium">
                     <span>Skill Training Certificate</span>
                     <ChevronRight className="ml-1 h-5 w-5 group-hover:ml-2 transition-all duration-300" />
@@ -814,12 +986,19 @@ export default function AboutPage() {
       <AnimatedSection className="py-20 bg-black text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">Our Methodologies</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              Our Methodologies
+            </h2>
             <div className="w-24 h-1 bg-yellow-400 mx-auto mb-6"></div>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">EARN BEFORE GRADUATION & LIFE-TIME COMPETENCIES</p>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              EARN BEFORE GRADUATION & LIFE-TIME COMPETENCIES
+            </p>
           </motion.div>
 
-          <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <motion.div
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
             {[
               {
                 title: "'Earn Before Graduation'",
@@ -836,10 +1015,12 @@ export default function AboutPage() {
               {
                 title: "Workforce Thought Systems Reinforcement Training",
                 icon: <Brain className="h-6 w-6 text-yellow-900" />,
-                description: "Enhancing cognitive processes and decision-making skills in the workplace.",
+                description:
+                  "Enhancing cognitive processes and decision-making skills in the workplace.",
               },
               {
-                title: "Workforce Behavioral Competencies Reinforcement Training",
+                title:
+                  "Workforce Behavioral Competencies Reinforcement Training",
                 icon: <Users className="h-6 w-6 text-yellow-900" />,
                 description:
                   "Developing essential behavioral skills for professional success in various work environments.",
@@ -867,7 +1048,8 @@ export default function AboutPage() {
 
           <motion.div variants={fadeIn} className="mt-12 text-center">
             <p className="text-xl font-medium bg-white/10 backdrop-blur-lg py-4 px-6 rounded-lg inline-block">
-              EACH SKILL TRAINING ARE TAILORED TOWARDS REAL LIFE TIME HABITS & SKILLS FOR INCOME CREATION.
+              EACH SKILL TRAINING ARE TAILORED TOWARDS REAL LIFE TIME HABITS &
+              SKILLS FOR INCOME CREATION.
             </p>
           </motion.div>
         </div>
@@ -877,14 +1059,19 @@ export default function AboutPage() {
       <AnimatedSection className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">Leadership Team</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              Leadership Team
+            </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-yellow-400 mx-auto mb-6"></div>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
               Meet the experts behind our innovative programs
             </p>
           </motion.div>
 
-          <motion.div variants={staggerContainer} className="grid md:grid-cols-2 gap-72">
+          <motion.div
+            variants={staggerContainer}
+            className="grid md:grid-cols-2 gap-72"
+          >
             <motion.div variants={scaleIn}>
               <TeamMemberCard
                 image="/zuraidah.jpeg"
@@ -902,10 +1089,7 @@ export default function AboutPage() {
                 description="The visionary behind our Chaarran and PARi Models, Sr. Anbuchuder has transformed English education through his innovative approaches."
               />
             </motion.div>
-
-              
-            </motion.div>
-
+          </motion.div>
         </div>
       </AnimatedSection>
 
@@ -913,11 +1097,16 @@ export default function AboutPage() {
       <AnimatedSection className="py-20 bg-yellow-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-black mb-2">5 Reasons to Choose PK International</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-black mb-2">
+              5 Reasons to Choose PK International
+            </h2>
             <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
           </motion.div>
 
-          <motion.div variants={staggerContainer} className="grid md:grid-cols-3 gap-8">
+          <motion.div
+            variants={staggerContainer}
+            className="grid md:grid-cols-3 gap-8"
+          >
             {[
               {
                 number: 1,
@@ -928,12 +1117,14 @@ export default function AboutPage() {
               {
                 number: 2,
                 title: "Speak with confidence in meetings",
-                description: "Gain the skills to participate confidently in corporate meetings and discussions.",
+                description:
+                  "Gain the skills to participate confidently in corporate meetings and discussions.",
               },
               {
                 number: 3,
                 title: "Master self-introduction",
-                description: "Learn to introduce yourself professionally and make a lasting first impression.",
+                description:
+                  "Learn to introduce yourself professionally and make a lasting first impression.",
               },
               {
                 number: 4,
@@ -944,7 +1135,8 @@ export default function AboutPage() {
               {
                 number: 5,
                 title: "Accelerate your career growth",
-                description: "Unlock new opportunities in your career with improved English communication skills.",
+                description:
+                  "Unlock new opportunities in your career with improved English communication skills.",
               },
             ].map((reason, index) => (
               <motion.div
@@ -973,10 +1165,13 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12">
             <motion.div variants={fadeIn}>
-              <h2 className="text-3xl md:text-4xl font-bold mb-2">Questions?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-2">
+                Questions?
+              </h2>
               <div className="w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-400 mb-6"></div>
               <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
-                We would be happy to help you with any questions about our programs.
+                We would be happy to help you with any questions about our
+                programs.
               </p>
 
               <div className="space-y-6">
@@ -987,7 +1182,8 @@ export default function AboutPage() {
                   <div>
                     <h3 className="font-semibold text-lg mb-1">Our Location</h3>
                     <p className="text-gray-600 dark:text-gray-400">
-                      LEVEL 3, NO G-15, JALAN USJ SENTRAL 1, USJ SENTRAL PERSIARAN SUBANG 1, SUBANG JAYA, SELANGOR
+                      LEVEL 3, NO G-15, JALAN USJ SENTRAL 1, USJ SENTRAL
+                      PERSIARAN SUBANG 1, SUBANG JAYA, SELANGOR
                     </p>
                   </div>
                 </div>
@@ -998,7 +1194,9 @@ export default function AboutPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg mb-1">Call Us</h3>
-                    <p className="text-gray-600 dark:text-gray-400">+60 03-80116996</p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      +60 03-80116996
+                    </p>
                   </div>
                 </div>
 
@@ -1008,7 +1206,9 @@ export default function AboutPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg mb-1">Email Us</h3>
-                    <p className="text-gray-600 dark:text-gray-400">ceo@pkibs.com</p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      ceo@pkibs.com
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1049,12 +1249,18 @@ export default function AboutPage() {
               </div>
             </motion.div>
 
-            <motion.div variants={scaleIn} className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8">
+            <motion.div
+              variants={scaleIn}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8"
+            >
               <h3 className="text-2xl font-bold mb-6">Get In Touch</h3>
               <form className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                    >
                       Your Name
                     </label>
                     <input
@@ -1065,7 +1271,10 @@ export default function AboutPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                    >
                       Your Email
                     </label>
                     <input
@@ -1077,7 +1286,10 @@ export default function AboutPage() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label
+                    htmlFor="subject"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     Subject
                   </label>
                   <input
@@ -1088,7 +1300,10 @@ export default function AboutPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     Message
                   </label>
                   <textarea
@@ -1115,13 +1330,23 @@ export default function AboutPage() {
       {/* CTA Section */}
       <AnimatedSection className="py-20 bg-black text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.h2 variants={fadeIn} className="text-3xl md:text-4xl font-bold text-white mb-6">
+          <motion.h2
+            variants={fadeIn}
+            className="text-3xl md:text-4xl font-bold text-white mb-6"
+          >
             Ready to Transform Your English Skills?
           </motion.h2>
-          <motion.p variants={fadeIn} className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of successful learners who have achieved 100% confidence in English speaking
+          <motion.p
+            variants={fadeIn}
+            className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto"
+          >
+            Join thousands of successful learners who have achieved 100%
+            confidence in English speaking
           </motion.p>
-          <motion.div variants={stagger} className="flex flex-col sm:flex-row gap-4 justify-center">
+          <motion.div
+            variants={stagger}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
             <motion.a
               href="/signup/student"
               className="bg-gradient-to-r from-yellow-400 to-yellow-400 hover:from-yellow-400 hover:to-yellow-400 text-yellow-900 font-medium px-8 py-3 rounded-md transition-all duration-200 hover:shadow-lg"
@@ -1154,29 +1379,42 @@ export default function AboutPage() {
                 <span className="ml-2 text-xl font-bold">PK International</span>
               </div>
               <p className="text-gray-400">
-                Empowering professionals through innovative English language education and modern learning experiences.
+                Empowering professionals through innovative English language
+                education and modern learning experiences.
               </p>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <Link href="/" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     Home
                   </Link>
                 </li>
                 <li>
-                  <Link href="/about" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/about"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/programs" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/programs"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     Programs
                   </Link>
                 </li>
                 <li>
-                  <Link href="/events" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/events"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     Events
                   </Link>
                 </li>
@@ -1186,22 +1424,34 @@ export default function AboutPage() {
               <h3 className="font-semibold mb-4">Programs</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <a href="#" className="hover:text-yellow-400 transition-colors duration-200">
+                  <a
+                    href="#"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     iCSE ALPHA
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-yellow-400 transition-colors duration-200">
+                  <a
+                    href="#"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     iCSE BETA
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-yellow-400 transition-colors duration-200">
+                  <a
+                    href="#"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     iCSE GAMMA
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-yellow-400 transition-colors duration-200">
+                  <a
+                    href="#"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     Corporate Training
                   </a>
                 </li>
@@ -1213,7 +1463,8 @@ export default function AboutPage() {
                 <li className="flex items-start">
                   <MapPin className="h-5 w-5 text-yellow-400 mr-2 shrink-0" />
                   <span>
-                    LEVEL 3, NO G-15, JALAN USJ SENTRAL 1, USJ SENTRAL PERSIARAN SUBANG 1, SUBANG JAYA, SELANGOR
+                    LEVEL 3, NO G-15, JALAN USJ SENTRAL 1, USJ SENTRAL PERSIARAN
+                    SUBANG 1, SUBANG JAYA, SELANGOR
                   </span>
                 </li>
                 <li className="flex items-start">
@@ -1228,18 +1479,32 @@ export default function AboutPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400">&copy; 2024 PK International Business School. All rights reserved.</p>
+            <p className="text-gray-400">
+              &copy; 2024 PK International Business School. All rights reserved.
+            </p>
             <div className="flex space-x-4 mt-4 md:mt-0">
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
+              <a
+                href="#"
+                className="text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+              >
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
+              <a
+                href="#"
+                className="text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+              >
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
+              <a
+                href="#"
+                className="text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+              >
                 <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
+              <a
+                href="#"
+                className="text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+              >
                 <LinkedIn className="h-5 w-5" />
               </a>
             </div>
@@ -1247,5 +1512,5 @@ export default function AboutPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

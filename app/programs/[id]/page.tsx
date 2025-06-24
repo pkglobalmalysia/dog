@@ -160,13 +160,13 @@ const programsData = [
     ],
     testimonials: [
       {
-        name: "Tan Wei Ming",
+        name: "Hanis Woo",
         company: "Sales Executive",
         text: "Before iCSE ALPHA, I would avoid speaking English at all costs. Now I can confidently handle basic customer inquiries in English. The supportive environment made all the difference.",
         image: "/placeholder.svg?height=100&width=100",
       },
       {
-        name: "Priya Sharma",
+        name: "Muniandy Halim",
         company: "Administrative Assistant",
         text: "The program helped me overcome my fear of making grammar mistakes. I now speak more freely without constantly worrying about perfect grammar.",
         image: "/placeholder.svg?height=100&width=100",
@@ -221,7 +221,7 @@ const programsData = [
     ],
     testimonials: [
       {
-        name: "Michael Lim",
+        name: "Abd Rahman bin Nazri",
         company: "Project Manager, Tech Solutions",
         text: "iCSE BETA transformed my ability to lead team meetings. I now speak more fluently and can express complex ideas clearly. My team has noticed the difference!",
         image: "/placeholder.svg?height=100&width=100",
@@ -276,8 +276,8 @@ const programsData = [
     ],
     testimonials: [
       {
-        name: "Dato' Ahmad Razali",
-        company: "CEO, Malaysian Banking Group",
+        name: "Juliana bin Osman",
+        company: "Manager IT",
         text: "iCSE GAMMA elevated my communication to match my executive role. I now lead board meetings with confidence and clarity that commands respect.",
         image: "/placeholder.svg?height=100&width=100",
       },

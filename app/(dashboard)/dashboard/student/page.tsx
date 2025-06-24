@@ -12,7 +12,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { ProgressCircle } from "@/components/dashboard/progress-circle";
 import { UpcomingClassCard } from "@/components/dashboard/upcoming-class-card";
 import { CourseProgressRow } from "@/components/dashboard/course-progress-row";
-import { BookOpen, Clock, FileText, Video, CheckCircle, X } from "lucide-react";
+import { BookOpen, Clock, FileText, Video, CheckCircle } from "lucide-react";
 import { isFuture, format } from "date-fns";
 
 type Course = {
@@ -339,20 +339,15 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mx-6">
       {/* Welcome Message */}
-      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-center justify-between">
-        <div>
-          <p className="text-green-800 dark:text-green-200">
-            Great effort so far {profile?.full_name}&#33; Keep up the hard work,
-            and with a bit more focus on your attendance, you&apos;re sure to
-            reach your full potential&#33;
-          </p>
-        </div>
-        <Button variant="ghost" size="sm">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Dismiss</span>
-        </Button>
+      <div className="relative bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 shadow-sm">
+        <p className="text-green-800 dark:text-green-200 text-sm md:text-base leading-relaxed">
+          <strong>Great effort so far, {profile?.full_name}!</strong>
+          <br />
+          Keep up the hard work, and with a bit more focus on your attendance,
+          you are sure to reach your full potential!
+        </p>
       </div>
 
       {/* Enrollment Status */}
@@ -393,15 +388,49 @@ export default function StudentDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-900 dark:text-yellow-100">
-                  Your enrollment requests are being reviewed by the admin.
-                  You&apos;ll receive access to your dashboard once approved.
+              <div className="bg-yellow-50 dark:bg-yellow-900 rounded-xl p-4 border border-yellow-300 dark:border-yellow-700">
+                <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100 mb-2">
+                  Enrollment In Progress
+                </h3>
+                <p className="text-yellow-900 dark:text-yellow-100 mb-4">
+                  Your enrollment request is being reviewed by the admin. You’ll
+                  receive dashboard access once approved.
                 </p>
+
+                <div className="bg-white dark:bg-yellow-800 rounded-lg p-4 text-sm space-y-2 text-yellow-900 dark:text-yellow-100 border border-yellow-200 dark:border-yellow-600">
+                  <p className="font-semibold">
+                    📌 Official Bank Details for iCSE Coaching Registration:
+                  </p>
+                  <p>
+                    <strong>Name:</strong> Strength Management and Trading Sdn
+                    Bhd
+                  </p>
+                  <p>
+                    <strong>Bank:</strong> OCBC Bank
+                  </p>
+                  <p>
+                    <strong>Account Number:</strong> 708-111381-9
+                  </p>
+                  <p>
+                    <strong>Branch:</strong> Subang Jaya
+                  </p>
+                </div>
+
+                <p className="mt-4 text-yellow-900 dark:text-yellow-100">
+                  📲 For fee details, contact us on WhatsApp:
+                  <a
+                    href="https://wa.me/600380116996"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 underline text-blue-700 dark:text-blue-300"
+                  >
+                    600380116996
+                  </a>
+                </p>
+                <Button className="mt-4" asChild variant="outline">
+                  <Link href="/courses">View Courses</Link>
+                </Button>
               </div>
-              <Button asChild variant="outline">
-                <Link href="/courses">View Courses</Link>
-              </Button>
             </div>
           </CardContent>
         </Card>

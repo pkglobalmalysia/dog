@@ -5,6 +5,8 @@ export type Profile = {
   full_name: string
   email: string
   role: "student" | "teacher" | "admin"
+  ic_number: string
+  address: string
   approved: boolean
   created_at?: string
   updated_at?: string

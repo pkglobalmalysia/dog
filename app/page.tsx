@@ -80,7 +80,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Navigation */}
-   <Navbar />
+      <Navbar />
 
       {/* Hero Section */}
       <section
@@ -123,10 +123,7 @@ export default function HomePage() {
       <section className="py-16 md:py-24 ">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div
-              className="overflow-hidden  rounded-lg "
-              ref={emblaRef}
-            >
+            <div className="overflow-hidden  rounded-lg " ref={emblaRef}>
               <div className="flex">
                 {images.map((src, index) => (
                   <div className="min-w-full " key={index}>
@@ -332,68 +329,71 @@ export default function HomePage() {
         </div>
       </section>
 
-<section className="py-16 md:py-24 bg-black">
-  <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="grid md:grid-cols-2 gap-12 items-center">
-      {/* Content */}
-      <div>
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-          Trusted by HRD Corp Malaysia
-        </h2>
-        <div className="w-24 h-1 bg-[#ffc107] mb-6"></div>
-        <p className="text-white/80 text-lg mb-6">
-          PK International Business School is an{" "}
-          <span className="text-white font-semibold">HRD Corp accredited training provider</span> under the Ministry of
-          Human Resources, Malaysia. Our programs are fully claimable, designed to upgrade corporate communication skills.
-        </p>
+      <section className="py-16 md:py-24 bg-black">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Content */}
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                Trusted by HRD Corp Malaysia
+              </h2>
+              <div className="w-24 h-1 bg-[#ffc107] mb-6"></div>
+              <p className="text-white/80 text-lg mb-6">
+                PK International Business School is an{" "}
+                <span className="text-white font-semibold">
+                  HRD Corp accredited training provider
+                </span>{" "}
+                under the Ministry of Human Resources, Malaysia. Our programs
+                are fully claimable, designed to upgrade corporate communication
+                skills.
+              </p>
 
-        <ul className="space-y-5 text-white/90">
-          <li className="flex items-start">
-            <CheckCircle className="text-[#ffc107] w-6 h-6 mt-1" />
-            <span className="ml-3">
-              <strong>TP Number:</strong> TP201101026924
-            </span>
-          </li>
-          <li className="flex items-start">
-            <CheckCircle className="text-[#ffc107] w-6 h-6 mt-1" />
-            <span className="ml-3">
-              <strong>Program Number:</strong> 10001547936
-            </span>
-          </li>
-          <li className="flex items-start">
-            <CheckCircle className="text-[#ffc107] w-6 h-6 mt-1" />
-            <span className="ml-3">
-              100% Claimable for Eligible Malaysian Employers
-            </span>
-          </li>
-        </ul>
-      </div>
+              <ul className="space-y-5 text-white/90">
+                <li className="flex items-start">
+                  <CheckCircle className="text-[#ffc107] w-6 h-6 mt-1" />
+                  <span className="ml-3">
+                    <strong>TP Number:</strong> TP201101026924
+                  </span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="text-[#ffc107] w-6 h-6 mt-1" />
+                  <span className="ml-3">
+                    <strong>Program Number:</strong> 10001547936
+                  </span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="text-[#ffc107] w-6 h-6 mt-1" />
+                  <span className="ml-3">
+                    100% Claimable for Eligible Malaysian Employers
+                  </span>
+                </li>
+              </ul>
+            </div>
 
-      {/* Logos / Certificates */}
-      <div className="flex flex-col items-center gap-6 md:items-start">
-        <div className=" p-4 rounded-xl shadow-xl w-64 h-40 flex items-center justify-center">
-          <Image
-            src="/hrd1.jpg"
-            alt="HRD Corp Logo"
-            width={200}
-            height={100}
-            className="object-contain h-auto"
-          />
+            {/* Logos / Certificates */}
+            <div className="flex flex-col items-center gap-6 md:items-start">
+              <div className=" p-4 rounded-xl shadow-xl w-64 h-40 flex items-center justify-center">
+                <Image
+                  src="/hrd1.jpg"
+                  alt="HRD Corp Logo"
+                  width={200}
+                  height={100}
+                  className="object-contain h-auto"
+                />
+              </div>
+              <div className=" p-4 rounded-xl shadow-xl w-64 h-40 flex items-center justify-center">
+                <Image
+                  src="/hrd2.jpg"
+                  alt="HRD Corp Certificate"
+                  width={200}
+                  height={100}
+                  className="object-contain h-auto"
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className=" p-4 rounded-xl shadow-xl w-64 h-40 flex items-center justify-center">
-          <Image
-            src="/hrd2.jpg"
-            alt="HRD Corp Certificate"
-            width={200}
-            height={100}
-            className="object-contain h-auto"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
+      </section>
 
       {/* Testimonials Section */}
       <section className="py-16 md:py-24">
@@ -429,7 +429,7 @@ export default function HomePage() {
                   <span className="font-bold text-gray-600">AK</span>
                 </div>
                 <div className="ml-4">
-                  <p className="font-bold">Ahmad Kamal</p>
+                  <p className="font-bold">Umi Zakaria</p>
                   <p className="text-sm text-gray-500">Marketing Manager</p>
                 </div>
               </div>
@@ -454,7 +454,7 @@ export default function HomePage() {
                   <span className="font-bold text-gray-600">SL</span>
                 </div>
                 <div className="ml-4">
-                  <p className="font-bold">Sarah Lee</p>
+                  <p className="font-bold">Tengku Zubir</p>
                   <p className="text-sm text-gray-500">HR Specialist</p>
                 </div>
               </div>
@@ -561,65 +561,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">
-              Frequently Asked <span className="text-[#ffc107]">Questions</span>
-            </h2>
-            <div className="w-24 h-1 bg-[#ffc107] mx-auto mb-6"></div>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Find answers to common questions about our programs
-            </p>
-          </div>
 
-          <div className="max-w-3xl mx-auto">
-            <div className="space-y-4">
-              {[
-                {
-                  question: "What makes your English programs different?",
-                  answer:
-                    "Our programs use the revolutionary Chaarran and PARi Models, which focus on building confidence through positive reinforcement rather than traditional grammar-focused approaches.",
-                },
-                {
-                  question: "How long are your courses?",
-                  answer:
-                    "Our courses range from 8 to 12 weeks, depending on the level and specific program. We also offer customized corporate training with flexible scheduling.",
-                },
-                {
-                  question: "Do you offer online classes?",
-                  answer:
-                    "Yes, we offer both in-person and online classes to accommodate different learning preferences and schedules.",
-                },
-                {
-                  question: "Is prior English knowledge required?",
-                  answer:
-                    "Our programs cater to different proficiency levels. While basic English understanding is helpful, our ALPHA program is designed for beginners who want to build confidence.",
-                },
-                {
-                  question: "Do you provide job placement assistance?",
-                  answer:
-                    "While we don't directly place students in jobs, our career services team offers guidance, interview preparation, and networking opportunities with our corporate partners.",
-                },
-              ].map((faq, index) => (
-                <div
-                  key={index}
-                  className="border-b border-gray-200 dark:border-gray-700 pb-4"
-                >
-                  <button className="flex justify-between items-center w-full text-left font-medium">
-                    <span>{faq.question}</span>
-                    <ChevronRight className="h-5 w-5 text-[#ffc107] transform rotate-90" />
-                  </button>
-                  <div className="mt-2 text-gray-600 dark:text-gray-400">
-                    <p>{faq.answer}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Contact Section */}
       <section className="py-16 md:py-24 bg-gray-50 dark:bg-gray-900">
@@ -702,24 +644,40 @@ export default function HomePage() {
                   <Phone className="h-6 w-6 text-[#ffc107] mr-4" />
                   <div>
                     <h3 className="font-bold mb-1">Phone</h3>
-                    <p>+60 3 1234 5678</p>
-                    <p>+60 12 345 6789</p>
+                    <p>+60 03-80116996</p>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <Mail className="h-6 w-6 text-[#ffc107] mr-4" />
                   <div>
-                    <h3 className="font-bold mb-1">Email</h3>
-                    <p>info@pkinternational.edu</p>
-                    <p>admissions@pkinternational.edu</p>
+                    <h3 className="text-lg font-semibold mb-2">Email</h3>
+                    <div className="flex items-center mb-1">
+                      <span className="font-medium w-28">For Support:</span>
+                      <a
+                        href="mailto:support@pkinternational.edu"
+                        className=" hover:underline"
+                      >
+                        support@pkinternational.edu
+                      </a>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="font-medium w-28">For Admin:</span>
+                      <a
+                        href="mailto:ceo@pkibs.edu"
+                        className=" hover:underline"
+                      >
+                        ceo@pkibs.edu
+                      </a>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <MapPin className="h-6 w-6 text-[#ffc107] mr-4" />
                   <div>
                     <h3 className="font-bold mb-1">Address</h3>
-                    <p>123 Education Street</p>
-                    <p>Kuala Lumpur, Malaysia</p>
+                    <p>LEVEL 3, NO G-15, JALAN USJ SENTRAL,</p>
+                    <p>USJ SENTRAL PERSIARAN SUBANG 1,</p>
+                    <p>SUBANG JAYA, SELANGOR</p>
                   </div>
                 </div>
                 <div>
@@ -773,7 +731,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-       <footer className="bg-black text-white py-12">
+      <footer className="bg-black text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
@@ -782,29 +740,42 @@ export default function HomePage() {
                 <span className="ml-2 text-xl font-bold">PK International</span>
               </div>
               <p className="text-gray-400">
-                Empowering professionals through innovative English language education and modern learning experiences.
+                Empowering professionals through innovative English language
+                education and modern learning experiences.
               </p>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <Link href="/" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     Home
                   </Link>
                 </li>
                 <li>
-                  <Link href="/about" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/about"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/programs" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/programs"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     Programs
                   </Link>
                 </li>
                 <li>
-                  <Link href="/events" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/events"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     Events
                   </Link>
                 </li>
@@ -814,22 +785,34 @@ export default function HomePage() {
               <h3 className="font-semibold mb-4">Programs</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <a href="#" className="hover:text-yellow-400 transition-colors duration-200">
+                  <a
+                    href="#"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     iCSE ALPHA
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-yellow-400 transition-colors duration-200">
+                  <a
+                    href="#"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     iCSE BETA
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-yellow-400 transition-colors duration-200">
+                  <a
+                    href="#"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     iCSE GAMMA
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-yellow-400 transition-colors duration-200">
+                  <a
+                    href="#"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     Corporate Training
                   </a>
                 </li>
@@ -841,7 +824,8 @@ export default function HomePage() {
                 <li className="flex items-start">
                   <MapPin className="h-5 w-5 text-yellow-400 mr-2 shrink-0" />
                   <span>
-                    LEVEL 3, NO G-15, JALAN USJ SENTRAL 1, USJ SENTRAL PERSIARAN SUBANG 1, SUBANG JAYA, SELANGOR
+                    LEVEL 3, NO G-15, JALAN USJ SENTRAL 1, USJ SENTRAL PERSIARAN
+                    SUBANG 1, SUBANG JAYA, SELANGOR
                   </span>
                 </li>
                 <li className="flex items-start">
@@ -856,24 +840,38 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400">&copy; 2024 PK International Business School. All rights reserved.</p>
+            <p className="text-gray-400">
+              &copy; 2024 PK International Business School. All rights reserved.
+            </p>
             <div className="flex space-x-4 mt-4 md:mt-0">
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
+              <a
+                href="#"
+                className="text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+              >
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
+              <a
+                href="#"
+                className="text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+              >
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
+              <a
+                href="#"
+                className="text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+              >
                 <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
+              <a
+                href="#"
+                className="text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+              >
                 <LinkedIn className="h-5 w-5" />
               </a>
             </div>
           </div>
         </div>
       </footer>
-    </div> 
+    </div>
   );
 }
