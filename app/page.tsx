@@ -45,26 +45,8 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [emblaApi, scrollNext]);
 
-  useEffect(() => {
-    if (!isLoading && user && profile) {
-      // Redirect authenticated users to their dashboard
-      switch (profile.role) {
-        case "admin":
-          router.push("/admin");
-          break;
-        case "teacher":
-          router.push(
-            profile.approved ? "/dashboard/teacher" : "/pending-approval"
-          );
-          break;
-        case "student":
-          router.push("/dashboard/student");
-          break;
-        default:
-          break;
-      }
-    }
-  }, [user, profile, isLoading, router]);
+  // Remove automatic redirect logic from home page
+  // Let the auth provider handle redirects to avoid conflicts
 
   if (isLoading) {
     return (
@@ -79,6 +61,20 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
+      {/* Debug Section - Remove this in production */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-gray-100 dark:bg-gray-800 p-4 border-b">
+          <div className="max-w-7xl mx-auto">
+            <h3 className="text-sm font-bold mb-2">🐛 Debug Info:</h3>
+            <div className="text-xs space-y-1">
+              <div>Loading: {isLoading ? '✅ True' : '❌ False'}</div>
+              <div>User: {user ? `✅ ${user.email}` : '❌ No user'}</div>
+              <div>Profile: {profile ? `✅ ${profile.full_name} (${profile.role})` : '❌ No profile'}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <Navbar />
 

@@ -108,10 +108,10 @@ const programsData = [
     location: "PK International Campus, Subang Jaya",
     image: "/8.jpg",
     description:
-      "The iCSE ALPHA program is designed for beginners who want to overcome their fear of speaking English and build foundational confidence. This 8-week program focuses on creating a safe environment where you can practice speaking without judgment, while gradually building your vocabulary and conversation skills.",
+      "The iCSE ALPHA program is designed for beginners who want to overcome their fear of speaking English and build foundational confidence. This 12-week program focuses on creating a safe environment where you can practice speaking without judgment, while gradually building your vocabulary and conversation skills.",
     category: "English Speaking",
     price: "RM 1,200",
-    duration: "8 weeks",
+    duration: "12 weeks",
     schedule: "Weekends (Saturday & Sunday), 9:00 AM - 12:00 PM",
     capacity: 20,
     spotsLeft: 8,

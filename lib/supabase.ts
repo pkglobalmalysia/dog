@@ -108,13 +108,23 @@ let supabaseClient: ReturnType<typeof createClientComponentClient> | null = null
 export const createClient = () => {
   // Check if we're in a browser environment
   if (typeof window === "undefined") {
-    // We're on the server, return null or a mock client
-    return null
+    // We're on the server, create a temporary client for SSR
+    try {
+      return createClientComponentClient()
+    } catch (error) {
+      console.error("Failed to create server-side Supabase client:", error)
+      return null
+    }
   }
 
   // We're in the browser, use singleton pattern
   if (!supabaseClient) {
-    supabaseClient = createClientComponentClient()
+    try {
+      supabaseClient = createClientComponentClient()
+    } catch (error) {
+      console.error("Failed to create client-side Supabase client:", error)
+      return null
+    }
   }
   return supabaseClient
 }

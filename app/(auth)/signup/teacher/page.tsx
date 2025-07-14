@@ -1,9 +1,10 @@
 "use client"
 
+import { useRouter } from "next/navigation";
+
 import type React from "react"
 import Navbar from "@/components/navbar"
 import Image from "next/image"
-
 import { useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/components/auth-provider"
@@ -12,62 +13,113 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, CheckCircle, Clock, Eye, EyeOff } from "lucide-react"
+import { createClient } from "@/lib/supabase"
 
 export default function TeacherSignupPage() {
-  const [fullName, setFullName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const { signUp } = useAuth()
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [address, setAddress] = useState("");
+  const [icNumber, setICNumber] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(null)
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
     // Validation
     if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      setIsLoading(false)
-      return
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long")
-      setIsLoading(false)
-      return
+      setError("Password must be at least 6 characters long");
+      setIsLoading(false);
+      return;
     }
 
     if (!fullName.trim()) {
-      setError("Full name is required")
-      setIsLoading(false)
-      return
+      setError("Full name is required");
+      setIsLoading(false);
+      return;
+    }
+    if (!icNumber.trim()) {
+      setError("IC Number is required");
+      setIsLoading(false);
+      return;
+    }
+    if (!address.trim()) {
+      setError("Address is required");
+      setIsLoading(false);
+      return;
     }
 
     try {
-      const { error } = await signUp(email, password, {
+      // Sign up with Supabase Auth
+      const { error: signUpError } = await signUp(email, password, {
         full_name: fullName.trim(),
         role: "teacher",
-        approved: false,
-      })
+        ic_number: icNumber.trim(),
+        address: address.trim(),
+      });
 
-      if (error) {
-        setError(error.message)
-      } else {
-        setSuccess(true)
+      if (signUpError) {
+        setError(signUpError.message || "An error occurred during signup");
+        setIsLoading(false);
+        return;
       }
+
+      // Get user from Supabase Auth
+      const supabase = createClient();
+      if (!supabase) {
+        setError("Failed to initialize Supabase client");
+        setIsLoading(false);
+        return;
+      }
+      const { data: { user }, error: userFetchError } = await supabase.auth.getUser();
+
+      if (userFetchError || !user) {
+        setError("Failed to retrieve user information after signup");
+        setIsLoading(false);
+        return;
+      }
+
+      // Insert into profiles table
+      const { error: profileError } = await supabase.from("profiles").insert([
+        {
+          id: user.id,
+          full_name: fullName.trim(),
+          email,
+          role: "teacher",
+          address: address.trim(),
+          ic_number: icNumber.trim(),
+          approved: false,
+        },
+      ]);
+      if (profileError) {
+        setError(profileError.message || "Failed to save profile data");
+        setIsLoading(false);
+        return;
+      }
+
+      setSuccess(true);
     } catch (err) {
-      setError("An unexpected error occurred")
-      console.error(err)
+      setError("An unexpected error occurred");
+      console.error(err);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (success) {
     return (
@@ -242,6 +294,38 @@ export default function TeacherSignupPage() {
                 takes 24-48 hours.
               </AlertDescription>
             </Alert>
+
+            {/* Address */}
+            <div className="space-y-2">
+              <Label htmlFor="address" className="text-gray-300">
+                Address
+              </Label>
+              <Input
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+                disabled={isLoading}
+                className="bg-[#1e1e1e] border-[#333] text-white focus:border-yellow-500 focus:ring-yellow-500"
+                placeholder="Enter your address"
+              />
+            </div>
+
+            {/* IC Number */}
+            <div className="space-y-2">
+              <Label htmlFor="icnumber" className="text-gray-300">
+                IC Number
+              </Label>
+              <Input
+                id="icnumber"
+                value={icNumber}
+                onChange={(e) => setICNumber(e.target.value)}
+                required
+                disabled={isLoading}
+                className="bg-[#1e1e1e] border-[#333] text-white focus:border-yellow-500 focus:ring-yellow-500"
+                placeholder="Enter your IC number"
+              />
+            </div>
 
             <Button
               type="submit"

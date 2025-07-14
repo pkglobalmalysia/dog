@@ -48,6 +48,15 @@ export default function LoginPage() {
         } else {
           setError(error.message || "An error occurred during login")
         }
+      } else {
+        // Successful login - redirect to admin or redirect URL
+        const redirectTo = searchParams.get('redirect') || '/admin'
+        console.log("🎯 Login successful, redirecting to:", redirectTo)
+        
+        // Small delay to ensure session is established
+        setTimeout(() => {
+          window.location.href = redirectTo
+        }, 500)
       }
     } catch (err: unknown) {
       setError("An unexpected error occurred")
@@ -182,7 +191,6 @@ export default function LoginPage() {
           <p className="text-yellow-100">Login to access your account</p>
 
           <div className="absolute bottom-0 right-0 transform translate-y-1/4">
-            <Image src="/placeholder.svg?height=400&width=400" height={400} width={400} alt="Students illustration" className="opacity-90" />
           </div>
         </div>
 

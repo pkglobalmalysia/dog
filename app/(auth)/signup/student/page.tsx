@@ -3,7 +3,6 @@
 import type React from "react";
 import Navbar from "@/components/navbar";
 import Image from "next/image";
-
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -52,29 +51,34 @@ export default function StudentSignupPage() {
       setIsLoading(false);
       return;
     }
-     if (!icNumber.trim()) {
-      setError("IC NUmber is required");
+    if (!icNumber.trim()) {
+      setError("IC Number is required");
+      setIsLoading(false);
+      return;
+    }
+    if (!address.trim()) {
+      setError("Address is required");
       setIsLoading(false);
       return;
     }
 
     try {
-      const { error } = await signUp(email, password, {
+      // Sign up with Supabase Auth
+      const { error: signUpError } = await signUp(email, password, {
         full_name: fullName.trim(),
         role: "student",
+        ic_number: icNumber.trim(),
+        address: address.trim(),
       });
 
-      if (error) {
-        setError(error.message || "An error occurred during signup");
-      } else {
-        setSuccess(true);
-        // Redirect to login after 2 seconds
-        setTimeout(() => {
-          router.push(
-            "/login?message=Account created successfully. Please log in."
-          );
-        }, 2000);
+      if (signUpError) {
+        setError(signUpError.message || "An error occurred during signup");
+        setIsLoading(false);
+        return;
       }
+
+      // Show success message to verify email
+      setSuccess(true);
     } catch (err: unknown) {
       setError("An unexpected error occurred");
       console.error(err);
@@ -94,56 +98,43 @@ export default function StudentSignupPage() {
     );
   }
 
-
-
   if (success) {
     return (
       <>
         <Navbar />
-
         <div className="min-h-screen flex flex-col md:flex-row">
           <div className="w-full md:w-1/2 bg-[#121212] p-8 md:p-16 flex flex-col justify-center">
             <div className="max-w-md mx-auto w-full">
-              <div className="bg-[#1e1e1e] p-8 rounded-lg border border-green-500/20">
+              <div className="bg-[#1e1e1e] p-8 rounded-lg border border-yellow-500/20">
                 <div className="flex items-center justify-center mb-4">
-                  <CheckCircle className="h-12 w-12 text-green-500" />
+                  <CheckCircle className="h-12 w-12 text-yellow-500" />
                 </div>
                 <h2 className="text-2xl font-bold text-white text-center mb-2">
-                  Account Created!
+                  Verify Your Email
                 </h2>
                 <p className="text-gray-300 text-center mb-6">
-                  Your student account has been created successfully
+                  A verification email has been sent to <span className="font-semibold">{email}</span>.<br />
+                  Please check your inbox and verify your email before logging in.
                 </p>
-                <Alert className="bg-green-900/20 border-green-800 text-green-200">
+                <Alert className="bg-yellow-900/20 border-yellow-800 text-yellow-200">
                   <AlertDescription>
-                    Welcome to our LMS! You can now access all student features
-                    including courses, assignments, and lectures. Redirecting to
-                    login...
+                    You must verify your email address to activate your student account.<br />
+                    After verification, you can log in and access all features.
                   </AlertDescription>
                 </Alert>
               </div>
             </div>
           </div>
-          
-
           {/* Right side - yellow panel with illustration */}
           <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-yellow-600 to-yellow-800 p-16 items-center justify-center relative overflow-hidden">
             <div className="relative z-10 text-white max-w-lg">
               <h2 className="text-5xl font-bold mb-4">Welcome to</h2>
               <h3 className="text-5xl font-bold mb-6">student portal</h3>
-              <p className="text-yellow-100">Your account has been created</p>
-
+              <p className="text-yellow-100">Please verify your email</p>
               <div className="absolute bottom-0 right-0 transform translate-y-1/4">
-                <Image
-                  src="/placeholder.svg?height=400&width=400"
-                  height={400}
-                  width={400}
-                  alt="Students illustration"
-                  className="opacity-90"
-                />
+               
               </div>
             </div>
-
             {/* Background shapes */}
             <div className="absolute top-0 left-0 w-full h-full opacity-10">
               <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-white"></div>
@@ -344,13 +335,7 @@ export default function StudentSignupPage() {
             <p className="text-yellow-100">Create your student account</p>
 
             <div className="absolute bottom-0 right-0 transform translate-y-1/4">
-              <Image
-                src="/placeholder.svg?height=400&width=400"
-                height={400}
-                width={400}
-                alt="Students illustration"
-                className="opacity-90"
-              />
+             
             </div>
           </div>
 

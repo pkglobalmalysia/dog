@@ -5,11 +5,13 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useState,
   useMemo,
   useCallback,
+  useRef,
 } from "react";
-import { createClient } from "@/lib/supabase";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import type { Session, User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/supabase";
@@ -33,6 +35,8 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  console.log("🎯 AuthProvider component rendering...");
+  
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -40,38 +44,84 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [initialized, setInitialized] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  
+  // Track if we've attempted initialization
+  const initAttempted = useRef(false);
 
-  const supabase = useMemo(() => createClient(), []);
+  // TEST useEffect - let's see if this works
+  useEffect(() => {
+    console.log("🚀 EARLY useEffect is running! This means useEffect works!");
+  }, []);
+
+  console.log("🔍 Current pathname:", pathname);
+  console.log("📊 Current state - isLoading:", isLoading, "initialized:", initialized);
+
+  const supabase = useMemo(() => {
+    console.log("🔧 Creating Supabase client...");
+    const client = createClientComponentClient();
+    if (client) {
+      console.log("✅ Supabase client created successfully");
+    } else {
+      console.error("❌ Failed to create Supabase client");
+    }
+    return client;
+  }, []);
 
   const fetchProfile = useCallback(
     async (userId: string): Promise<Profile | null> => {
+      console.log("🔍 Fetching profile for user:", userId);
+      
       // Check cache first
       const cached = profileCache.get(userId);
       if (cached) {
+        console.log("📦 Profile found in cache:", cached);
         return cached;
       }
 
       try {
         if (!supabase) {
-          console.error("Supabase client is not initialized.");
+          console.error("❌ Supabase client is not initialized.");
           return null;
         }
-        const { data, error } = await supabase
+        
+        console.log("🌐 Fetching profile from database...");
+        
+        // Add timeout protection to prevent hanging (increased to 15 seconds)
+        const profilePromise = supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)
           .single();
+          
+        console.log("⏱️ Starting Promise.race with 15s timeout...");
+        
+        let timeoutId: NodeJS.Timeout | undefined;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            console.log("⚠️ Profile fetch timeout triggered");
+            reject(new Error("Profile fetch timeout - please check your internet connection"));
+          }, 15000);
+        });
+
+        const result = await Promise.race([profilePromise, timeoutPromise]);
+        
+        // Clear the timeout since we got a result
+        if (timeoutId) clearTimeout(timeoutId);
+        console.log("📡 Promise.race completed, result:", result);
+        
+        const { data, error } = result;
 
         if (error) {
-          console.error("Error fetching profile:", error);
+          console.error("❌ Error fetching profile:", error);
           return null;
         }
 
+        console.log("✅ Profile fetched successfully:", data);
         // Cache the result
         profileCache.set(userId, data);
         return data as Profile;
       } catch (error) {
-        console.error("Error fetching profile:", error);
+        console.error("🚨 Catch block - Error fetching profile:", error);
         return null;
       }
     },
@@ -80,10 +130,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     if (user) {
-      // Clear cache and fetch fresh data
-      profileCache.clear(user.id);
-      const profileData = await fetchProfile(user.id);
-      setProfile(profileData);
+      try {
+        // Clear cache and fetch fresh data
+        profileCache.clear(user.id);
+        const profileData = await fetchProfile(user.id);
+        setProfile(profileData);
+      } catch (error) {
+        console.error("Error refreshing profile:", error);
+        // On error, don't update profile state to prevent showing stale data
+      }
     }
   }, [user, fetchProfile]);
 
@@ -100,124 +155,275 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Direct initialization since useEffect isn't working
+  if (supabase && !initAttempted.current && !initialized) {
+    console.log("🔥 DIRECT INITIALIZATION - Running during render!");
+    initAttempted.current = true;
+    
+    // Run async initialization
+    (async () => {
+      try {
+        console.log("📡 Direct: Getting initial session...");
+        
+        // First, try to refresh the session to make sure we have the latest
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("❌ Direct: Error getting session:", error);
+        } else {
+          console.log("📊 Direct: Initial session:", session ? `Found session for ${session.user?.email}` : "No session");
+        }
+
+        setSession(session);
+        setUser(session?.user || null);
+        
+        if (session?.user) {
+          console.log("👤 Direct: User found, fetching profile...");
+          try {
+            const profileData = await fetchProfile(session.user.id);
+            setProfile(profileData);
+            console.log("✅ Direct: Profile set:", profileData);
+            
+            // Force a re-render to update the UI
+            setIsLoading(false);
+            setInitialized(true);
+          } catch (profileError) {
+            console.error("❌ Direct: Profile fetch error:", profileError);
+            setIsLoading(false);
+            setInitialized(true);
+          }
+        } else {
+          setIsLoading(false);
+          setInitialized(true);
+        }
+        
+        // Set up auth state change listener for future changes
+        console.log("🔔 Direct: Setting up auth listener...");
+        supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log("🔄 Auth state change:", event, session ? `has session for ${session.user?.email}` : "no session");
+          
+          setSession(session);
+          setUser(session?.user || null);
+          
+          if (session?.user) {
+            try {
+              const profileData = await fetchProfile(session.user.id);
+              setProfile(profileData);
+              console.log("✅ Listener: Profile updated:", profileData);
+            } catch (error) {
+              console.error("❌ Listener: Profile fetch error:", error);
+            }
+          } else {
+            setProfile(null);
+            console.log("🧹 Listener: Cleared profile");
+          }
+        });
+        
+      } catch (error) {
+        console.error("🚨 Direct: Auth initialization error:", error);
+        setIsLoading(false);
+        setInitialized(true);
+      }
+    })();
+  }
+
   const handleAuthStateChange = useCallback(
     async (session: Session | null) => {
-      setSession(session);
-      setUser(session?.user || null);
+      console.log("Auth state change - Session:", session ? "exists" : "null");
+      console.log("Current pathname:", pathname);
+      
+      try {
+        setSession(session);
+        setUser(session?.user || null);
 
-      if (session?.user) {
-        const profileData = await fetchProfile(session.user.id);
-        setProfile(profileData);
+        if (session?.user) {
+          console.log("👤 User session found, fetching profile for:", session.user.email);
+          console.log("🆔 User ID:", session.user.id);
+          
+          try {
+            console.log("🚀 About to call fetchProfile...");
+            const profileData = await fetchProfile(session.user.id);
+            console.log("📊 fetchProfile returned:", profileData);
+            
+            if (profileData) {
+              setProfile(profileData);
+              console.log("✅ Profile set to:", profileData);
+            } else {
+              console.warn("⚠️ Profile fetch returned null, user may need to complete registration");
+              setProfile(null);
+            }
+          } catch (profileError) {
+            console.error("🚨 Failed to fetch profile:", profileError);
+            // Don't block authentication if profile fetch fails
+            // User can still access basic functionality
+            setProfile(null);
+          }
 
-        // Only redirect if on auth pages or root
-        if (
-          profileData &&
-          (pathname === "/" ||
-            pathname === "/login" ||
-            pathname.startsWith("/signup"))
-        ) {
-          const dashboardPath = getDashboardPath(
-            profileData.role,
-            profileData.approved
-          );
-          if (pathname !== dashboardPath) {
-            router.replace(dashboardPath);
+          // Only redirect if on auth pages - avoid redirecting on dashboard/protected pages
+          // Use profile state instead of profileData variable
+        } else {
+          console.log("No user session, clearing profile");
+          setProfile(null);
+          profileCache.clear();
+
+          // Only redirect to login if on protected routes
+          if (
+            (pathname.startsWith("/dashboard") ||
+              pathname.startsWith("/admin") ||
+              pathname === "/pending-approval") &&
+            pathname !== "/login"
+          ) {
+            console.log("Redirecting to login from protected route");
+            router.replace("/login");
           }
         }
-      } else {
+      } catch (error) {
+        console.error("Error in auth state change:", error);
         setProfile(null);
-        profileCache.clear();
-
-        // Only redirect if on protected routes
-        if (
-          pathname.startsWith("/dashboard") ||
-          pathname.startsWith("/admin")
-        ) {
-          router.replace("/login");
-        }
+      } finally {
+        // Always ensure loading state is cleared
+        setIsLoading(false);
       }
     },
     [fetchProfile, pathname, router, getDashboardPath]
   );
 
-  useEffect(() => {
-    let mounted = true;
+  console.log("🎬 About to set up useEffect for auth initialization...");
 
-    const initializeAuth = async () => {
+  // Try useLayoutEffect instead - runs before useEffect
+  useLayoutEffect(() => {
+    console.log("🚀 useLayoutEffect RUNNING - this should work!");
+    
+    if (!supabase) {
+      console.error("❌ No supabase in layoutEffect");
+      return;
+    }
+    
+    const quickInit = async () => {
+      console.log("⚡ Quick auth initialization...");
+      
       try {
-        if (!supabase) {
-          console.error("Supabase client is not initialized.");
-          return;
-        }
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!mounted) return;
-
-        await handleAuthStateChange(session);
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-      } finally {
-        if (mounted) {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("📊 LayoutEffect session:", session ? "Found" : "None");
+        
+        if (session) {
+          setSession(session);
+          setUser(session.user);
+          setIsLoading(false);
+          setInitialized(true);
+          
+          // Try to fetch profile
+          const profileData = await fetchProfile(session.user.id);
+          setProfile(profileData);
+          console.log("✅ LayoutEffect profile set:", profileData?.full_name);
+        } else {
           setIsLoading(false);
           setInitialized(true);
         }
+      } catch (error) {
+        console.error("❌ LayoutEffect error:", error);
+        setIsLoading(false);
+        setInitialized(true);
+      }
+    };
+    
+    quickInit();
+  }, [supabase, fetchProfile]);
+
+  // Simple test useEffect
+  useEffect(() => {
+    console.log("🔥 SIMPLE useEffect is working!");
+  }, []);
+
+  useEffect(() => {
+    console.log("🎉 useEffect callback is RUNNING!");
+    
+    const initializeAuth = async () => {
+      console.log("🚀 Initializing auth...");
+      
+      if (!supabase) {
+        console.error("❌ Supabase client is not initialized.");
+        setIsLoading(false);
+        setInitialized(true);
+        return;
+      }
+
+      try {
+        console.log("📡 Getting initial session...");
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("❌ Error getting session:", error);
+        } else {
+          console.log("� Initial session:", session ? "Found session" : "No session");
+        }
+
+        setSession(session);
+        setUser(session?.user || null);
+        
+        if (session?.user) {
+          console.log("� User found, fetching profile...");
+          try {
+            const profileData = await fetchProfile(session.user.id);
+            setProfile(profileData);
+            console.log("✅ Profile set:", profileData);
+          } catch (profileError) {
+            console.error("❌ Profile fetch error:", profileError);
+          }
+        }
+        
+      } catch (error) {
+        console.error("� Auth initialization error:", error);
+      } finally {
+        console.log("✅ Auth initialization complete");
+        setIsLoading(false);
+        setInitialized(true);
       }
     };
 
     initializeAuth();
-
-    let subscription: { unsubscribe: () => void } | null = null;
-
-    if (supabase) {
-      const {
-        data: { subscription: sub },
-      } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (!mounted) return;
-
-        if (event === "SIGNED_OUT") {
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          profileCache.clear();
-          router.replace("/login");
-        } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          await handleAuthStateChange(session);
-        }
-
-        setIsLoading(false);
-      });
-      subscription = sub;
-    }
-
-    return () => {
-      mounted = false;
-      if (subscription) {
-        subscription.unsubscribe();
-      }
-    };
-  }, [supabase, handleAuthStateChange, router]);
+  }, []); // Empty dependency array
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("🔐 SignIn: Starting login process...");
       if (!supabase) {
         console.error("Supabase client is not initialized.");
         return { error: "Supabase client is not initialized." };
       }
+      
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (!error && data.user) {
-        // Profile will be fetched by auth state change handler
+      if (error) {
+        console.error("❌ SignIn: Login failed:", error);
+        return { error };
+      }
+
+      if (data.user && data.session) {
+        console.log("✅ SignIn: Login successful, updating state...");
+        
+        // Manually update state since auth state change listener isn't working
+        setSession(data.session);
+        setUser(data.user);
+        
+        // Fetch and set profile
+        try {
+          const profileData = await fetchProfile(data.user.id);
+          setProfile(profileData);
+          console.log("✅ SignIn: Profile set:", profileData);
+        } catch (profileError) {
+          console.error("❌ SignIn: Profile fetch error:", profileError);
+        }
+        
         return { error: null };
       }
 
-      return { error };
+      return { error: "No user data returned" };
     } catch (err: any) {
-      console.error("Sign in error:", err);
+      console.error("❌ SignIn: Exception:", err);
       return { error: err };
     }
   };
@@ -269,7 +475,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       profile,
       session,
-      isLoading: isLoading || !initialized,
+      isLoading: isLoading && !initialized, // Only show loading if not initialized
       signIn,
       signUp,
       signOut,
@@ -282,9 +488,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       initialized,
       refreshProfile,
-      signIn,
-      signUp,
-      signOut,
     ]
   );
 
