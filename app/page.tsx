@@ -2,7 +2,6 @@
 
 import { useAuth } from "@/components/auth-provider";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
@@ -30,7 +29,6 @@ import {
 
 export default function HomePage() {
   const { user, profile, isLoading } = useAuth();
-  const router = useRouter();
   const images = ["/flyer1.jpg", "/flyer2.jpg"];
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
 

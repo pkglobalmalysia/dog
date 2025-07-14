@@ -12,7 +12,7 @@ import {
   useRef,
 } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter, usePathname } from "next/navigation";
+import {  usePathname } from "next/navigation";
 import type { Session, User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/supabase";
 import { profileCache } from "@/lib/auth-cache";
@@ -42,7 +42,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
   
   // Track if we've attempted initialization
@@ -142,18 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, fetchProfile]);
 
-  const getDashboardPath = useCallback((role: string, approved?: boolean) => {
-    switch (role) {
-      case "student":
-        return "/dashboard/student";
-      case "teacher":
-        return approved ? "/dashboard/teacher" : "/pending-approval";
-      case "admin":
-        return "/admin";
-      default:
-        return "/";
-    }
-  }, []);
+
 
   // Direct initialization since useEffect isn't working
   if (supabase && !initAttempted.current && !initialized) {
@@ -227,66 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
   }
 
-  const handleAuthStateChange = useCallback(
-    async (session: Session | null) => {
-      console.log("Auth state change - Session:", session ? "exists" : "null");
-      console.log("Current pathname:", pathname);
-      
-      try {
-        setSession(session);
-        setUser(session?.user || null);
 
-        if (session?.user) {
-          console.log("👤 User session found, fetching profile for:", session.user.email);
-          console.log("🆔 User ID:", session.user.id);
-          
-          try {
-            console.log("🚀 About to call fetchProfile...");
-            const profileData = await fetchProfile(session.user.id);
-            console.log("📊 fetchProfile returned:", profileData);
-            
-            if (profileData) {
-              setProfile(profileData);
-              console.log("✅ Profile set to:", profileData);
-            } else {
-              console.warn("⚠️ Profile fetch returned null, user may need to complete registration");
-              setProfile(null);
-            }
-          } catch (profileError) {
-            console.error("🚨 Failed to fetch profile:", profileError);
-            // Don't block authentication if profile fetch fails
-            // User can still access basic functionality
-            setProfile(null);
-          }
-
-          // Only redirect if on auth pages - avoid redirecting on dashboard/protected pages
-          // Use profile state instead of profileData variable
-        } else {
-          console.log("No user session, clearing profile");
-          setProfile(null);
-          profileCache.clear();
-
-          // Only redirect to login if on protected routes
-          if (
-            (pathname.startsWith("/dashboard") ||
-              pathname.startsWith("/admin") ||
-              pathname === "/pending-approval") &&
-            pathname !== "/login"
-          ) {
-            console.log("Redirecting to login from protected route");
-            router.replace("/login");
-          }
-        }
-      } catch (error) {
-        console.error("Error in auth state change:", error);
-        setProfile(null);
-      } finally {
-        // Always ensure loading state is cleared
-        setIsLoading(false);
-      }
-    },
-    [fetchProfile, pathname, router, getDashboardPath]
-  );
 
   console.log("🎬 About to set up useEffect for auth initialization...");
 

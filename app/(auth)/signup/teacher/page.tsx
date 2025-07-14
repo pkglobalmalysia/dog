@@ -1,6 +1,5 @@
 "use client"
 
-import { useRouter } from "next/navigation";
 
 import type React from "react"
 import Navbar from "@/components/navbar"
@@ -28,7 +27,6 @@ export default function TeacherSignupPage() {
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
