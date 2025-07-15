@@ -40,7 +40,11 @@ export default function LoginPage() {
     try {
       const { error } = await signIn(email, password)
       if (error) {
-        if (error.message?.includes("Invalid login credentials")) {
+        if (error.message?.includes("wait") && error.message?.includes("seconds")) {
+          setError(error.message)
+        } else if (error.message?.includes("Too many login attempts")) {
+          setError("Too many login attempts. Please wait a moment and try again.")
+        } else if (error.message?.includes("Invalid login credentials")) {
           setError("Invalid email or password. Please check your credentials and try again.")
         } else if (error.message?.includes("Email not confirmed")) {
           setError("Please check your email and click the confirmation link before logging in.")

@@ -1,15 +1,14 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { motion, useAnimation, useInView } from "framer-motion"
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { motion, useAnimation, useInView } from "framer-motion";
 import {
   BookOpen,
   CheckCircle,
   ChevronRight,
   Users,
-  Star,
   Menu,
   X,
   Facebook,
@@ -23,13 +22,14 @@ import {
   Layers,
   Zap,
   Book,
-} from "lucide-react"
+} from "lucide-react";
+import TestimonialsSection from "@/components/testimonials";
 
 // Animation variants
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-}
+};
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -39,7 +39,7 @@ const staggerContainer = {
       staggerChildren: 0.2,
     },
   },
-}
+};
 
 const scaleIn = {
   hidden: { scale: 0.8, opacity: 0 },
@@ -52,25 +52,30 @@ const scaleIn = {
       damping: 15,
     },
   },
-}
+};
 
 // Section component with animation
 type AnimatedSectionProps = {
-  children: React.ReactNode
-  className?: string
-  delay?: number
-  id?: string
-}
-const AnimatedSection = ({ children, className = "", delay = 0, id }: AnimatedSectionProps) => {
-  const controls = useAnimation()
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+  id?: string;
+};
+const AnimatedSection = ({
+  children,
+  className = "",
+  delay = 0,
+  id,
+}: AnimatedSectionProps) => {
+  const controls = useAnimation();
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
 
   useEffect(() => {
     if (inView) {
-      controls.start("visible")
+      controls.start("visible");
     }
-  }, [controls, inView])
+  }, [controls, inView]);
 
   return (
     <motion.section
@@ -92,21 +97,21 @@ const AnimatedSection = ({ children, className = "", delay = 0, id }: AnimatedSe
     >
       {children}
     </motion.section>
-  )
-}
+  );
+};
 
 // Program Card Component
 type Program = {
-  id: string
-  title: string
-  subtitle: string
-  features: string[]
-  duration: string
-  price: string
-  image: string
-  description: string
-  category: string
-}
+  id: string;
+  title: string;
+  subtitle: string;
+  features: string[];
+  duration: string;
+  price: string;
+  image: string;
+  description: string;
+  category: string;
+};
 
 const ProgramCard = ({ program }: { program: Program }) => {
   return (
@@ -125,14 +130,18 @@ const ProgramCard = ({ program }: { program: Program }) => {
           {program.features.map((feature, index) => (
             <div key={index} className="flex items-start">
               <CheckCircle className="h-5 w-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
-              <span className="text-gray-600 dark:text-gray-300">{feature}</span>
+              <span className="text-gray-600 dark:text-gray-300">
+                {feature}
+              </span>
             </div>
           ))}
         </div>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <Clock className="h-5 w-5 text-gray-400 mr-2" />
-            <span className="text-gray-600 dark:text-gray-400">{program.duration}</span>
+            <span className="text-gray-600 dark:text-gray-400">
+              {program.duration}
+            </span>
           </div>
           <div className="text-2xl font-bold">{program.price}</div>
         </div>
@@ -153,17 +162,17 @@ const ProgramCard = ({ program }: { program: Program }) => {
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};
 
 export default function ProgramsPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Sample programs data
   const programs = [
     {
       id: "icse-alpha",
-      title: "iCSE ALPHA",
+      title: "iCSE Coaching™ Alpha",
       subtitle: "Foundation level | Escape fear of speaking | Build confidence",
       features: [
         "Overcome speaking anxiety",
@@ -180,8 +189,9 @@ export default function ProgramsPage() {
     },
     {
       id: "icse-beta",
-      title: "iCSE BETA",
-      subtitle: "Intermediate level | Master speaking rhythms | Enhance fluency",
+      title: "iCSE Coaching™ Beta",
+      subtitle:
+        "Intermediate level | Master speaking rhythms | Enhance fluency",
       features: [
         "Improve speech fluency",
         "Expand professional vocabulary",
@@ -197,7 +207,7 @@ export default function ProgramsPage() {
     },
     {
       id: "icse-gamma",
-      title: "iCSE GAMMA",
+      title: "iCSE Coaching™ Gamma",
       subtitle: "Advanced level | Professional communication | Meeting mastery",
       features: [
         "Lead meetings confidently",
@@ -263,12 +273,12 @@ export default function ProgramsPage() {
         "Advanced training in mechatronics and industrial automation for the modern manufacturing environment.",
       category: "Technical Skills",
     },
-  ]
+  ];
 
   // Featured program
   const featuredProgram = {
     id: "icse-confidence",
-    title: "I Can Speak English Coaching",
+    title: " i Can Speak English iCSE Coaching™",
     description:
       "Speak English 100% Confidently with our specialized courses designed for both students and adults. Join thousands of successful learners who transformed their communication skills.",
     features: [
@@ -278,12 +288,12 @@ export default function ProgramsPage() {
       "Gain confidence in everyday English conversations",
     ],
     image: "/events/event3-1.jpeg",
-  }
+  };
 
   // Scroll to top on page load
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
@@ -324,7 +334,10 @@ export default function ProgramsPage() {
               </div>
             </div>
             <div className="hidden md:flex items-center space-x-4">
-              <Link href="/login" className="text-white hover:text-yellow-400 transition-colors duration-200">
+              <Link
+                href="/login"
+                className="text-white hover:text-yellow-400 transition-colors duration-200"
+              >
                 Sign In
               </Link>
               <Link
@@ -339,7 +352,11 @@ export default function ProgramsPage() {
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="text-white hover:text-yellow-400 transition-colors duration-200"
               >
-                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                {mobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
               </button>
             </div>
           </div>
@@ -431,8 +448,9 @@ export default function ProgramsPage() {
             </h1>
             <div className="w-20 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 my-6"></div>
             <p className="text-xl text-gray-200 max-w-2xl">
-              Find the perfect English speaking program to boost your confidence and advance your career, or explore our
-              technical skills training for professional development.
+              Find the perfect English speaking program to boost your confidence
+              and advance your career, or explore our technical skills training
+              for professional development.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <motion.a
@@ -461,14 +479,22 @@ export default function ProgramsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div variants={fadeIn}>
-              <span className="text-yellow-400 dark:text-yellow-400 font-semibold">FEATURED PROGRAM</span>
-              <h2 className="text-3xl md:text-4xl font-bold mt-2 mb-4">{featuredProgram.title}</h2>
-              <p className="text-gray-700 dark:text-gray-300 mb-6">{featuredProgram.description}</p>
+              <span className="text-yellow-400 dark:text-yellow-400 font-semibold">
+                FEATURED PROGRAM
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold mt-2 mb-4">
+                {featuredProgram.title}
+              </h2>
+              <p className="text-gray-700 dark:text-gray-300 mb-6">
+                {featuredProgram.description}
+              </p>
               <div className="space-y-4 mb-8">
                 {featuredProgram.features.map((feature, index) => (
                   <div key={index} className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-yellow-400 mr-3 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      {feature}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -513,20 +539,28 @@ export default function ProgramsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto">
             <motion.div variants={fadeIn} className="text-center">
-              <h2 className="text-3xl font-bold mb-6">About Our iCSE Program</h2>
+              <h2 className="text-3xl font-bold mb-6">
+                About our i Can Speak English iCSE Coaching™
+              </h2>
               <p className="text-gray-700 dark:text-gray-300 mb-6">
-                The iCSE Coaching program is a revolutionary approach to English language mastery. Utilizing two
-                groundbreaking trademark models - the Chaarran Model and the PARi Model - we instill 100% confidence in
-                English communication, covering both dialogue and monologue scenarios.
+                The iCSE Coaching program is a revolutionary approach to English
+                language mastery. Utilizing two groundbreaking trademark models
+                - the Chaarran Model and the PARi Model - we instill 100%
+                confidence in English communication, covering both dialogue and
+                monologue scenarios.
               </p>
               <p className="text-gray-700 dark:text-gray-300 mb-6">
-                Our program is designed to eliminate fears of grammar mistakes, vocabulary limitations, and
-                pronunciation struggles, replacing them with positive, reinforcing behaviors in listening, reading, and
-                speaking.
+                Our program is designed to eliminate fears of grammar mistakes,
+                vocabulary limitations, and pronunciation struggles, replacing
+                them with positive, reinforcing behaviors in listening, reading,
+                and speaking.
               </p>
             </motion.div>
 
-            <motion.div variants={staggerContainer} className="grid md:grid-cols-3 gap-6 mt-12">
+            <motion.div
+              variants={staggerContainer}
+              className="grid md:grid-cols-3 gap-6 mt-12"
+            >
               <motion.div variants={fadeIn} className="text-center">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-400 flex items-center justify-center mx-auto mb-4">
                   <Layers className="h-8 w-8 text-white" />
@@ -563,15 +597,23 @@ export default function ProgramsPage() {
       <AnimatedSection id="english-programs" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">English Speaking Programs</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              {" "}
+              i Can Speak English iCSE Coaching™
+            </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-yellow-500 to-yellow-400 mx-auto mb-6"></div>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Our iCSE program is designed to optimize your English speaking skills, build your confidence, and empower
-              you to excel in your corporate career. Choose the level that best suits your needs and goals.
+              Our  i Can Speak English iCSE Coaching™ is designed to optimize your English speaking
+              skills, build your confidence, and empower you to excel in your
+              corporate career. Choose the level that best suits your needs and
+              goals.
             </p>
           </motion.div>
 
-          <motion.div variants={staggerContainer} className="grid md:grid-cols-3 gap-8">
+          <motion.div
+            variants={staggerContainer}
+            className="grid md:grid-cols-3 gap-8"
+          >
             {programs
               .filter((program) => program.category === "English Speaking")
               .map((program) => (
@@ -592,7 +634,9 @@ export default function ProgramsPage() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold">CUSTOM PROGRAMS</h3>
-                  <p className="text-gray-500">Tailored programs for corporate needs</p>
+                  <p className="text-gray-500">
+                    Tailored programs for corporate needs
+                  </p>
                 </div>
               </div>
               <div className="grid md:grid-cols-2 gap-8">
@@ -619,7 +663,9 @@ export default function ProgramsPage() {
                 <div className="space-y-3">
                   <div className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-yellow-400 mr-3 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300">Industry-specific vocabulary and scenarios</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Industry-specific vocabulary and scenarios
+                    </span>
                   </div>
                   <div className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-yellow-400 mr-3 mt-0.5" />
@@ -629,7 +675,9 @@ export default function ProgramsPage() {
                   </div>
                   <div className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-yellow-400 mr-3 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300">Group discounts for corporate teams</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Group discounts for corporate teams
+                    </span>
                   </div>
                 </div>
               </div>
@@ -656,14 +704,20 @@ export default function ProgramsPage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Technical Skills Programs</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              Technical Skills Programs
+            </h2>
             <div className="w-24 h-1 bg-yellow-400 mx-auto mb-6"></div>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              In addition to our English programs, we offer technical skills training to enhance your career prospects
+              In addition to our English programs, we offer technical skills
+              training to enhance your career prospects
             </p>
           </motion.div>
 
-          <motion.div variants={staggerContainer} className="grid md:grid-cols-3 gap-8">
+          <motion.div
+            variants={staggerContainer}
+            className="grid md:grid-cols-3 gap-8"
+          >
             {programs
               .filter((program) => program.category === "Technical Skills")
               .map((program) => (
@@ -679,7 +733,9 @@ export default function ProgramsPage() {
                       <p className="text-gray-300">{program.duration}</p>
                     </div>
                     <div>
-                      <p className="font-semibold text-yellow-400">Focus Areas:</p>
+                      <p className="font-semibold text-yellow-400">
+                        Focus Areas:
+                      </p>
                       <ul className="space-y-2 mt-2">
                         {program.features.slice(0, 2).map((feature, index) => (
                           <li key={index} className="flex items-start">
@@ -693,7 +749,9 @@ export default function ProgramsPage() {
                     </div>
                   </div>
                   <div className="flex justify-between items-center mb-6">
-                    <div className="text-xl font-bold text-white">{program.price}</div>
+                    <div className="text-xl font-bold text-white">
+                      {program.price}
+                    </div>
                   </div>
                   <Link
                     href={`/programs/${program.id}`}
@@ -707,74 +765,28 @@ export default function ProgramsPage() {
         </div>
       </AnimatedSection>
 
-      {/* Testimonials Section */}
-      <AnimatedSection className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">What Our Students Say</h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-yellow-500 to-yellow-400 mx-auto mb-6"></div>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Hear from our students who have transformed their English speaking skills
-            </p>
-          </motion.div>
-
-          <motion.div variants={staggerContainer} className="grid md:grid-cols-2 gap-8">
-            <motion.div variants={scaleIn} className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
-              <div className="flex mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} className="h-5 w-5 text-yellow-400" fill="currentColor" />
-                ))}
-              </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-6 italic">
-                The iCSE ALPHA program was exactly what I needed. I used to avoid speaking English in meetings, but now
-                I contribute confidently. The Chaarran Model helped me overcome my fear of making mistakes.
-              </p>
-              <div className="flex items-center">
-                <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="font-bold text-gray-600">RJ</span>
-                </div>
-                <div className="ml-4">
-                  <p className="font-bold">Raj Kumar</p>
-                  <p className="text-sm text-gray-500">IT Project Manager</p>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div variants={scaleIn} className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
-              <div className="flex mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} className="h-5 w-5 text-yellow-400" fill="currentColor" />
-                ))}
-              </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-6 italic">
-              After completing the iCSE GAMMA program, I was promoted to team lead. My improved communication skills
-                made a huge difference in how I present ideas and lead discussions. Worth every penny!
-              </p>
-              <div className="flex items-center">
-                <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="font-bold text-gray-600">NL</span>
-                </div>
-                <div className="ml-4">
-                  <p className="font-bold">Nurul Lina</p>
-                  <p className="text-sm text-gray-500">Marketing Team Lead</p>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </AnimatedSection>
+     <TestimonialsSection />
 
       {/* CTA Section */}
       <AnimatedSection className="py-20 bg-black text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.h2 variants={fadeIn} className="text-3xl md:text-4xl font-bold text-white mb-6">
+          <motion.h2
+            variants={fadeIn}
+            className="text-3xl md:text-4xl font-bold text-white mb-6"
+          >
             Ready to Transform Your Skills?
           </motion.h2>
-          <motion.p variants={fadeIn} className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of successful learners who have achieved 100% confidence in English speaking or advanced
-            their technical careers
+          <motion.p
+            variants={fadeIn}
+            className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto"
+          >
+            Join thousands of successful learners who have achieved 100%
+            confidence in English speaking or advanced their technical careers
           </motion.p>
-          <motion.div variants={staggerContainer} className="flex flex-col sm:flex-row gap-4 justify-center">
+          <motion.div
+            variants={staggerContainer}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
             <motion.a
               href="/signup/student"
               className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-yellow-900 font-medium px-8 py-3 rounded-md transition-all duration-200 hover:shadow-lg"
@@ -807,29 +819,42 @@ export default function ProgramsPage() {
                 <span className="ml-2 text-xl font-bold">PK International</span>
               </div>
               <p className="text-gray-400">
-                Empowering professionals through innovative English language education and modern learning experiences.
+                Empowering professionals through innovative English language
+                education and modern learning experiences.
               </p>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <Link href="/" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     Home
                   </Link>
                 </li>
                 <li>
-                  <Link href="/about" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/about"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="/programs" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/programs"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     Programs
                   </Link>
                 </li>
                 <li>
-                  <Link href="/events" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/events"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     Events
                   </Link>
                 </li>
@@ -839,22 +864,34 @@ export default function ProgramsPage() {
               <h3 className="font-semibold mb-4">Programs</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <Link href="/programs/icse-alpha" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/programs/icse-alpha"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     iCSE ALPHA
                   </Link>
                 </li>
                 <li>
-                  <Link href="/programs/icse-beta" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/programs/icse-beta"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     iCSE BETA
                   </Link>
                 </li>
                 <li>
-                  <Link href="/programs/icse-gamma" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/programs/icse-gamma"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     iCSE GAMMA
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contact" className="hover:text-yellow-400 transition-colors duration-200">
+                  <Link
+                    href="/contact"
+                    className="hover:text-yellow-400 transition-colors duration-200"
+                  >
                     Corporate Training
                   </Link>
                 </li>
@@ -866,7 +903,8 @@ export default function ProgramsPage() {
                 <li className="flex items-start">
                   <MapPin className="h-5 w-5 text-yellow-400 mr-2 shrink-0" />
                   <span>
-                    LEVEL 3, NO G-15, JALAN USJ SENTRAL 1, USJ SENTRAL PERSIARAN SUBANG 1, SUBANG JAYA, SELANGOR
+                    LEVEL 3, NO G-15, JALAN USJ SENTRAL 1, USJ SENTRAL PERSIARAN
+                    SUBANG 1, SUBANG JAYA, SELANGOR
                   </span>
                 </li>
                 <li className="flex items-start">
@@ -881,18 +919,32 @@ export default function ProgramsPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400">&copy; 2024 PK International Business School. All rights reserved.</p>
+            <p className="text-gray-400">
+              &copy; 2024 PK International Business School. All rights reserved.
+            </p>
             <div className="flex space-x-4 mt-4 md:mt-0">
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
+              <a
+                href="#"
+                className="text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+              >
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
+              <a
+                href="#"
+                className="text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+              >
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
+              <a
+                href="#"
+                className="text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+              >
                 <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
+              <a
+                href="#"
+                className="text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+              >
                 <LinkedIn className="h-5 w-5" />
               </a>
             </div>
@@ -900,5 +952,5 @@ export default function ProgramsPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

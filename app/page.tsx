@@ -14,7 +14,6 @@ import {
   CheckCircle,
   GraduationCap,
   Globe,
-  Star,
   ChevronRight,
   Phone,
   Mail,
@@ -26,9 +25,10 @@ import {
   Award,
   Headphones,
 } from "lucide-react";
+import TestimonialsSection from "@/components/testimonials";
 
 export default function HomePage() {
-  const { user, profile, isLoading } = useAuth();
+  const {  isLoading } = useAuth();
   const images = ["/flyer1.jpg", "/flyer2.jpg"];
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
 
@@ -59,55 +59,89 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
-      {/* Debug Section - Remove this in production */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="bg-gray-100 dark:bg-gray-800 p-4 border-b">
-          <div className="max-w-7xl mx-auto">
-            <h3 className="text-sm font-bold mb-2">🐛 Debug Info:</h3>
-            <div className="text-xs space-y-1">
-              <div>Loading: {isLoading ? '✅ True' : '❌ False'}</div>
-              <div>User: {user ? `✅ ${user.email}` : '❌ No user'}</div>
-              <div>Profile: {profile ? `✅ ${profile.full_name} (${profile.role})` : '❌ No profile'}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Navigation */}
       <Navbar />
 
       {/* Hero Section */}
-      <section
-        className="relative bg-cover bg-center"
-        style={{
-          backgroundImage: "url('/3.jpeg')",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute inset-0 bg-black "></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 relative z-10">
-          <div className="max-w-3xl mx-auto text-center text-white">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-              Speak English{" "}
-              <span className="text-[#ffc107]">100% Confidently</span>
-            </h1>
-            <p className="text-xl text-gray-300 mb-10">
-              Transform your career with our innovative English speaking
-              programs designed for Malaysian professionals.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/signup/student"
-                className="bg-[#ffc107] hover:bg-[#e6af06] text-[#0a2540] font-bold py-3 px-6 rounded-md transition-all"
-              >
-                Start Learning Today
-              </Link>
-              <Link
-                href="/programs"
-                className="border-2 border-[#ffc107] text-[#ffc107] hover:bg-[#ffc107] hover:text-[#0a2540] font-bold py-3 px-6 rounded-md transition-all"
-              >
-                Explore Courses
-              </Link>
+      <section className="relative flex-1 flex items-center justify-center px-4 pt-32 pb-16 bg-black">
+        {/* Left Logo */}
+        <div className="absolute left-8 top-8 hidden lg:block z-20">
+          <div className="text-center">
+            <div className="w-64 h-40 bg-white mx-16  flex items-center justify-center mb-3 overflow-hidden ">
+              <Image
+                src="/globe.png"
+                alt="Company Logo"
+                  width={500}
+                      height={200}
+                className="w-64 h-40 object-cover rounded-full"
+              />
+            </div>
+            <div className="text-white text-md font-bold tracking-wide">
+              Strength Management & Trading <br /> Sdn. Bhd. (955060-H)
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-4xl text-white md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+            Speak English <span className="text-[#ffc107]">100%</span>
+            <br />
+            <span className="text-[#ffc107]">Confidently</span>
+          </h1>
+          <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+            Transform your career with our innovative i Can Speak English (iCSE)
+            Coaching™ designed for Malaysian professionals.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/signup/student"
+              className="bg-[#ffc107] hover:bg-[#e6af06] text-black font-bold py-3 px-8 rounded transition-all"
+            >
+              Start Learning Today
+            </Link>
+            <Link
+              href="/programs"
+              className="border-2 border-[#ffc107] text-[#ffc107] hover:bg-[#ffc107] hover:text-black font-bold py-3 px-8 rounded transition-all"
+            >
+              Explore Courses
+            </Link>
+          </div>
+        </div>
+
+        {/* Right Certification Badges */}
+        <div className="absolute right-8 top-8 hidden lg:block z-20">
+          <div className="flex flex-row space-x-6">
+            {/* International Certification Badge */}
+            <div className="text-center">
+              <div className="w-36 h-36 mx-7 rounded-full backdrop-blur-sm flex items-center justify-center overflow-hidden shadow-lg">
+                <Image
+                  src="/logo.png"
+                  alt="International Certification"
+                    width={500}
+                      height={200}
+                  className="w-36 h-36 object-contain"
+                />
+              </div>
+              <div className="text-white text-md font-bold mt-2 tracking-wide">
+                PK International Business <br /> School
+              </div>
+            </div>
+
+            {/* Registered Badge */}
+            <div className="text-center">
+              <div className="w-36 h-36 bg-white rounded-full backdrop-blur-sm flex items-center justify-center overflow-hidden shadow-lg">
+                <Image
+                  src="/hrd1.png"
+                  alt="Registered Certification"
+                    width={500}
+                      height={200}
+                  className="w-36 h-36 object-contain"
+                />
+              </div>
+              <div className="text-white text-md font-bold mt-2 tracking-wide">
+                TP Number: <br /> 201101026924
+              </div>
             </div>
           </div>
         </div>
@@ -220,7 +254,7 @@ export default function HomePage() {
               <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
                 <GraduationCap className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-bold mb-4">iCSE ALPHA</h3>
+              <h3 className="text-xl font-bold mb-4">iCSE Coaching™ Alpha</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
                 Foundation level program to build confidence and overcome the
                 fear of speaking English in professional settings.
@@ -237,7 +271,7 @@ export default function HomePage() {
               <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
                 <Users className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-bold mb-4">iCSE BETA</h3>
+              <h3 className="text-xl font-bold mb-4">iCSE Coaching™ Beta</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
                 Intermediate level program to enhance fluency and master
                 speaking rhythms for professional communication.
@@ -254,7 +288,7 @@ export default function HomePage() {
               <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
                 <Award className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-bold mb-4">iCSE GAMMA</h3>
+              <h3 className="text-xl font-bold mb-4">iCSE Coaching™ Gamma</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
                 Advanced level program to perfect professional communication
                 skills and master meeting leadership.
@@ -352,7 +386,8 @@ export default function HomePage() {
                 <li className="flex items-start">
                   <CheckCircle className="text-[#ffc107] w-6 h-6 mt-1" />
                   <span className="ml-3">
-                    <strong>Program Number:</strong> 10001547936
+                    <strong>Program Number:</strong> 10001561679 | 10001564414 |
+                    10001563663
                   </span>
                 </li>
                 <li className="flex items-start">
@@ -366,9 +401,9 @@ export default function HomePage() {
 
             {/* Logos / Certificates */}
             <div className="flex flex-col items-center gap-6 md:items-start">
-              <div className=" p-4 rounded-xl shadow-xl w-64 h-40 flex items-center justify-center">
+              <div className="   bg-white rounded-full shadow-xl  flex items-center justify-center">
                 <Image
-                  src="/hrd1.jpg"
+                  src="/hrd1.png"
                   alt="HRD Corp Logo"
                   width={200}
                   height={100}
@@ -392,76 +427,7 @@ export default function HomePage() {
       {/* Testimonials Section */}
       <section className="py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">
-              What Our Students Say
-            </h2>
-            <div className="w-24 h-1 bg-[#ffc107] mx-auto mb-6"></div>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Hear from our students who have transformed their English speaking
-              skills
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
-              <div className="flex mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className="h-5 w-5 text-[#ffc107] fill-[#ffc107]"
-                  />
-                ))}
-              </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-6 italic">
-                Before joining PK International, I was afraid to speak English
-                in meetings. Now, I confidently lead presentations and have even
-                been promoted! The Chaarran Model really works.
-              </p>
-              <div className="flex items-center">
-                <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="font-bold text-gray-600">AK</span>
-                </div>
-                <div className="ml-4">
-                  <p className="font-bold">Umi Zakaria</p>
-                  <p className="text-sm text-gray-500">Marketing Manager</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
-              <div className="flex mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className="h-5 w-5 text-[#ffc107] fill-[#ffc107]"
-                  />
-                ))}
-              </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-6 italic">
-                The PARi Model helped me overcome my grammar anxiety. I used to
-                overthink every sentence, but now I speak naturally and
-                fluently. My colleagues have noticed the difference!
-              </p>
-              <div className="flex items-center">
-                <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="font-bold text-gray-600">SL</span>
-                </div>
-                <div className="ml-4">
-                  <p className="font-bold">Tengku Zubir</p>
-                  <p className="text-sm text-gray-500">HR Specialist</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-center mt-8">
-            <div className="flex space-x-2">
-              <button className="w-3 h-3 rounded-full bg-[#ffc107]"></button>
-              <button className="w-3 h-3 rounded-full bg-gray-300"></button>
-              <button className="w-3 h-3 rounded-full bg-gray-300"></button>
-            </div>
-          </div>
+          <TestimonialsSection />
         </div>
       </section>
 
@@ -555,8 +521,6 @@ export default function HomePage() {
         </div>
       </section>
 
-
-
       {/* Contact Section */}
       <section className="py-16 md:py-24 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -565,7 +529,11 @@ export default function HomePage() {
               <h2 className="text-2xl md:text-3xl font-bold mb-6">
                 Contact Us
               </h2>
-              <form className="space-y-6">
+              <form
+                className="space-y-6"
+                action="https://formspree.io/f/xrblgznl"
+                method="POST"
+              >
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -573,6 +541,8 @@ export default function HomePage() {
                     </label>
                     <input
                       type="text"
+                      name="name"
+                      required
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-[#ffc107]"
                       placeholder="John Doe"
                     />
@@ -583,6 +553,7 @@ export default function HomePage() {
                     </label>
                     <input
                       type="tel"
+                      name="phone"
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-[#ffc107]"
                       placeholder="+60 12 345 6789"
                     />
@@ -594,6 +565,8 @@ export default function HomePage() {
                   </label>
                   <input
                     type="email"
+                    name="email"
+                    required
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-[#ffc107]"
                     placeholder="john@example.com"
                   />
@@ -602,7 +575,10 @@ export default function HomePage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Subject
                   </label>
-                  <select className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-[#ffc107]">
+                  <select
+                    name="subject"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-[#ffc107]"
+                  >
                     <option>Course Inquiry</option>
                     <option>Corporate Training</option>
                     <option>General Question</option>
@@ -614,6 +590,7 @@ export default function HomePage() {
                     Message
                   </label>
                   <textarea
+                    name="message"
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-[#ffc107]"
                     rows={4}
                     placeholder="How can we help you?"
@@ -648,19 +625,19 @@ export default function HomePage() {
                     <div className="flex items-center mb-1">
                       <span className="font-medium w-28">For Support:</span>
                       <a
-                        href="mailto:support@pkinternational.edu"
+                        href="mailto:ceo@pkibs.com"
                         className=" hover:underline"
                       >
-                        support@pkinternational.edu
+                        support@pkibs.com
                       </a>
                     </div>
                     <div className="flex items-center">
                       <span className="font-medium w-28">For Admin:</span>
                       <a
-                        href="mailto:ceo@pkibs.edu"
+                        href="mailto:ceo@pkibs.com"
                         className=" hover:underline"
                       >
-                        ceo@pkibs.edu
+                        ceo@pkibs.com
                       </a>
                     </div>
                   </div>

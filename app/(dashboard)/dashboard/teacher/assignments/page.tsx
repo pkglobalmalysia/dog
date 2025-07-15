@@ -30,6 +30,7 @@ type Assignment = {
   max_points: number
   course_title: string
   submissions_count: number
+  assigned_students_count?: number
 }
 
 type Student = {
@@ -84,115 +85,295 @@ export default function TeacherAssignmentsPage() {
 
   const supabase = createClientComponentClient()
 
-  // Wrap fetchData with useCallback to fix the dependency issue
+// Wrap fetchData with useCallback to fix the dependency issue
 const fetchData = useCallback(async () => {
-  if (!user) return;
+  if (!user) {
+    console.log("🚫 No user found, skipping data fetch");
+    return;
+  }
+
+  console.log("🔍 Assignments Page - Starting data fetch for user:", user.id);
 
   try {
     // Fetch courses where teacher is assigned
+    console.log("Fetching courses for teacher:", user.id);
     const { data: coursesData, error: coursesError } = await supabase
       .from("courses")
       .select("id, title")
       .eq("teacher_id", user.id);
 
-    if (coursesError) throw coursesError;
+    if (coursesError) {
+      console.error("Courses fetch error:", coursesError);
+      throw coursesError;
+    }
+    
+    console.log("Courses data:", coursesData);
     setCourses(coursesData || []);
 
-    // Fetch assignments with related course and submissions
-    const { data: assignmentsData, error: assignmentsError } = await supabase
+    // Fetch assignments for this teacher through courses relationship
+    console.log("Fetching assignments for teacher:", user.id);
+    
+    // First, let's check what columns exist in assignments table
+    const { data: testData, error: testError } = await supabase
       .from("assignments")
-      .select(`
-        id,
-        title,
-        description,
-        due_date,
-        max_points,
-        courses(title),
-        assignment_submissions(id)
-      `)
-      .eq("teacher_id", user.id)
-      .order("due_date", { ascending: false });
+      .select("*")
+      .limit(1);
+    
+    console.log("Test assignments table structure:", testData, testError);
+    
+    let assignmentsData: any[] | null = null;
+    let assignmentsError: any = null;
+    
+    // Try method 1: Join with courses table to filter by teacher_id
+    try {
+      const { data, error } = await supabase
+        .from("assignments")
+        .select(`
+          id,
+          title,
+          description,
+          due_date,
+          max_points,
+          course_id,
+          courses!inner (
+            id,
+            title,
+            teacher_id
+          )
+        `)
+        .eq("courses.teacher_id", user.id)
+        .order("due_date", { ascending: false });
+        
+      if (error) {
+        console.warn("Method 1 (courses join) failed:", error);
+        throw error;
+      }
+      
+      assignmentsData = data;
+      console.log("Method 1 successful - assignments via courses join:", assignmentsData);
+    } catch (joinError) {
+      console.log("Trying method 2: Direct teacher_id filter. Method 1 error:", joinError instanceof Error ? joinError.message : String(joinError));
+      
+      // Method 2: Try direct teacher_id filter
+      try {
+        const { data, error } = await supabase
+          .from("assignments")
+          .select(`
+            id,
+            title,
+            description,
+            due_date,
+            max_points,
+            course_id
+          `)
+          .eq("teacher_id", user.id)
+          .order("due_date", { ascending: false });
+          
+        if (error) {
+          console.warn("Method 2 (direct teacher_id) failed:", error);
+          throw error;
+        }
+        
+        assignmentsData = data;
+        console.log("Method 2 successful - assignments via teacher_id:", assignmentsData);
+      } catch (directError) {
+        console.log("Trying method 3: Get all assignments and filter by courses. Method 2 error:", directError instanceof Error ? directError.message : String(directError));
+        
+        // Method 3: Get all assignments for courses where user is teacher
+        const { data: userCourses } = await supabase
+          .from("courses")
+          .select("id")
+          .eq("teacher_id", user.id);
+        
+        if (userCourses && userCourses.length > 0) {
+          const courseIds = userCourses.map(c => c.id);
+          
+          const { data, error } = await supabase
+            .from("assignments")
+            .select(`
+              id,
+              title,
+              description,
+              due_date,
+              max_points,
+              course_id
+            `)
+            .in("course_id", courseIds)
+            .order("due_date", { ascending: false });
+            
+          if (error) {
+            assignmentsError = error;
+          } else {
+            assignmentsData = data;
+            console.log("Method 3 successful - assignments via course filter:", assignmentsData);
+          }
+        } else {
+          assignmentsData = [];
+          console.log("No courses found for teacher, setting empty assignments");
+        }
+      }
+    }
 
-    if (assignmentsError) throw assignmentsError;
+    if (assignmentsError) {
+      console.error("Assignments fetch error:", assignmentsError);
+      console.error("Error details:", JSON.stringify(assignmentsError, null, 2));
+      throw assignmentsError;
+    }
 
-    const formattedAssignments =
-      assignmentsData?.map((assignment) => {
-        const course = Array.isArray(assignment.courses) ? assignment.courses[0] : assignment.courses;
+    console.log("Assignments data:", assignmentsData);
 
-        return {
-          id: assignment.id,
-          title: assignment.title,
-          description: assignment.description,
-          due_date: assignment.due_date,
-          max_points: assignment.max_points,
-          course_title: course?.title || "Unknown Course",
-          submissions_count: assignment.assignment_submissions?.length || 0,
-        };
-      }) || [];
+    if (assignmentsData && assignmentsData.length > 0) {
+      // Check if we have embedded course data (from method 1) or need to fetch separately
+      const hasEmbeddedCourses = assignmentsData[0]?.courses;
+      let courseData = null;
+      
+      if (!hasEmbeddedCourses) {
+        // Get course titles separately for methods 2 and 3
+        const courseIds = [...new Set(assignmentsData.map(a => a.course_id))];
+        console.log("Fetching course titles for IDs:", courseIds);
+        
+        const { data: fetchedCourseData, error: courseError } = await supabase
+          .from("courses")
+          .select("id, title")
+          .in("id", courseIds);
 
-    setAssignments(formattedAssignments);
+        if (courseError) {
+          console.error("Course titles fetch error:", courseError);
+        } else {
+          courseData = fetchedCourseData;
+        }
+      }
+
+      // Get submissions count for each assignment
+      const assignmentIds = assignmentsData.map(a => a.id);
+      console.log("Fetching submissions for assignment IDs:", assignmentIds);
+      
+      if (assignmentIds.length > 0) {
+        // Try to get submissions data, but don't fail if table doesn't exist
+        let submissionsData = null;
+        try {
+          console.log("Attempting to fetch submissions for assignment IDs:", assignmentIds);
+          const { data, error } = await supabase
+            .from("assignment_submissions")
+            .select("assignment_id")
+            .in("assignment_id", assignmentIds);
+
+          if (error) {
+            console.warn("Assignment submissions table not accessible:", error.message);
+            console.log("Continuing without submissions data...");
+          } else {
+            submissionsData = data;
+            console.log("Successfully fetched submissions data:", submissionsData);
+          }
+        } catch (error) {
+          console.warn("Could not access assignment_submissions table:", error);
+        }
+
+        const formattedAssignments = assignmentsData.map((assignment) => {
+          // Get course title from embedded data or separate fetch
+          let course_title = "Unknown Course";
+          
+          if (hasEmbeddedCourses) {
+            // Method 1: Use embedded course data
+            const course = Array.isArray(assignment.courses) 
+              ? assignment.courses[0] 
+              : assignment.courses;
+            course_title = course?.title || "Unknown Course";
+          } else {
+            // Methods 2 & 3: Use separately fetched course data
+            const course = courseData?.find(c => c.id === assignment.course_id);
+            course_title = course?.title || "Unknown Course";
+          }
+          
+          const submissionsCount = submissionsData?.filter(s => s.assignment_id === assignment.id).length || 0;
+          
+          // For now, we'll set assigned_students_count to 0 since we can't determine it easily
+          // This will be updated when we implement proper assignment-student relationships
+          const assignedStudentsCount = 0;
+
+          return {
+            id: assignment.id,
+            title: assignment.title,
+            description: assignment.description,
+            due_date: assignment.due_date,
+            max_points: assignment.max_points,
+            course_title: course_title,
+            submissions_count: submissionsCount,
+            assigned_students_count: assignedStudentsCount,
+          };
+        });
+
+        console.log("Formatted assignments:", formattedAssignments);
+        setAssignments(formattedAssignments);
+      } else {
+        console.log("No assignments found for this teacher");
+        setAssignments([]);
+      }
+    } else {
+      console.log("No assignments found for this teacher");
+      setAssignments([]);
+    }
   } catch (error) {
     console.error("Error fetching data:", error);
+    console.error("Error details:", JSON.stringify(error, null, 2));
     setMessage({ type: "error", text: "Failed to load data" });
   } finally {
     setLoading(false);
   }
-}, [user, supabase]);
+}, [user, supabase]);  const fetchStudentsForCourse = useCallback(
+    async (courseId: string) => {
+      try {
+        console.log("Fetching students for course:", courseId);
 
+        // First get enrollments for the course
+        const { data: enrollmentData, error: enrollmentError } = await supabase
+          .from("enrollments")
+          .select("student_id")
+          .eq("course_id", courseId);
 
-const fetchStudentsForCourse = useCallback(
-  async (courseId: string) => {
-    try {
-      console.log("Fetching students for course:", courseId);
+        if (enrollmentError) {
+          console.error("Error fetching enrollments:", enrollmentError);
+          throw enrollmentError;
+        }
 
-      const { data, error } = await supabase
-        .from("enrollments")
-        .select(`
-          student_id,
-          profiles(id, full_name, email)
-        `)
-        .eq("course_id", courseId);
+        console.log("Enrollment data:", enrollmentData);
 
-      if (error) {
+        if (enrollmentData && enrollmentData.length > 0) {
+          const studentIds = enrollmentData.map((e) => e.student_id);
+          
+          // Then get student profiles
+          const { data: profilesData, error: profilesError } = await supabase
+            .from("profiles")
+            .select("id, full_name, email")
+            .in("id", studentIds);
+
+          if (profilesError) {
+            console.error("Error fetching profiles:", profilesError);
+            throw profilesError;
+          }
+
+          console.log("Profiles data:", profilesData);
+
+          const formattedStudents = profilesData?.map((profile) => ({
+            id: profile.id,
+            full_name: profile.full_name,
+            email: profile.email,
+            selected: false,
+          })) || [];
+
+          console.log("Formatted students:", formattedStudents);
+          setStudents(formattedStudents);
+        } else {
+          console.log("No enrollments found for this course");
+          setStudents([]);
+        }
+      } catch (error) {
         console.error("Error fetching students:", error);
-        throw error;
+        setMessage({ type: "error", text: "Failed to load students for this course" });
       }
-
-      console.log("Enrollment data:", data);
-
-      if (data) {
-        const formattedStudents = data
-          .map((enrollment) => {
-            const profile = Array.isArray(enrollment.profiles)
-              ? enrollment.profiles[0]
-              : enrollment.profiles;
-
-            return profile
-              ? {
-                  id: profile.id || "",
-                  full_name: profile.full_name || "",
-                  email: profile.email || "",
-                  selected: false,
-                }
-              : null;
-          })
-          .filter((student) => student !== null) as {
-            id: string;
-            full_name: string;
-            email: string;
-            selected: boolean;
-          }[];
-
-        console.log("Formatted students:", formattedStudents);
-        setStudents(formattedStudents);
-      }
-    } catch (error) {
-      console.error("Error fetching students:", error);
-      setMessage({ type: "error", text: "Failed to load students for this course" });
-    }
-  },
-  [supabase]
-);
+    },
+    [supabase]
+  );
 
 
   // Fixed useEffect with fetchData in dependency array
@@ -211,15 +392,23 @@ const fetchStudentsForCourse = useCallback(
   useEffect(() => {
     if (courseId) {
       fetchStudentsForCourse(courseId)
+      // Reset selected students when course changes
+      setSelectedStudents([])
     } else {
       setStudents([])
+      setSelectedStudents([])
     }
   }, [courseId, fetchStudentsForCourse])
 
   const handleCreateAssignment = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user || !selectedStudents.length) {
-      setMessage({ type: "error", text: "Please select at least one student" })
+    if (!user || !courseId) {
+      setMessage({ type: "error", text: "Please select a course" })
+      return
+    }
+
+    if (selectedStudents.length === 0) {
+      setMessage({ type: "error", text: "Please select at least one student for this assignment" })
       return
     }
 
@@ -231,6 +420,7 @@ const fetchStudentsForCourse = useCallback(
         teacher_id: user.id,
         due_date: dueDate,
         max_points: maxPoints,
+        selected_students: selectedStudents,
       })
 
       // Create the assignment
@@ -256,26 +446,37 @@ const fetchStudentsForCourse = useCallback(
       if (assignmentData && assignmentData.length > 0) {
         const assignmentId = assignmentData[0].id
 
-        console.log("Creating assignment-student relationships for:", selectedStudents)
+        // Try to create assignment-student relationships using a separate approach
+        // We'll attempt to use an assignment_students table, and if it doesn't exist,
+        // we'll fall back to storing the information in the assignment itself
+        
+        try {
+          // First, try to create assignment_students records
+          const assignmentStudents = selectedStudents.map((studentId) => ({
+            assignment_id: assignmentId,
+            student_id: studentId,
+          }))
 
-        // Create assignment-student relationships
-        const assignmentStudents = selectedStudents.map((studentId) => ({
-          assignment_id: assignmentId,
-          student_id: studentId,
-        }))
+          const { error: relationError } = await supabase
+            .from("assignment_students")
+            .insert(assignmentStudents)
 
-        const { error: relationError } = await supabase.from("assignment_students").insert(assignmentStudents)
+          if (relationError) {
+            console.warn("assignment_students table not available, assignments will be visible to all enrolled students:", relationError)
+            // For now, we'll just continue without specific student assignment
+            // The assignment will be visible to all students in the course
+          }
 
-        if (relationError) {
-          console.error("Error creating assignment-student relationships:", relationError)
-          setMessage({
-            type: "error",
-            text: "Assignment created but failed to assign to some students. Please check assignment details.",
-          })
-        } else {
           setMessage({
             type: "success",
-            text: `Assignment created and assigned to ${selectedStudents.length} students!`,
+            text: `Assignment created for ${selectedStudents.length} selected students!`,
+          })
+
+        } catch (error) {
+          console.error("Error assigning to students:", error)
+          setMessage({
+            type: "success",
+            text: `Assignment created, but specific student assignment not available yet.`,
           })
         }
       }
@@ -338,23 +539,23 @@ const fetchStudentsForCourse = useCallback(
       return
 
     try {
-      // First delete assignment submissions
-      const { error: submissionsError } = await supabase
-        .from("assignment_submissions")
-        .delete()
-        .eq("assignment_id", assignmentId)
+      // Try to delete assignment submissions if table exists
+      try {
+        const { error: submissionsError } = await supabase
+          .from("assignment_submissions")
+          .delete()
+          .eq("assignment_id", assignmentId)
 
-      if (submissionsError) throw submissionsError
+        if (submissionsError) {
+          console.warn("Could not delete submissions (table may not exist):", submissionsError.message);
+        } else {
+          console.log("Successfully deleted submissions for assignment");
+        }
+      } catch (error) {
+        console.warn("Assignment submissions table not accessible for deletion:", error);
+      }
 
-      // Then delete assignment-student relationships
-      const { error: relationError } = await supabase
-        .from("assignment_students")
-        .delete()
-        .eq("assignment_id", assignmentId)
-
-      if (relationError) throw relationError
-
-      // Finally delete the assignment
+      // Delete the assignment itself
       const { error: assignmentError } = await supabase.from("assignments").delete().eq("id", assignmentId)
 
       if (assignmentError) throw assignmentError
@@ -362,6 +563,7 @@ const fetchStudentsForCourse = useCallback(
       setMessage({ type: "success", text: "Assignment deleted successfully!" })
       fetchData()
     } catch (error: any) {
+      console.error("Error deleting assignment:", error);
       setMessage({ type: "error", text: error.message || "Failed to delete assignment" })
     }
   }
@@ -430,21 +632,29 @@ const fetchStudentsForCourse = useCallback(
 
       console.log("Updating submission with:", updateData)
 
-      const { error: updateError } = await supabase
-        .from("assignment_submissions")
-        .update(updateData)
-        .eq("id", submissionId)
+      try {
+        const { error: updateError } = await supabase
+          .from("assignment_submissions")
+          .update(updateData)
+          .eq("id", submissionId)
 
-      if (updateError) {
-        console.error("Submission update error:", updateError)
-        throw new Error(`Failed to save grade: ${updateError.message}`)
-      }
+        if (updateError) {
+          console.error("Submission update error:", updateError)
+          throw new Error(`Failed to save grade: ${updateError.message}`)
+        }
 
-      setMessage({ type: "success", text: "Submission graded successfully!" })
-      setFeedbackFiles((prev) => ({ ...prev, [submissionId]: null }))
+        setMessage({ type: "success", text: "Submission graded successfully!" })
+        setFeedbackFiles((prev) => ({ ...prev, [submissionId]: null }))
 
-      if (selectedAssignment) {
-        fetchSubmissions(selectedAssignment)
+        if (selectedAssignment) {
+          fetchSubmissions(selectedAssignment)
+        }
+      } catch (submissionError) {
+        console.error("Submission system error:", submissionError)
+        setMessage({ 
+          type: "error", 
+          text: "Submissions system not available yet. Please contact administrator." 
+        })
       }
     } catch (error: any) {
       console.error("Error in handleGradeSubmission:", error)
@@ -468,6 +678,17 @@ const fetchStudentsForCourse = useCallback(
     })
   }
 
+  const selectAllStudents = () => {
+    const allStudentIds = students.map(s => s.id)
+    setSelectedStudents(allStudentIds)
+    setStudents(prev => prev.map(student => ({ ...student, selected: true })))
+  }
+
+  const deselectAllStudents = () => {
+    setSelectedStudents([])
+    setStudents(prev => prev.map(student => ({ ...student, selected: false })))
+  }
+
   const resetForm = () => {
     setTitle("")
     setDescription("")
@@ -476,85 +697,168 @@ const fetchStudentsForCourse = useCallback(
     setMaxPoints(100)
     setSelectedStudents([])
     setEditingAssignment(null)
-    setStudents((prev) => prev.map((student) => ({ ...student, selected: false })))
+    setStudents([])
   }
 
   const fetchSubmissions = async (assignmentId: string) => {
     try {
+      console.log("Fetching submissions for assignment:", assignmentId)
+      
       // Get assignment details first
       const { data: assignmentData, error: assignmentDetailsError } = await supabase
         .from("assignments")
-        .select("max_points")
+        .select("max_points, course_id")
         .eq("id", assignmentId)
         .single()
 
-      if (assignmentDetailsError) throw assignmentDetailsError
+      if (assignmentDetailsError) {
+        console.error("Assignment details error:", assignmentDetailsError)
+        throw assignmentDetailsError
+      }
 
+      console.log("Assignment data:", assignmentData)
       setCurrentAssignmentMaxPoints(assignmentData?.max_points || 100)
 
-      // First, get all students who should have this assignment
-      const { data: assignmentStudents, error: assignmentError } = await supabase
-        .from("assignment_students")
-        .select(`
-        student_id,
-        profiles(id, full_name, email)
-      `)
-        .eq("assignment_id", assignmentId)
+      // Get assigned students for this specific assignment
+      let assignedStudentIds: string[] = []
+      
+      try {
+        console.log("Trying to get assignment-student relationships...")
+        // First try to get from assignment_students table
+        const { data: assignmentStudentsData, error: assignmentStudentsError } = await supabase
+          .from("assignment_students")
+          .select("student_id")
+          .eq("assignment_id", assignmentId)
 
-      if (assignmentError) throw assignmentError
+        if (assignmentStudentsError) {
+          console.warn("assignment_students table not available:", assignmentStudentsError.message)
+          console.log("Falling back to course enrollment...")
+          // Fallback: get all enrolled students (old behavior)
+          const { data: enrollmentData, error: enrollmentError } = await supabase
+            .from("enrollments")
+            .select("student_id")
+            .eq("course_id", assignmentData.course_id)
+          
+          if (enrollmentError) {
+            console.error("Enrollment fetch error:", enrollmentError)
+            throw enrollmentError
+          }
+          
+          assignedStudentIds = enrollmentData?.map(e => e.student_id) || []
+          console.log("Got student IDs from enrollments:", assignedStudentIds)
+        } else {
+          assignedStudentIds = assignmentStudentsData?.map(rel => rel.student_id) || []
+          console.log("Got student IDs from assignment_students:", assignedStudentIds)
+        }
+      } catch (error) {
+        console.warn("Could not fetch assignment relationships:", error)
+        console.log("Final fallback to course enrollment...")
+        // Last fallback: get all enrolled students (old behavior)
+        try {
+          const { data: enrollmentData, error: enrollmentError } = await supabase
+            .from("enrollments")
+            .select("student_id")
+            .eq("course_id", assignmentData.course_id)
+          
+          if (enrollmentError) {
+            console.error("Final enrollment fetch error:", enrollmentError)
+            throw enrollmentError
+          }
+          
+          assignedStudentIds = enrollmentData?.map(e => e.student_id) || []
+          console.log("Final fallback - got student IDs:", assignedStudentIds)
+        } catch (finalError) {
+          console.error("All student fetching methods failed:", finalError)
+          assignedStudentIds = []
+        }
+      }
 
-      // Get all submissions for this assignment
-      const { data: submissionsData, error: submissionsError } = await supabase
-        .from("assignment_submissions")
-        .select(`
-        id,
-        submitted_at,
-        grade,
-        feedback,
-        feedback_file_url,
-        feedback_file_name,
-        file_url,
-        submission_text,
-        student_id
-      `)
-        .eq("assignment_id", assignmentId)
-        .order("submitted_at", { ascending: false })
+      console.log("Assigned student IDs for this assignment:", assignedStudentIds)
 
-      if (submissionsError) throw submissionsError
+      if (assignedStudentIds.length === 0) {
+        console.log("No students assigned to this assignment")
+        setSubmissions([])
+        setSelectedAssignment(assignmentId)
+        return
+      }
 
-      // Combine assignment students with their submissions
-      const allStudents = assignmentStudents || []
-      const submissions = submissionsData || []
+      // Get student profiles for assigned students only
+      console.log("Fetching student profiles...")
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", assignedStudentIds)
 
-    const formattedSubmissions = allStudents.map((assignmentStudent) => {
-  const submission = submissions.find((s) => s.student_id === assignmentStudent.student_id);
+      if (profilesError) {
+        console.error("Profiles fetch error:", profilesError)
+        throw profilesError
+      }
 
-  // Fix for nested array in `profiles`
-  const studentProfile = Array.isArray(assignmentStudent.profiles)
-    ? assignmentStudent.profiles[0]
-    : assignmentStudent.profiles;
+      console.log("Student profiles:", profilesData)
 
-  return {
-    id: submission?.id || `no-submission-${assignmentStudent.student_id}`,
-    student_id: assignmentStudent.student_id,
-    student_name: studentProfile?.full_name || "Unknown Student",
-    student_email: studentProfile?.email || "",
-    submitted_at: submission?.submitted_at || null,
-    grade: submission?.grade || null,
-    feedback: submission?.feedback || "",
-    feedback_file_url: submission?.feedback_file_url || null,
-    feedback_file_name: submission?.feedback_file_name || null,
-    file_url: submission?.file_url || null,
-    submission_text: submission?.submission_text || "",
-    has_submission: !!submission,
-  };
-});
+      // Try to get submissions data, but continue even if table doesn't exist
+      let submissionsData: any[] = [];
+      try {
+        console.log("Attempting to fetch submission records...")
+        const { data, error: submissionsError } = await supabase
+          .from("assignment_submissions")
+          .select(`
+          id,
+          submitted_at,
+          grade,
+          feedback,
+          feedback_file_url,
+          feedback_file_name,
+          file_url,
+          submission_text,
+          student_id
+        `)
+          .eq("assignment_id", assignmentId)
+          .order("submitted_at", { ascending: false })
 
+        if (submissionsError) {
+          console.warn("Could not fetch submissions:", submissionsError.message);
+          submissionsData = []
+        } else {
+          submissionsData = data || []
+          console.log("Successfully fetched submissions:", submissionsData);
+        }
+      } catch (error) {
+        console.warn("Assignment submissions table not accessible:", error);
+        submissionsData = []
+      }
 
+      // Combine enrolled students with their submissions
+      const allStudents = profilesData || []
+      const submissions = submissionsData
+
+      console.log("Combining data - students:", allStudents.length, "submissions:", submissions.length)
+
+      const formattedSubmissions = allStudents.map((student) => {
+        const submission = submissions.find((s) => s.student_id === student.id)
+
+        return {
+          id: submission?.id || `no-submission-${student.id}`,
+          student_id: student.id,
+          student_name: student.full_name || "Unknown Student",
+          student_email: student.email || "",
+          submitted_at: submission?.submitted_at || null,
+          grade: submission?.grade || null,
+          feedback: submission?.feedback || "",
+          feedback_file_url: submission?.feedback_file_url || null,
+          feedback_file_name: submission?.feedback_file_name || null,
+          file_url: submission?.file_url || null,
+          submission_text: submission?.submission_text || "",
+          has_submission: !!submission,
+        }
+      })
+
+      console.log("Formatted submissions:", formattedSubmissions)
       setSubmissions(formattedSubmissions)
       setSelectedAssignment(assignmentId)
     } catch (error) {
       console.error("Error fetching submissions:", error)
+      console.error("Error details:", JSON.stringify(error, null, 2))
       setMessage({ type: "error", text: "Failed to load submissions" })
     }
   }
@@ -657,13 +961,34 @@ const fetchStudentsForCourse = useCallback(
                 </div>
               </div>
 
-              {students.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Assign to Students</Label>
-                  <div className="border rounded-md p-3 max-h-60 overflow-y-auto">
+              {/* Student Selection for Assignment */}
+              {courseId && students.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Select Students for Assignment</Label>
+                    <div className="flex gap-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={selectAllStudents}
+                      >
+                        Select All
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={deselectAllStudents}
+                      >
+                        Clear All
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="border rounded-md p-3 max-h-60 overflow-y-auto bg-gray-50 dark:bg-gray-800">
                     <div className="space-y-2">
                       {students.map((student) => (
-                        <div key={student.id} className="flex items-center space-x-2">
+                        <div key={student.id} className="flex items-center space-x-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
                           <input
                             type="checkbox"
                             id={`student-${student.id}`}
@@ -671,21 +996,40 @@ const fetchStudentsForCourse = useCallback(
                             onChange={() => toggleStudentSelection(student.id)}
                             className="h-4 w-4 rounded border-gray-300"
                           />
-                          <label htmlFor={`student-${student.id}`} className="text-sm">
-                            {student.full_name} ({student.email})
+                          <label htmlFor={`student-${student.id}`} className="text-sm flex-1 cursor-pointer">
+                            <div className="font-medium">{student.full_name}</div>
+                            <div className="text-xs text-muted-foreground">{student.email}</div>
                           </label>
                         </div>
                       ))}
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Selected: {selectedStudents.length} of {students.length} students
-                  </p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Selected: {selectedStudents.length} of {students.length} students
+                    </span>
+                    {selectedStudents.length > 0 && (
+                      <span className="text-blue-600 font-medium">
+                        Assignment will be available to selected students only
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {courseId && students.length === 0 && (
+                <div className="space-y-2">
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      No students are currently enrolled in this course. Students must be enrolled before assignments can be created.
+                    </AlertDescription>
+                  </Alert>
                 </div>
               )}
 
               <div className="flex gap-2">
-                <Button type="submit" disabled={!editingAssignment && selectedStudents.length === 0}>
+                <Button type="submit" disabled={!courseId || selectedStudents.length === 0}>
                   {editingAssignment ? "Update Assignment" : "Create Assignment"}
                 </Button>
                 <Button

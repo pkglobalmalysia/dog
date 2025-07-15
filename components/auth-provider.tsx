@@ -46,6 +46,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Track if we've attempted initialization
   const initAttempted = useRef(false);
+  
+  // Rate limiting for login attempts
+  const lastLoginAttempt = useRef(0);
+  const LOGIN_COOLDOWN = 2000; // 2 seconds between attempts
 
   // TEST useEffect - let's see if this works
   useEffect(() => {
@@ -316,9 +320,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       console.log("🔐 SignIn: Starting login process...");
+      
+      // Check rate limiting
+      const now = Date.now();
+      if (now - lastLoginAttempt.current < LOGIN_COOLDOWN) {
+        const remainingTime = Math.ceil((LOGIN_COOLDOWN - (now - lastLoginAttempt.current)) / 1000);
+        return { 
+          error: { 
+            message: `Please wait ${remainingTime} seconds before trying again.` 
+          } 
+        };
+      }
+      
+      lastLoginAttempt.current = now;
+      
       if (!supabase) {
         console.error("Supabase client is not initialized.");
-        return { error: "Supabase client is not initialized." };
+        return { error: { message: "Supabase client is not initialized." } };
       }
       
       const { error, data } = await supabase.auth.signInWithPassword({
@@ -328,6 +346,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error("❌ SignIn: Login failed:", error);
+        
+        // Handle specific error types
+        if (error.message?.includes('rate limit')) {
+          return { 
+            error: { 
+              message: "Too many login attempts. Please wait a moment and try again." 
+            } 
+          };
+        }
+        
+        if (error.message?.includes('Invalid login credentials')) {
+          return { 
+            error: { 
+              message: "Invalid email or password. Please check your credentials." 
+            } 
+          };
+        }
+        
+        if (error.message?.includes('Email not confirmed')) {
+          return { 
+            error: { 
+              message: "Please check your email and confirm your account before logging in." 
+            } 
+          };
+        }
+        
         return { error };
       }
 

@@ -152,7 +152,7 @@ const CounterAnimation = ({
     <div ref={counterRef} className="text-center">
       <div className="relative mb-4">
         <div className="w-24 h-24 rounded-full bg-yellow-400 flex items-center justify-center mx-auto">
-          <div className="w-20 h-20 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center text-3xl font-bold text-transparent bg-clip-text bg-white">
+          <div className="w-20 h-20 rounded-full dark:bg-gray-900 flex items-center justify-center text-3xl font-bold text-transparent bg-clip-text bg-white">
             {count}
             {suffix}
           </div>
@@ -1001,13 +1001,13 @@ export default function AboutPage() {
           >
             {[
               {
-                title: "'Earn Before Graduation'",
+                title: "Earn Before Graduation",
                 icon: <Award className="h-6 w-6 text-yellow-900" />,
                 description:
                   "Skills Certificate and Diploma programs designed for youth and adults to start earning while still completing their education.",
               },
               {
-                title: "I CAN SPEAK ENGLISH",
+                title: " i Can Speak English iCSE Coaching™",
                 icon: <MessageCircle className="h-6 w-6 text-yellow-900" />,
                 description:
                   "Coaching program to build 100% confidence in English communication for professional settings.",

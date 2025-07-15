@@ -65,7 +65,13 @@ export default function TeacherDashboard() {
   })
 
   const fetchTeacherData = useCallback(async () => {
-    if (!user) return
+    if (!user) {
+      console.log("🚫 No user found, skipping teacher data fetch")
+      return
+    }
+
+    console.log("🔍 Teacher Dashboard - Starting data fetch for user:", user.id)
+    console.log("🔍 User object:", user)
 
     try {
       const { data: coursesData } = await supabase
@@ -75,57 +81,68 @@ export default function TeacherDashboard() {
           title,
           description,
           scheduled_time,
-          live_class_url
+          live_class_url,
+          enrollments(count)
         `)
         .eq("teacher_id", user.id)
         .order("scheduled_time", { ascending: true })
 
       if (coursesData) {
-        const courseIdsInitial = coursesData.map((course) => course.id)
-        const { data: enrollmentCounts } = await supabase
-          .from("enrollment_requests")
-          .select("course_id")
-          .in("course_id", courseIdsInitial)
-          .eq("status", "approved")
-
         const formattedCourses = coursesData.map((course) => {
-          const enrollmentCount = enrollmentCounts?.filter((e) => e.course_id === course.id).length || 0
           return {
             id: course.id,
             title: course.title,
             description: course.description,
             scheduled_time: course.scheduled_time,
             live_class_url: course.live_class_url,
-            student_count: enrollmentCount,
+            student_count: course.enrollments?.[0]?.count || 0,
           }
         })
         setCourses(formattedCourses)
 
         const courseIds = formattedCourses.map((c) => c.id)
 
-        const { data: studentsData } = await supabase
-          .from("enrollment_requests")
-          .select(`
-            requested_at,
-            profiles(id, full_name, email),
-            courses(title)
-          `)
+        // Get all enrollments for teacher's courses
+        const { data: enrollmentData } = await supabase
+          .from("enrollments")
+          .select("student_id, course_id, enrolled_at")
           .in("course_id", courseIds)
-          .eq("status", "approved")
-          .order("requested_at", { ascending: false })
+          .order("enrolled_at", { ascending: false })
 
-        if (studentsData) {
-          const formattedStudents = studentsData.map((enrollment) => ({
-            id: enrollment.profiles?.[0]?.id || "",
-            full_name: enrollment.profiles?.[0]?.full_name || "",
-            email: enrollment.profiles?.[0]?.email || "",
-            course_title: enrollment.courses?.[0]?.title || "",
-            enrollment_date: enrollment.requested_at,
-          }))
-          setStudents(formattedStudents)
+        if (enrollmentData && enrollmentData.length > 0) {
+          const studentIds = enrollmentData.map((e) => e.student_id)
+          
+          // Get student profiles
+          const { data: profilesData } = await supabase
+            .from("profiles")
+            .select("id, full_name, email")
+            .in("id", studentIds)
+
+          // Get course titles
+          const { data: coursesInfo } = await supabase
+            .from("courses")
+            .select("id, title")
+            .in("id", courseIds)
+
+          if (profilesData && coursesInfo) {
+            const formattedStudents = enrollmentData.map((enrollment) => {
+              const profile = profilesData.find(p => p.id === enrollment.student_id)
+              const course = coursesInfo.find(c => c.id === enrollment.course_id)
+              return {
+                id: profile?.id || "",
+                full_name: profile?.full_name || "",
+                email: profile?.email || "",
+                course_title: course?.title || "",
+                enrollment_date: enrollment.enrolled_at || new Date().toISOString(),
+              }
+            }).filter(student => student.id) // Filter out any students without valid profiles
+            setStudents(formattedStudents)
+          }
+        } else {
+          setStudents([])
         }
 
-        const { data: assignmentsData } = await supabase
+        const { data: assignmentsData, error: assignmentsError } = await supabase
           .from("assignments")
           .select(`
             id,
@@ -138,6 +155,12 @@ export default function TeacherDashboard() {
           .order("due_date", { ascending: false })
           .limit(10)
 
+        console.log("🎯 Teacher Dashboard - Assignments Query Debug:")
+        console.log("Teacher ID:", user.id)
+        console.log("Assignments Data:", assignmentsData)
+        console.log("Assignments Error:", assignmentsError)
+        console.log("Assignments Count:", assignmentsData?.length || 0)
+
         if (assignmentsData) {
           const formattedAssignments = assignmentsData.map((assignment) => ({
             id: assignment.id,
@@ -148,6 +171,11 @@ export default function TeacherDashboard() {
             total_students: formattedCourses.find((c) => c.title === assignment.courses?.[0]?.title)?.student_count || 0,
           }))
           setAssignments(formattedAssignments)
+        } else {
+          // Handle the case where assignments query failed due to auth issues
+          console.log("🔧 No assignments data received, likely due to auth delay")
+          console.log("🔧 Setting assignments to empty array for now")
+          setAssignments([])
         }
 
         const currentMonth = new Date().getMonth() + 1
@@ -183,6 +211,13 @@ export default function TeacherDashboard() {
         const totalStudents = formattedCourses.reduce((sum, course) => sum + course.student_count, 0)
         const totalAssignments = assignmentsData?.length || 0
 
+        console.log("📊 Final stats calculation:")
+        console.log("Total courses:", totalCourses)
+        console.log("Total students:", totalStudents)
+        console.log("Total assignments from query:", totalAssignments)
+        console.log("Assignments data length:", assignmentsData?.length)
+        console.log("User ID used in query:", user.id)
+
         setStats({
           totalCourses,
           totalStudents,
@@ -199,10 +234,42 @@ export default function TeacherDashboard() {
   }, [user, supabase])
 
   useEffect(() => {
+    console.log("🔄 Teacher Dashboard - useEffect triggered")
+    console.log("User state:", user)
+    console.log("Loading state:", loading)
+    
     if (user) {
+      console.log("✅ User found, fetching teacher data...")
       fetchTeacherData()
+    } else {
+      console.log("⏳ No user yet, waiting...")
     }
-  }, [user, fetchTeacherData])
+  }, [user, fetchTeacherData, loading])
+
+  // Fallback effect to handle auth initialization delays
+  useEffect(() => {
+    if (!user && !loading) {
+      console.log("🔄 Fallback: Auth may have loaded late, checking again...")
+      const timer = setTimeout(() => {
+        if (profile && !user) {
+          console.log("🔧 Fallback: Profile exists but no user, forcing refresh...")
+          window.location.reload()
+        }
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [user, loading, profile])
+
+  // Retry mechanism for assignments when they're missing but courses exist
+  useEffect(() => {
+    if (user && stats.totalCourses > 0 && stats.totalAssignments === 0 && assignments.length === 0) {
+      console.log("🔄 Retry: Detected missing assignments despite having courses, retrying...")
+      const timer = setTimeout(() => {
+        fetchTeacherData()
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [user, stats, assignments.length, fetchTeacherData])
 
   const getUpcomingClass = () => {
     const now = new Date()
