@@ -66,12 +66,8 @@ export default function TeacherDashboard() {
 
   const fetchTeacherData = useCallback(async () => {
     if (!user) {
-      console.log("🚫 No user found, skipping teacher data fetch")
       return
     }
-
-    console.log("🔍 Teacher Dashboard - Starting data fetch for user:", user.id)
-    console.log("🔍 User object:", user)
 
     try {
       const { data: coursesData } = await supabase
@@ -142,24 +138,30 @@ export default function TeacherDashboard() {
           setStudents([])
         }
 
-        const { data: assignmentsData, error: assignmentsError } = await supabase
-          .from("assignments")
-          .select(`
-            id,
-            title,
-            due_date,
-            courses(title),
-            assignment_submissions(count)
-          `)
-          .eq("teacher_id", user.id)
-          .order("due_date", { ascending: false })
-          .limit(10)
-
-        console.log("🎯 Teacher Dashboard - Assignments Query Debug:")
-        console.log("Teacher ID:", user.id)
-        console.log("Assignments Data:", assignmentsData)
-        console.log("Assignments Error:", assignmentsError)
-        console.log("Assignments Count:", assignmentsData?.length || 0)
+        // Get teacher's courses first, then assignments for those courses
+        const teacherCourseIds = coursesData?.map(course => course.id) || [];
+        
+        let assignmentsData: any[] | null = null;
+        
+        if (teacherCourseIds.length > 0) {
+          const result = await supabase
+            .from("assignments")
+            .select(`
+              id,
+              title,
+              due_date,
+              course_id,
+              courses(title),
+              assignments_submissions(count)
+            `)
+            .in("course_id", teacherCourseIds)
+            .order("due_date", { ascending: false })
+            .limit(10);
+          
+          assignmentsData = result.data;
+        } else {
+          assignmentsData = [];
+        }
 
         if (assignmentsData) {
           const formattedAssignments = assignmentsData.map((assignment) => ({
@@ -167,14 +169,12 @@ export default function TeacherDashboard() {
             title: assignment.title,
             due_date: assignment.due_date,
             course_title: assignment.courses?.[0]?.title || "",
-            submissions_count: assignment.assignment_submissions?.length || 0,
+            submissions_count: assignment.assignments_submissions?.length || 0,
             total_students: formattedCourses.find((c) => c.title === assignment.courses?.[0]?.title)?.student_count || 0,
           }))
           setAssignments(formattedAssignments)
         } else {
           // Handle the case where assignments query failed due to auth issues
-          console.log("🔧 No assignments data received, likely due to auth delay")
-          console.log("🔧 Setting assignments to empty array for now")
           setAssignments([])
         }
 
@@ -211,13 +211,6 @@ export default function TeacherDashboard() {
         const totalStudents = formattedCourses.reduce((sum, course) => sum + course.student_count, 0)
         const totalAssignments = assignmentsData?.length || 0
 
-        console.log("📊 Final stats calculation:")
-        console.log("Total courses:", totalCourses)
-        console.log("Total students:", totalStudents)
-        console.log("Total assignments from query:", totalAssignments)
-        console.log("Assignments data length:", assignmentsData?.length)
-        console.log("User ID used in query:", user.id)
-
         setStats({
           totalCourses,
           totalStudents,
@@ -234,25 +227,16 @@ export default function TeacherDashboard() {
   }, [user, supabase])
 
   useEffect(() => {
-    console.log("🔄 Teacher Dashboard - useEffect triggered")
-    console.log("User state:", user)
-    console.log("Loading state:", loading)
-    
     if (user) {
-      console.log("✅ User found, fetching teacher data...")
       fetchTeacherData()
-    } else {
-      console.log("⏳ No user yet, waiting...")
     }
   }, [user, fetchTeacherData, loading])
 
   // Fallback effect to handle auth initialization delays
   useEffect(() => {
     if (!user && !loading) {
-      console.log("🔄 Fallback: Auth may have loaded late, checking again...")
       const timer = setTimeout(() => {
         if (profile && !user) {
-          console.log("🔧 Fallback: Profile exists but no user, forcing refresh...")
           window.location.reload()
         }
       }, 2000)
@@ -263,7 +247,6 @@ export default function TeacherDashboard() {
   // Retry mechanism for assignments when they're missing but courses exist
   useEffect(() => {
     if (user && stats.totalCourses > 0 && stats.totalAssignments === 0 && assignments.length === 0) {
-      console.log("🔄 Retry: Detected missing assignments despite having courses, retrying...")
       const timer = setTimeout(() => {
         fetchTeacherData()
       }, 3000)

@@ -84,57 +84,152 @@ export default function StudentAssignments() {
   const supabase = useMemo(() => createClient(), []);
 
   const fetchAssignments = useCallback(async () => {
-    if (!supabase) return;
-    if (!user) return;
+    if (!supabase) {
+      console.error("❌ Supabase client not available");
+      return;
+    }
+    if (!user) {
+      console.error("❌ User not logged in");
+      return;
+    }
+
+    console.log("🚀 Starting fetchAssignments for user:", user.id);
+    setLoading(true);
 
     try {
+      // First, verify user session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("❌ Session error:", sessionError);
+        throw new Error("Authentication session error");
+      }
+      if (!session) {
+        console.error("❌ No active session found");
+        throw new Error("No active session - please login again");
+      }
+      console.log("✅ Session verified for user:", session.user.id);
+      
       // Get enrolled courses first
+      console.log("🎓 Fetching enrollments for student:", user.id);
       const { data: enrollments, error: enrollmentError } = await supabase
         .from("enrollments")
         .select("course_id")
         .eq("student_id", user.id);
 
-      if (enrollmentError) throw enrollmentError;
+      console.log("📚 Enrollments data:", enrollments);
+      console.log("❌ Enrollments error:", enrollmentError);
+
+      if (enrollmentError) {
+        console.error("❌ Enrollment fetch error details:", {
+          message: enrollmentError instanceof Error ? enrollmentError.message : String(enrollmentError),
+          code: enrollmentError?.code,
+          details: enrollmentError?.details,
+          hint: enrollmentError?.hint,
+          raw: enrollmentError
+        });
+        throw enrollmentError;
+      }
 
       if (enrollments && enrollments.length > 0) {
         const courseIds = enrollments.map((e) => e.course_id);
 
-        // Get assignments for enrolled courses with optimized query
-        const { data: assignmentsData, error } = await supabase
-          .from("assignments")
-          .select(
-            `
-          id,
-          title,
-          description,
-          due_date,
-          max_points,
-          courses:course_id!inner (
-            title
-          ),
-          assignment_submissions!left (
+        // Get assignments for enrolled courses with fallback for missing assignments_submissions
+        console.log("📚 Fetching assignments for courses:", courseIds);
+        console.log("👤 Current user ID:", user.id);
+        
+        // First try the full query with assignments_submissions
+        let assignmentsData = null;
+        let error = null;
+        
+        try {
+          const result = await supabase
+            .from("assignments")
+            .select(
+              `
             id,
-            submitted_at,
-            grade,
-            feedback,
-            feedback_file_url,
-            feedback_file_name,
-            file_url,
-            submission_text
-          )
-        `
-          )
-          .in("course_id", courseIds)
-          .eq("assignment_submissions.student_id", user.id)
-          .order("due_date", { ascending: true });
+            title,
+            description,
+            due_date,
+            max_points,
+            course_id,
+            courses:course_id!inner (
+              title
+            ),
+            assignments_submissions!left (
+              id,
+              submitted_at,
+              grade,
+              feedback,
+              feedback_file_url,
+              feedback_file_name,
+              file_url,
+              submission_text,
+              student_id
+            )
+          `
+            )
+            .in("course_id", courseIds)
+            .order("due_date", { ascending: true });
+            
+          assignmentsData = result.data;
+          error = result.error;
+        } catch (queryError) {
+          console.warn("Full query failed, trying fallback without submissions:", queryError);
+          error = queryError;
+        }
+        
+        // If the full query failed, try a simpler query without assignments_submissions
+        if (error || !assignmentsData) {
+          console.log("🔄 Falling back to basic assignment query without submissions");
+          const fallbackResult = await supabase
+            .from("assignments")
+            .select(
+              `
+            id,
+            title,
+            description,
+            due_date,
+            max_points,
+            course_id,
+            courses:course_id!inner (
+              title
+            )
+          `
+            )
+            .in("course_id", courseIds)
+            .order("due_date", { ascending: true });
+            
+          assignmentsData = fallbackResult.data;
+          error = fallbackResult.error;
+          
+          if (error) {
+            console.error("❌ Even fallback query failed:", error);
+            throw error;
+          } else {
+            console.log("✅ Fallback query succeeded");
+          }
+        }
+
+        console.log("📋 Raw assignments data:", assignmentsData);
 
         if (error) throw error;
 
         const formattedAssignments =
-          assignmentsData?.map((assignment) => {
+          assignmentsData?.map((assignment: any) => {
             const course = Array.isArray(assignment.courses)
               ? assignment.courses[0]
               : assignment.courses;
+
+            // Handle submissions - might be undefined if table doesn't exist
+            let userSubmissions = [];
+            if (assignment.assignments_submissions) {
+              // Filter submissions to only include ones from current student
+              userSubmissions = assignment.assignments_submissions?.filter(
+                (sub: any) => sub.student_id === user.id
+              ) || [];
+            }
+
+            console.log(`📝 Assignment "${assignment.title}" submissions for user:`, userSubmissions);
 
             return {
               id: assignment.id,
@@ -143,15 +238,21 @@ export default function StudentAssignments() {
               due_date: assignment.due_date,
               max_points: assignment.max_points,
               course_title: course?.title || "Unknown Course",
-              submission: assignment.assignment_submissions?.[0] || undefined,
+              submission: userSubmissions[0] || undefined,
             };
           }) || [];
         setAssignments(formattedAssignments as Assignment[]);
       } else {
+        console.log("📭 No enrollments found for student - setting empty assignments array");
         setAssignments([]);
       }
     } catch (error) {
       console.error("Error fetching assignments:", error);
+      console.error("Error details:", {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        raw: error
+      });
       setMessage({ type: "error", text: "Failed to load assignments" });
     } finally {
       setLoading(false);
@@ -226,20 +327,127 @@ export default function StudentAssignments() {
       }
       if (!supabase) return;
 
-      // Submit assignment
-      const { error } = await supabase.from("assignment_submissions").upsert({
-        assignment_id: assignmentId,
-        student_id: user.id,
-        submission_text: submissionText.trim() || null,
-        file_url: fileUrl,
-        submitted_at: new Date().toISOString(),
-      });
-
-      if (error) {
-        console.error("Database error:", error);
-        throw new Error(`Submission failed: ${error.message}`);
+      // Submit assignment with fallback handling
+      let submissionResult;
+      try {
+        submissionResult = await supabase.from("assignments_submissions").upsert({
+          assignment_id: assignmentId,
+          student_id: user.id,
+          submission_text: submissionText.trim() || null,
+          file_url: fileUrl,
+          submitted_at: new Date().toISOString(),
+        });
+      } catch (dbError: any) {
+        console.error("Direct database submission failed:", dbError);
+        
+        // Try API fallback if direct database access fails
+        if (dbError?.code === '42P01' || dbError?.message?.includes('does not exist')) {
+          console.log("🔄 Trying API fallback for assignment submission...");
+          try {
+            const response = await fetch('/api/submit-assignment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                assignment_id: assignmentId,
+                submission_text: submissionText.trim() || null,
+                file_url: fileUrl,
+              }),
+            });
+            
+            const result = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(result.error || 'API submission failed');
+            }
+            
+            setMessage({
+              type: "success",
+              text: result.message || "Assignment submitted successfully!",
+            });
+            setSubmissionText("");
+            setSelectedFile(null);
+            setActiveSubmission(null);
+            fetchAssignments();
+            return; // Exit early on success
+            
+          } catch (apiError: any) {
+            console.error("API fallback also failed:", apiError);
+            throw new Error(`Both direct and API submission failed: ${apiError.message}`);
+          }
+        } else {
+          throw new Error(`Database operation failed: ${dbError?.message || 'Unknown error'}`);
+        }
       }
 
+      if (submissionResult?.error) {
+        const error = submissionResult.error;
+        console.error("Database submission error:", error);
+        console.error("Submission error details:", {
+          message: error instanceof Error ? error.message : String(error),
+          code: error?.code,
+          details: error?.details,
+          hint: error?.hint,
+          raw: error
+        });
+        
+        // Try API fallback for database errors too
+        if (error?.code === '42P01' || error?.message?.includes('does not exist') || 
+            error?.code === '42501' || !error?.message) {
+          console.log("🔄 Database error detected, trying API fallback...");
+          try {
+            // Get the current session for auth token
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            const response = await fetch('/api/submit-assignment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session?.access_token || ''}`,
+              },
+              body: JSON.stringify({
+                assignment_id: assignmentId,
+                submission_text: submissionText.trim() || null,
+                file_url: fileUrl,
+              }),
+            });
+            
+            const result = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(result.error || 'API submission failed');
+            }
+            
+            setMessage({
+              type: "success",
+              text: result.message || "Assignment submitted successfully!",
+            });
+            setSubmissionText("");
+            setSelectedFile(null);
+            setActiveSubmission(null);
+            fetchAssignments();
+            return; // Exit early on success
+            
+          } catch (apiError: any) {
+            console.error("API fallback failed:", apiError);
+            // Fall through to original error handling
+          }
+        }
+        
+        // Provide more specific error messages based on error type
+        if (error?.code === '42P01') {
+          throw new Error('Assignment submissions table does not exist. Please contact administrator.');
+        } else if (error?.code === '42501') {
+          throw new Error('Permission denied. You may not have access to submit assignments.');
+        } else if (error?.message?.includes('foreign key')) {
+          throw new Error('Invalid assignment reference. Please refresh and try again.');
+        } else {
+          throw new Error(`Submission failed: ${error?.message || 'Unknown database error'}`);
+        }
+      }
+
+      // If we reach here, the direct database submission was successful
       setMessage({
         type: "success",
         text: "Assignment submitted successfully!",
@@ -247,7 +455,9 @@ export default function StudentAssignments() {
       setSubmissionText("");
       setSelectedFile(null);
       setActiveSubmission(null);
-      fetchAssignments();
+      
+      // Refresh assignments to show updated status
+      await fetchAssignments();
     } catch (error: unknown) {
       console.error("Error submitting assignment:", error);
       setMessage({

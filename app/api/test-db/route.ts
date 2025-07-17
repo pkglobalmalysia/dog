@@ -13,6 +13,9 @@ export async function GET() {
       "courses", 
       "lectures",
       "assignments",
+      "assignments_submissions",
+      "enrollments",
+      "attendance",
       "salary_payments_new",
       "lecture_attendance"
     ];

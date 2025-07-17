@@ -1,13 +1,30 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import { SupabaseClient } from "@supabase/supabase-js"
 
-
-export const createServerClient = (): SupabaseClient => createServerComponentClient({ cookies })
+export const createServerClient = async (): Promise<SupabaseClient> => {
+  const cookieStore = await cookies()
+  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  
+  // Get auth token from cookies
+  const authToken = cookieStore.get('sb-ztdkbucjuynmoessbttje-auth-token')?.value
+  
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: authToken ? {
+        Authorization: `Bearer ${authToken}`
+      } : {}
+    }
+  })
+  
+  return supabase
+}
 
 // Server-side utility functions
 export async function getServerSession() {
-  const supabase = createServerClient() // ✅ FIX: client was missing
+  const supabase = await createServerClient() // ✅ FIX: await added
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -15,7 +32,7 @@ export async function getServerSession() {
 }
 
 export async function getServerProfile(userId: string) {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single()
 
   if (error) {

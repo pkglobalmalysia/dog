@@ -7,6 +7,7 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -69,6 +70,123 @@ type Assignment = {
 type Message = {
   type: "success" | "error"
   text: string
+}
+
+// Helper function to get status badge for assignments
+const getStatusBadge = (assignment: Assignment) => {
+  if (!assignment.submission) {
+    // Check if assignment is overdue
+    const isOverdue = new Date() > new Date(assignment.due_date)
+    if (isOverdue) {
+      return (
+        <Badge variant="destructive" className="bg-red-100 text-red-800 border-red-200">
+          <AlertCircle className="h-3 w-3 mr-1" />
+          Overdue
+        </Badge>
+      )
+    }
+    return (
+      <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+        <AlertCircle className="h-3 w-3 mr-1" />
+        Not Submitted
+      </Badge>
+    )
+  }
+
+  // Has submission - check if graded
+  if (assignment.submission.grade !== null && assignment.submission.grade !== undefined) {
+    return (
+      <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+        <CheckCircle className="h-3 w-3 mr-1" />
+        Graded ({assignment.submission.grade}/{assignment.max_points})
+      </Badge>
+    )
+  }
+
+  // Submitted but not graded yet
+  return (
+    <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+      <CheckCircle className="h-3 w-3 mr-1" />
+      Submitted - Pending Review
+    </Badge>
+  )
+}
+
+
+
+// Helper function to get file type icon
+const getFileTypeIcon = (fileUrl: string) => {
+  if (!fileUrl) return <FileText className="h-4 w-4" />
+  
+  const extension = fileUrl.split('.').pop()?.toLowerCase()
+  
+  switch (extension) {
+    case 'pdf':
+      return <FileText className="h-4 w-4 text-red-500" />
+    case 'doc':
+    case 'docx':
+      return <FileText className="h-4 w-4 text-blue-500" />
+    case 'mp3':
+    case 'wav':
+    case 'm4a':
+      return <FileAudio className="h-4 w-4 text-purple-500" />
+    case 'mp4':
+    case 'avi':
+    case 'mov':
+      return <FileVideo className="h-4 w-4 text-green-500" />
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+      return <FileText className="h-4 w-4 text-orange-500" />
+    default:
+      return <FileText className="h-4 w-4" />
+  }
+}
+
+// Helper function to render file preview
+const renderFilePreview = (fileUrl: string) => {
+  if (!fileUrl) return null
+  
+  const extension = fileUrl.split('.').pop()?.toLowerCase()
+  
+  if (['jpg', 'jpeg', 'png', 'gif'].includes(extension || '')) {
+    return (
+      <div className="mt-2">
+        <Image 
+          src={fileUrl} 
+          alt="File preview" 
+          width={200} 
+          height={200} 
+          className="rounded border max-w-full h-auto"
+        />
+      </div>
+    )
+  }
+  
+  if (['mp4', 'avi', 'mov'].includes(extension || '')) {
+    return (
+      <div className="mt-2">
+        <video controls className="max-w-full h-auto rounded border">
+          <source src={fileUrl} type={`video/${extension}`} />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    )
+  }
+  
+  if (['mp3', 'wav', 'm4a'].includes(extension || '')) {
+    return (
+      <div className="mt-2">
+        <audio controls className="w-full">
+          <source src={fileUrl} type={`audio/${extension}`} />
+          Your browser does not support the audio tag.
+        </audio>
+      </div>
+    )
+  }
+  
+  return null
 }
 
 export default function CourseDetailsPage() {
@@ -158,7 +276,7 @@ export default function CourseDetailsPage() {
           due_date,
           max_points,
           course_id,
-          assignment_submissions!inner(
+          assignments_submissions!inner(
             id,
             submitted_at,
             grade,
@@ -171,7 +289,7 @@ export default function CourseDetailsPage() {
           )
         `)
         .eq("course_id", courseId)
-        .eq("assignment_submissions.student_id", user.id)
+        .eq("assignments_submissions.student_id", user.id)
         .order("due_date", { ascending: true })
 
       // Also fetch assignments without submissions
@@ -194,6 +312,7 @@ export default function CourseDetailsPage() {
         // Merge assignments with their submissions
         const formattedAssignments = allAssignmentsData.map((assignment) => {
           const submissionData = assignmentsData?.find((a) => a.id === assignment.id)
+          
           return {
             id: assignment.id,
             title: assignment.title,
@@ -201,7 +320,7 @@ export default function CourseDetailsPage() {
             due_date: assignment.due_date,
             max_points: assignment.max_points,
             course_id: assignment.course_id,
-            submission: submissionData?.assignment_submissions?.[0] || undefined,
+            submission: submissionData?.assignments_submissions?.[0] || undefined,
           }
         })
         setAssignments(formattedAssignments)
@@ -286,7 +405,6 @@ export default function CourseDetailsPage() {
               })
 
             if (uploadError) {
-              console.error("Upload error:", uploadError)
               throw new Error(`File upload failed: ${uploadError.message}`)
             }
 
@@ -298,8 +416,7 @@ export default function CourseDetailsPage() {
           }
 
           setUploadProgress(100)
-        } catch (fileError) {
-          console.error("File upload error:", fileError)
+        } catch {
           if (!submissionText[assignmentId]?.trim()) {
             throw new Error("File upload failed and no text submission provided")
           }
@@ -307,18 +424,70 @@ export default function CourseDetailsPage() {
         }
       }
 
-      // Submit assignment
-      const { error } = await supabase.from("assignment_submissions").upsert({
-        assignment_id: assignmentId,
-        student_id: user.id,
-        submission_text: submissionText[assignmentId]?.trim() || null,
-        file_url: fileUrl,
-        submitted_at: new Date().toISOString(),
-      })
+      // Submit assignment with better error handling and fallback
+      let submissionResult;
+      try {
+        submissionResult = await supabase.from("assignments_submissions").upsert({
+          assignment_id: assignmentId,
+          student_id: user.id,
+          submission_text: submissionText[assignmentId]?.trim() || null,
+          file_url: fileUrl,
+          submitted_at: new Date().toISOString(),
+        });
+      } catch (dbError: any) {
+        
+        // Try API fallback if direct database access fails
+        if (dbError?.code === '42P01' || dbError?.message?.includes('does not exist')) {
+          try {
+            const response = await fetch('/api/submit-assignment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                assignment_id: assignmentId,
+                submission_text: submissionText[assignmentId]?.trim() || null,
+                file_url: fileUrl,
+              }),
+            });
+            
+            const result = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(result.error || 'API submission failed');
+            }
+            
+            setMessage({ 
+              type: "success", 
+              text: result.message || "Assignment submitted successfully!" 
+            });
+            setSubmissionText((prev) => ({ ...prev, [assignmentId]: "" }));
+            setSelectedFiles((prev) => ({ ...prev, [assignmentId]: null }));
+            setActiveSubmission(null);
+            fetchCourseDetails();
+            return; // Exit early on success
+            
+          } catch (apiError: any) {
+            throw new Error(`Both direct and API submission failed: ${apiError.message}`);
+          }
+        } else {
+          throw new Error(`Database operation failed: ${dbError?.message || 'Unknown error'}`);
+        }
+      }
 
-      if (error) {
-        console.error("Database error:", error)
-        throw new Error(`Submission failed: ${error.message}`)
+      if (submissionResult?.error) {
+        const error = submissionResult.error;
+        
+        // Provide more specific error messages
+        if (error?.code === '42P01') {
+          throw new Error('Assignment submissions table does not exist. Please contact administrator.');
+        } else if (error?.code === '42501') {
+          throw new Error('Permission denied. You may not have access to submit assignments.');
+        } else if (error?.message?.includes('foreign key')) {
+          throw new Error('Invalid assignment or student reference. Please refresh and try again.');
+        } else {
+          throw new Error(`Submission failed: ${error?.message || 'Unknown database error'}`);
+        }
       }
 
       setMessage({ type: "success", text: "Assignment submitted successfully!" })
@@ -327,8 +496,7 @@ export default function CourseDetailsPage() {
       setActiveSubmission(null)
       fetchCourseDetails()
     } catch (error: any) {
-      console.error("Error submitting assignment:", error)
-      setMessage({ type: "error", text: error.message || "Failed to submit assignment" })
+      setMessage({ type: "error", text: error?.message || "Failed to submit assignment" })
     } finally {
       setSubmitting(null)
       setUploadProgress(0)
@@ -337,70 +505,6 @@ export default function CourseDetailsPage() {
 
   const isOverdue = (dueDate: string) => {
     return new Date(dueDate) < new Date()
-  }
-
-  const getStatusBadge = (assignment: Assignment) => {
-    if (assignment.submission) {
-      if (assignment.submission.grade !== null && assignment.submission.grade !== undefined) {
-        return (
-          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm">
-            Grade: {assignment.submission.grade}/{assignment.max_points}
-          </span>
-        )
-      }
-      return <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">Submitted</span>
-    }
-    if (isOverdue(assignment.due_date)) {
-      return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-md text-sm">Overdue</span>
-    }
-    return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-md text-sm">Pending</span>
-  }
-
-  const getFileTypeIcon = (url: string) => {
-    if (!url) return <FileText className="h-4 w-4" />
-
-    const extension = url.split(".").pop()?.toLowerCase()
-
-    if (["mp3", "wav", "ogg", "aac"].includes(extension || "")) {
-      return <FileAudio className="h-4 w-4" />
-    } else if (["mp4", "webm", "mov", "avi"].includes(extension || "")) {
-      return <FileVideo className="h-4 w-4" />
-    } else {
-      return <FileText className="h-4 w-4" />
-    }
-  }
-
-  const renderFilePreview = (url: string) => {
-    if (!url) return null
-
-    const extension = url.split(".").pop()?.toLowerCase()
-
-    if (["mp3", "wav", "ogg", "aac"].includes(extension || "")) {
-      return (
-        <audio controls className="w-full mt-2">
-          <source src={url} type={`audio/${extension}`} />
-          Your browser does not support the audio element.
-        </audio>
-      )
-    } else if (["mp4", "webm", "mov"].includes(extension || "")) {
-      return (
-        <video controls className="w-full mt-2 max-h-[200px]">
-          <source src={url} type={`video/${extension}`} />
-          Your browser does not support the video element.
-        </video>
-      )
-    } else if (["jpg", "jpeg", "png", "gif"].includes(extension || "")) {
-      return (
-        <Image
-          src={url || "/placeholder.svg"}
-          alt="Submission preview"
-          className="mt-2 max-h-[200px] rounded"
-          crossOrigin="anonymous"
-        />
-      )
-    }
-
-    return null
   }
 
   if (loading) {

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useAuth } from '@/components/auth-provider'
 
 export default function SimpleLoginPage() {
   const [email, setEmail] = useState('pkibs.office@gmail.com')
@@ -9,6 +10,7 @@ export default function SimpleLoginPage() {
   const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(false)
   const supabase = createClientComponentClient()
+  const { resetRateLimit } = useAuth()
 
   const handleLogin = async () => {
     setLoading(true)
@@ -62,6 +64,51 @@ export default function SimpleLoginPage() {
     setStatus(`Current session: ${data.session ? `${data.session.user.email}` : 'None'}`)
   }
 
+  const testStudentData = async () => {
+    setStatus('🔍 Testing student data access...')
+    
+    try {
+      const { data: session } = await supabase.auth.getSession()
+      if (!session.session) {
+        setStatus('❌ No session - please login first')
+        return
+      }
+      
+      const userId = session.session.user.id
+      setStatus(prev => prev + `\n👤 User ID: ${userId}`)
+      
+      // Test enrollments
+      const { data: enrollments, error: enrollError } = await supabase
+        .from('enrollments')
+        .select('*')
+        .eq('student_id', userId)
+      
+      setStatus(prev => prev + `\n📚 Enrollments: ${enrollments?.length || 0} found`)
+      if (enrollError) {
+        setStatus(prev => prev + `\n❌ Enrollment error: ${JSON.stringify(enrollError)}`)
+      }
+      
+      // Test assignments
+      if (enrollments && enrollments.length > 0) {
+        const courseIds = enrollments.map(e => e.course_id)
+        const { data: assignments, error: assignError } = await supabase
+          .from('assignments')
+          .select('*')
+          .in('course_id', courseIds)
+        
+        setStatus(prev => prev + `\n📝 Assignments: ${assignments?.length || 0} found`)
+        if (assignError) {
+          setStatus(prev => prev + `\n❌ Assignment error: ${JSON.stringify(assignError)}`)
+        }
+      }
+      
+      setStatus(prev => prev + '\n✅ Test complete')
+      
+    } catch (error) {
+      setStatus(prev => prev + `\n❌ Test error: ${error}`)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
@@ -94,6 +141,23 @@ export default function SimpleLoginPage() {
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
             {loading ? 'Logging in...' : 'Login'}
+          </button>
+          
+          <button
+            onClick={() => {
+              resetRateLimit()
+              setStatus('🔄 Rate limiting has been reset. You can try logging in again.')
+            }}
+            className="w-full flex justify-center py-2 px-4 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            🔄 Reset Rate Limit
+          </button>
+
+          <button
+            onClick={testStudentData}
+            className="w-full flex justify-center py-2 px-4 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            🧪 Test Student Data Access
           </button>
           
           <button

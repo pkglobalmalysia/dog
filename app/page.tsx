@@ -67,13 +67,13 @@ export default function HomePage() {
         {/* Left Logo */}
         <div className="absolute left-8 top-8 hidden lg:block z-20">
           <div className="text-center">
-            <div className="w-64 h-40 bg-white mx-16  flex items-center justify-center mb-3 overflow-hidden ">
+            <div className="w-64 h-40 mx-16  flex items-center justify-center mb-3 overflow-hidden ">
               <Image
-                src="/globe.png"
+                src="/globe.jpeg"
                 alt="Company Logo"
                   width={500}
                       height={200}
-                className="w-64 h-40 object-cover rounded-full"
+                className="w-64 h-40 object-cover "
               />
             </div>
             <div className="text-white text-md font-bold tracking-wide">

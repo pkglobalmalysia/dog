@@ -105,7 +105,8 @@ export default function StudentDashboard() {
           .order("scheduled_time", { ascending: true });
 
         // Fetch assignments for each course to calculate real progress
-        const { data: assignmentsData } = await supabase
+        console.log("🔍 Student Dashboard - Fetching assignments for courses:", courseIds);
+        const { data: assignmentsData, error: assignmentsError } = await supabase
           .from("assignments")
           .select(
             `
@@ -115,7 +116,7 @@ export default function StudentDashboard() {
             max_points,
             course_id,
             courses(title),
-            assignment_submissions(
+            assignments_submissions(
               grade,
               submitted_at,
               student_id
@@ -124,6 +125,11 @@ export default function StudentDashboard() {
           )
           .in("course_id", courseIds)
           .order("due_date", { ascending: false });
+          
+        console.log("📊 Student Dashboard - Assignments query result:");
+        console.log("- Assignments data:", assignmentsData);
+        console.log("- Assignments error:", assignmentsError);
+        console.log("- Assignments count:", assignmentsData?.length || 0);
 
         if (coursesData) {
           // Calculate real progress for each course based on assignments
@@ -131,7 +137,7 @@ export default function StudentDashboard() {
             const courseAssignments =
               assignmentsData?.filter((a) => a.course_id === course.id) || [];
             const courseSubmissions = courseAssignments.filter((a) =>
-              a.assignment_submissions?.some(
+              a.assignments_submissions?.some(
                 (sub) => sub.student_id === user.id
               )
             );
@@ -166,10 +172,22 @@ export default function StudentDashboard() {
         }
 
         if (assignmentsData) {
+          console.log("🔄 Processing assignments data...");
           const formattedAssignments = assignmentsData.map((assignment) => {
             const course = Array.isArray(assignment.courses)
               ? assignment.courses[0]
               : assignment.courses;
+
+            const submission = assignment.assignments_submissions?.find(
+              (sub) => sub.student_id === user.id
+            );
+
+            console.log(`📝 Assignment "${assignment.title}":`, {
+              id: assignment.id,
+              courseTitle: course?.title,
+              hasSubmission: !!submission,
+              submissionData: submission
+            });
 
             return {
               id: assignment.id,
@@ -177,12 +195,11 @@ export default function StudentDashboard() {
               due_date: assignment.due_date,
               max_points: assignment.max_points,
               course_title: course?.title || "Unknown Course",
-              submission:
-                assignment.assignment_submissions?.find(
-                  (sub) => sub.student_id === user.id
-                ) || undefined,
+              submission: submission || undefined,
             };
           });
+          
+          console.log("✅ Final formatted assignments:", formattedAssignments);
           setAssignments(formattedAssignments);
 
           // Calculate grade statistics from real data

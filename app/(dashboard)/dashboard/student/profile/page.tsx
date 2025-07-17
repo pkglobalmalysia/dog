@@ -94,7 +94,7 @@ export default function StudentProfile() {
 
     // Fetch grade records
     const { data: gradeData } = await supabase
-      .from("assignment_submissions")
+      .from("assignments_submissions")
       .select(`
         grade,
         submitted_at,

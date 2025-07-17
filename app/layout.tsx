@@ -11,6 +11,19 @@ const inter = Inter({
   preload: true,
 })
 
+// Disable debug logs in production
+if (process.env.NODE_ENV === 'production') {
+  const originalLog = console.log;
+  console.log = (...args: any[]) => {
+    // Only log if it's an error or doesn't contain debug emojis
+    const message = args[0];
+    if (typeof message === 'string' && /^[🔍📊✅🔄📝👤📚🎓💾🚀🔥🔑🚨📭🧪]/.test(message)) {
+      return; // Skip debug logs with emojis
+    }
+    originalLog(...args);
+  };
+}
+
 export const metadata: Metadata = {
   title: "LMS - Learning Management System",
   description: "A comprehensive learning management system",

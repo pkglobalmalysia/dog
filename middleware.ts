@@ -23,9 +23,6 @@ export default async function middleware(req: NextRequest) {
       data: { session },
     } = await supabase.auth.getSession();
 
-    console.log("🔍 Middleware: Checking auth for", req.nextUrl.pathname);
-    console.log("📊 Middleware: Session exists:", !!session);
-
     const isAuthPage = 
       req.nextUrl.pathname === "/login" ||
       req.nextUrl.pathname.startsWith("/signup");
@@ -37,7 +34,6 @@ export default async function middleware(req: NextRequest) {
 
     // If no session and trying to access protected route, redirect to login
     if (!session && isProtectedRoute) {
-      console.log("🚨 Middleware: No session, redirecting to login");
       const loginUrl = new URL("/login", req.url);
       loginUrl.searchParams.set("redirect", req.nextUrl.pathname);
       return NextResponse.redirect(loginUrl);
@@ -46,13 +42,11 @@ export default async function middleware(req: NextRequest) {
     // If we have a session and trying to access auth pages, let it through
     // The client-side auth provider will handle the redirect
     if (session && isAuthPage) {
-      console.log("✅ Middleware: Has session but accessing auth page, allowing through");
+      // Let it through
     }
 
-    console.log("✅ Middleware: Allowing request to proceed");
     return res;
   } catch (error) {
-    console.error("❌ Middleware error:", error);
     // Don't block on middleware errors, let client handle
     return res;
   }

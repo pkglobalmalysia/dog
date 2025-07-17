@@ -254,7 +254,7 @@ const fetchData = useCallback(async () => {
         try {
           console.log("Attempting to fetch submissions for assignment IDs:", assignmentIds);
           const { data, error } = await supabase
-            .from("assignment_submissions")
+            .from("assignments_submissions")
             .select("assignment_id")
             .in("assignment_id", assignmentIds);
 
@@ -266,7 +266,7 @@ const fetchData = useCallback(async () => {
             console.log("Successfully fetched submissions data:", submissionsData);
           }
         } catch (error) {
-          console.warn("Could not access assignment_submissions table:", error);
+          console.warn("Could not access assignments_submissions table:", error);
         }
 
         const formattedAssignments = assignmentsData.map((assignment) => {
@@ -542,7 +542,7 @@ const fetchData = useCallback(async () => {
       // Try to delete assignment submissions if table exists
       try {
         const { error: submissionsError } = await supabase
-          .from("assignment_submissions")
+          .from("assignments_submissions")
           .delete()
           .eq("assignment_id", assignmentId)
 
@@ -634,7 +634,7 @@ const fetchData = useCallback(async () => {
 
       try {
         const { error: updateError } = await supabase
-          .from("assignment_submissions")
+          .from("assignments_submissions")
           .update(updateData)
           .eq("id", submissionId)
 
@@ -801,7 +801,7 @@ const fetchData = useCallback(async () => {
       try {
         console.log("Attempting to fetch submission records...")
         const { data, error: submissionsError } = await supabase
-          .from("assignment_submissions")
+          .from("assignments_submissions")
           .select(`
           id,
           submitted_at,

@@ -5,14 +5,12 @@ import {
   createContext,
   useContext,
   useEffect,
-  useLayoutEffect,
   useState,
   useMemo,
   useCallback,
   useRef,
 } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import {  usePathname } from "next/navigation";
 import type { Session, User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/supabase";
 import { profileCache } from "@/lib/auth-cache";
@@ -30,101 +28,60 @@ type AuthContextType = {
   ) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  resetRateLimit: () => void; // Add this function
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  console.log("🎯 AuthProvider component rendering...");
-  
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
-  const pathname = usePathname();
   
-  // Track if we've attempted initialization
+  // Track initialization to prevent multiple calls
+  const authListenerRef = useRef<{ data?: { subscription?: any } } | null>(null);
   const initAttempted = useRef(false);
   
   // Rate limiting for login attempts
   const lastLoginAttempt = useRef(0);
-  const LOGIN_COOLDOWN = 2000; // 2 seconds between attempts
+  const loginAttemptCount = useRef(0);
+  const LOGIN_COOLDOWN = 5000; // 5 seconds between attempts
+  const MAX_ATTEMPTS_PER_MINUTE = 3; // Maximum 3 attempts per minute
+  const MINUTE_COOLDOWN = 60000; // 60 seconds
+  const firstAttemptTime = useRef(0);
 
-  // TEST useEffect - let's see if this works
-  useEffect(() => {
-    console.log("🚀 EARLY useEffect is running! This means useEffect works!");
-  }, []);
-
-  console.log("🔍 Current pathname:", pathname);
-  console.log("📊 Current state - isLoading:", isLoading, "initialized:", initialized);
-
+  // Create a single, memoized Supabase client
   const supabase = useMemo(() => {
-    console.log("🔧 Creating Supabase client...");
-    const client = createClientComponentClient();
-    if (client) {
-      console.log("✅ Supabase client created successfully");
-    } else {
-      console.error("❌ Failed to create Supabase client");
-    }
-    return client;
+    return createClientComponentClient();
   }, []);
 
   const fetchProfile = useCallback(
     async (userId: string): Promise<Profile | null> => {
-      console.log("🔍 Fetching profile for user:", userId);
-      
       // Check cache first
       const cached = profileCache.get(userId);
       if (cached) {
-        console.log("📦 Profile found in cache:", cached);
         return cached;
       }
 
       try {
-        if (!supabase) {
-          console.error("❌ Supabase client is not initialized.");
-          return null;
-        }
-        
-        console.log("🌐 Fetching profile from database...");
-        
-        // Add timeout protection to prevent hanging (increased to 15 seconds)
-        const profilePromise = supabase
+        const { data, error } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)
           .single();
-          
-        console.log("⏱️ Starting Promise.race with 15s timeout...");
-        
-        let timeoutId: NodeJS.Timeout | undefined;
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          timeoutId = setTimeout(() => {
-            console.log("⚠️ Profile fetch timeout triggered");
-            reject(new Error("Profile fetch timeout - please check your internet connection"));
-          }, 15000);
-        });
-
-        const result = await Promise.race([profilePromise, timeoutPromise]);
-        
-        // Clear the timeout since we got a result
-        if (timeoutId) clearTimeout(timeoutId);
-        console.log("📡 Promise.race completed, result:", result);
-        
-        const { data, error } = result;
 
         if (error) {
-          console.error("❌ Error fetching profile:", error);
+          console.error("Error fetching profile:", error);
           return null;
         }
 
-        console.log("✅ Profile fetched successfully:", data);
         // Cache the result
         profileCache.set(userId, data);
         return data as Profile;
       } catch (error) {
-        console.error("🚨 Catch block - Error fetching profile:", error);
+        console.error("Error fetching profile:", error);
         return null;
       }
     },
@@ -140,58 +97,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(profileData);
       } catch (error) {
         console.error("Error refreshing profile:", error);
-        // On error, don't update profile state to prevent showing stale data
       }
     }
   }, [user, fetchProfile]);
 
+  const resetRateLimit = useCallback(() => {
+    loginAttemptCount.current = 0;
+    firstAttemptTime.current = 0;
+    lastLoginAttempt.current = 0;
+  }, []);
 
-
-  // Direct initialization since useEffect isn't working
-  if (supabase && !initAttempted.current && !initialized) {
-    console.log("🔥 DIRECT INITIALIZATION - Running during render!");
-    initAttempted.current = true;
+  // Initialize auth only once using useEffect
+  useEffect(() => {
+    if (initAttempted.current || !supabase) {
+      return;
+    }
     
-    // Run async initialization
-    (async () => {
+    initAttempted.current = true;
+    console.log("🚀 Initializing auth...");
+    
+    const initializeAuth = async () => {
       try {
-        console.log("📡 Direct: Getting initial session...");
-        
-        // First, try to refresh the session to make sure we have the latest
+        console.log("📡 Getting initial session...");
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error("❌ Direct: Error getting session:", error);
+          console.error("❌ Error getting session:", error);
         } else {
-          console.log("📊 Direct: Initial session:", session ? `Found session for ${session.user?.email}` : "No session");
+          console.log("📊 Initial session:", session ? `Found session for ${session.user?.email}` : "No session");
         }
 
         setSession(session);
         setUser(session?.user || null);
         
         if (session?.user) {
-          console.log("👤 Direct: User found, fetching profile...");
+          console.log("👤 User found, fetching profile...");
           try {
             const profileData = await fetchProfile(session.user.id);
             setProfile(profileData);
-            console.log("✅ Direct: Profile set:", profileData);
-            
-            // Force a re-render to update the UI
-            setIsLoading(false);
-            setInitialized(true);
+            console.log("✅ Profile set:", profileData);
           } catch (profileError) {
-            console.error("❌ Direct: Profile fetch error:", profileError);
-            setIsLoading(false);
-            setInitialized(true);
+            console.error("❌ Profile fetch error:", profileError);
           }
-        } else {
-          setIsLoading(false);
-          setInitialized(true);
         }
         
         // Set up auth state change listener for future changes
-        console.log("🔔 Direct: Setting up auth listener...");
-        supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log("🔔 Setting up auth listener...");
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
           console.log("🔄 Auth state change:", event, session ? `has session for ${session.user?.email}` : "no session");
           
           setSession(session);
@@ -211,102 +163,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         });
         
-      } catch (error) {
-        console.error("🚨 Direct: Auth initialization error:", error);
-        setIsLoading(false);
-        setInitialized(true);
-      }
-    })();
-  }
-
-
-
-  console.log("🎬 About to set up useEffect for auth initialization...");
-
-  // Try useLayoutEffect instead - runs before useEffect
-  useLayoutEffect(() => {
-    console.log("🚀 useLayoutEffect RUNNING - this should work!");
-    
-    if (!supabase) {
-      console.error("❌ No supabase in layoutEffect");
-      return;
-    }
-    
-    const quickInit = async () => {
-      console.log("⚡ Quick auth initialization...");
-      
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("📊 LayoutEffect session:", session ? "Found" : "None");
-        
-        if (session) {
-          setSession(session);
-          setUser(session.user);
-          setIsLoading(false);
-          setInitialized(true);
-          
-          // Try to fetch profile
-          const profileData = await fetchProfile(session.user.id);
-          setProfile(profileData);
-          console.log("✅ LayoutEffect profile set:", profileData?.full_name);
-        } else {
-          setIsLoading(false);
-          setInitialized(true);
-        }
-      } catch (error) {
-        console.error("❌ LayoutEffect error:", error);
-        setIsLoading(false);
-        setInitialized(true);
-      }
-    };
-    
-    quickInit();
-  }, [supabase, fetchProfile]);
-
-  // Simple test useEffect
-  useEffect(() => {
-    console.log("🔥 SIMPLE useEffect is working!");
-  }, []);
-
-  useEffect(() => {
-    console.log("🎉 useEffect callback is RUNNING!");
-    
-    const initializeAuth = async () => {
-      console.log("🚀 Initializing auth...");
-      
-      if (!supabase) {
-        console.error("❌ Supabase client is not initialized.");
-        setIsLoading(false);
-        setInitialized(true);
-        return;
-      }
-
-      try {
-        console.log("📡 Getting initial session...");
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("❌ Error getting session:", error);
-        } else {
-          console.log("� Initial session:", session ? "Found session" : "No session");
-        }
-
-        setSession(session);
-        setUser(session?.user || null);
-        
-        if (session?.user) {
-          console.log("� User found, fetching profile...");
-          try {
-            const profileData = await fetchProfile(session.user.id);
-            setProfile(profileData);
-            console.log("✅ Profile set:", profileData);
-          } catch (profileError) {
-            console.error("❌ Profile fetch error:", profileError);
-          }
-        }
+        // Store subscription for cleanup
+        authListenerRef.current = { data: { subscription } };
         
       } catch (error) {
-        console.error("� Auth initialization error:", error);
+        console.error("🚨 Auth initialization error:", error);
       } finally {
         console.log("✅ Auth initialization complete");
         setIsLoading(false);
@@ -315,16 +176,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initializeAuth();
-  }, []); // Empty dependency array
+    
+    // Cleanup function
+    return () => {
+      if (authListenerRef.current?.data?.subscription) {
+        authListenerRef.current.data.subscription.unsubscribe();
+      }
+    };
+  }, [supabase, fetchProfile]);
 
   const signIn = async (email: string, password: string) => {
     try {
       console.log("🔐 SignIn: Starting login process...");
       
-      // Check rate limiting
       const now = Date.now();
+      
+      // Reset attempt count if more than a minute has passed
+      if (now - firstAttemptTime.current > MINUTE_COOLDOWN) {
+        loginAttemptCount.current = 0;
+        firstAttemptTime.current = now;
+      }
+      
+      // Check if we've exceeded attempts in the last minute
+      if (loginAttemptCount.current >= MAX_ATTEMPTS_PER_MINUTE) {
+        const timeUntilReset = Math.ceil((MINUTE_COOLDOWN - (now - firstAttemptTime.current)) / 1000);
+        console.warn(`🚫 Too many login attempts. Need to wait ${timeUntilReset} seconds.`);
+        return { 
+          error: { 
+            message: `Too many login attempts. Please wait ${timeUntilReset} seconds before trying again.` 
+          } 
+        };
+      }
+      
+      // Check basic rate limiting between attempts
       if (now - lastLoginAttempt.current < LOGIN_COOLDOWN) {
         const remainingTime = Math.ceil((LOGIN_COOLDOWN - (now - lastLoginAttempt.current)) / 1000);
+        console.warn(`⏰ Rate limit: Need to wait ${remainingTime} seconds between attempts.`);
         return { 
           error: { 
             message: `Please wait ${remainingTime} seconds before trying again.` 
@@ -332,13 +219,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
       
+      // Record this attempt
       lastLoginAttempt.current = now;
+      loginAttemptCount.current += 1;
+      
+      // Set first attempt time if this is the first attempt in this window
+      if (loginAttemptCount.current === 1) {
+        firstAttemptTime.current = now;
+      }
+      
+      console.log(`📊 Login attempt ${loginAttemptCount.current}/${MAX_ATTEMPTS_PER_MINUTE} in current window`);
       
       if (!supabase) {
         console.error("Supabase client is not initialized.");
         return { error: { message: "Supabase client is not initialized." } };
       }
-      
+
+      console.log("🔄 Attempting Supabase authentication...");
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -348,10 +245,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("❌ SignIn: Login failed:", error);
         
         // Handle specific error types
-        if (error.message?.includes('rate limit')) {
+        if (error.message?.includes('rate limit') || error.message?.includes('Too many')) {
+          console.error("🚫 Supabase rate limit hit! Blocking further attempts for 2 minutes.");
+          // Block further attempts for 2 minutes when we hit Supabase rate limit
+          firstAttemptTime.current = now;
+          loginAttemptCount.current = MAX_ATTEMPTS_PER_MINUTE;
           return { 
             error: { 
-              message: "Too many login attempts. Please wait a moment and try again." 
+              message: "Rate limit reached. Please wait 2 minutes before trying again." 
             } 
           };
         }
@@ -378,18 +279,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.user && data.session) {
         console.log("✅ SignIn: Login successful, updating state...");
         
-        // Manually update state since auth state change listener isn't working
-        setSession(data.session);
-        setUser(data.user);
+        // Reset rate limiting on successful login
+        loginAttemptCount.current = 0;
+        firstAttemptTime.current = 0;
+        console.log("🎉 Rate limiting reset after successful login");
         
-        // Fetch and set profile
-        try {
-          const profileData = await fetchProfile(data.user.id);
-          setProfile(profileData);
-          console.log("✅ SignIn: Profile set:", profileData);
-        } catch (profileError) {
-          console.error("❌ SignIn: Profile fetch error:", profileError);
-        }
+        // Note: Don't manually update state here - let the auth listener handle it
+        // This prevents duplicate state updates that could cause extra API calls
+        console.log("🔄 Letting auth listener handle state update...");
         
         return { error: null };
       }
@@ -433,6 +330,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Reset rate limiting on signout
+      loginAttemptCount.current = 0;
+      firstAttemptTime.current = 0;
+      console.log("🧹 Rate limiting reset on signout");
+      
       if (supabase) {
         await supabase.auth.signOut();
       } else {
@@ -453,6 +355,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signUp,
       signOut,
       refreshProfile,
+      resetRateLimit,
     }),
     [
       user,
@@ -460,7 +363,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       isLoading,
       initialized,
+      signIn,
+      signUp,
+      signOut,
       refreshProfile,
+      resetRateLimit,
     ]
   );
 
