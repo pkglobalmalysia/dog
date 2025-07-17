@@ -85,13 +85,16 @@ export default function HomePage() {
         {/* Main Content */}
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl text-white md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            Speak English <span className="text-[#ffc107]">100%</span>
+            Learn English in Malaysia - <span className="text-[#ffc107]">Speak 100%</span>
             <br />
             <span className="text-[#ffc107]">Confidently</span>
           </h1>
+          <h2 className="text-2xl text-gray-300 mb-4 font-semibold">
+            #1 English Speaking Course in Malaysia | iCSE Coaching Program
+          </h2>
           <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-            Transform your career with our innovative i Can Speak English (iCSE)
-            Coaching™ designed for Malaysian professionals.
+            Transform your career with Malaysia&apos;s most effective English speaking program. 
+            Join 10,000+ professionals who achieved fluency through our proven i Can Speak English (iCSE) methodology.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -148,19 +151,19 @@ export default function HomePage() {
       </section>
 
       {/* Learn. Build. Grow. Section */}
-      <section className="py-16 md:py-24 ">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+      <section className="py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="overflow-hidden  rounded-lg " ref={emblaRef}>
+            <div className="overflow-hidden rounded-lg" ref={emblaRef}>
               <div className="flex">
                 {images.map((src, index) => (
-                  <div className="min-w-full " key={index}>
+                  <div className="min-w-full" key={index}>
                     <Image
                       src={src}
-                      alt={`Slide ${index + 1}`}
+                      alt={`iCSE Malaysia English Course - Professional Training Program ${index + 1}`}
                       width={500}
                       height={200}
-                      className=" object-fit rounded-lg"
+                      className="object-fit rounded-lg"
                     />
                   </div>
                 ))}
@@ -168,27 +171,25 @@ export default function HomePage() {
             </div>
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-2">
-                Learn. <span className="text-[#ffc107]">Build.</span> Grow.
+                Learn English. <span className="text-[#ffc107]">Build Confidence.</span> Grow Career.
               </h2>
               <div className="w-20 h-1 bg-[#ffc107] mb-6"></div>
               <p className="text-gray-700 dark:text-gray-300 mb-6">
-                PK International Business School is committed to transforming
-                careers through our innovative English speaking programs. Our
-                impact speaks volumes through the success of our students who
-                have achieved 100% confidence in their professional
-                communication.
+                <strong>iCSE Malaysia</strong> is committed to transforming careers through our innovative 
+                <em> English speaking programs in Malaysia</em>. Our impact speaks volumes through the success 
+                of our 10,000+ students who have achieved 100% confidence in their professional English communication.
               </p>
               <p className="text-gray-700 dark:text-gray-300 mb-8">
-                Using our revolutionary Chaarran and PARi Models, we help
-                professionals overcome the fear of making mistakes while
-                speaking English, enabling them to excel in their corporate
-                careers.
+                Using our revolutionary <strong>Chaarran and PARi Models</strong>, we help Malaysian professionals 
+                overcome the fear of making mistakes while speaking English, enabling them to excel in their 
+                corporate careers with <em>fluent English speaking skills</em>.
               </p>
               <Link
                 href="/about"
                 className="bg-[#ffc107] hover:bg-[#e6af06] text-[#0a2540] font-bold py-3 px-6 rounded-md transition-all inline-flex items-center"
+                title="Learn more about iCSE Malaysia English courses"
               >
-                Learn More
+                Learn More About Our English Programs
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Link>
             </div>
@@ -201,34 +202,34 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-              Why Choose PK International Business School?
+              Why Choose iCSE Malaysia for English Learning?
             </h2>
             <div className="w-24 h-1 bg-[#ffc107] mx-auto mb-6"></div>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              We are committed to transforming careers through our innovative
-              English speaking programs.
+              Malaysia&apos;s #1 English speaking course with proven results. 
+              We transform careers through innovative English communication training programs.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-[#ffc107] p-6 rounded-lg text-center">
               <div className="text-[#0a2540] text-4xl font-bold mb-2">
-                1500+
+                10,000+
               </div>
               <div className="text-[#0a2540] font-medium">
-                Students Trained Successfully
-              </div>
-            </div>
-            <div className="bg-[#ffc107] p-6 rounded-lg text-center">
-              <div className="text-[#0a2540] text-4xl font-bold mb-2">10+</div>
-              <div className="text-[#0a2540] font-medium">
-                Professional Courses Offered
+                Professionals Trained Successfully in English Speaking
               </div>
             </div>
             <div className="bg-[#ffc107] p-6 rounded-lg text-center">
-              <div className="text-[#0a2540] text-4xl font-bold mb-2">25+</div>
+              <div className="text-[#0a2540] text-4xl font-bold mb-2">99%</div>
               <div className="text-[#0a2540] font-medium">
-                Expert Instructors & Coaches
+                Success Rate - Guaranteed English Fluency Results
+              </div>
+            </div>
+            <div className="bg-[#ffc107] p-6 rounded-lg text-center">
+              <div className="text-[#0a2540] text-4xl font-bold mb-2">15+</div>
+              <div className="text-[#0a2540] font-medium">
+                Years of Excellence in English Training Malaysia
               </div>
             </div>
           </div>
@@ -240,12 +241,12 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-2">
-              What We Offer
+              English Speaking Programs We Offer in Malaysia
             </h2>
             <div className="w-24 h-1 bg-[#ffc107] mx-auto mb-6"></div>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Our comprehensive programs are designed to help you master English
-              communication in professional settings
+              Our comprehensive <strong>English speaking courses</strong> are designed specifically for 
+              Malaysian professionals to master English communication in workplace settings
             </p>
           </div>
 
@@ -254,14 +255,15 @@ export default function HomePage() {
               <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
                 <GraduationCap className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-bold mb-4">iCSE Coaching™ Alpha</h3>
+              <h3 className="text-xl font-bold mb-4">iCSE Coaching™ Alpha - Beginner English Course</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Foundation level program to build confidence and overcome the
-                fear of speaking English in professional settings.
+                Foundation level <em>English speaking program</em> to build confidence and overcome the
+                fear of speaking English in professional settings. Perfect for beginners in Malaysia.
               </p>
               <Link
                 href="/programs"
                 className="text-[#ffc107] hover:text-[#e6af06] font-medium inline-flex items-center"
+                title="Learn more about beginner English course in Malaysia"
               >
                 Learn More <ChevronRight className="ml-1 h-4 w-4" />
               </Link>
@@ -271,14 +273,15 @@ export default function HomePage() {
               <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
                 <Users className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-bold mb-4">iCSE Coaching™ Beta</h3>
+              <h3 className="text-xl font-bold mb-4">iCSE Coaching™ Beta - Intermediate English</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Intermediate level program to enhance fluency and master
-                speaking rhythms for professional communication.
+                Intermediate level program to enhance <strong>English fluency</strong> and master
+                speaking rhythms for professional communication in Malaysian workplaces.
               </p>
               <Link
                 href="/programs"
                 className="text-[#ffc107] hover:text-[#e6af06] font-medium inline-flex items-center"
+                title="Intermediate English speaking course Malaysia"
               >
                 Learn More <ChevronRight className="ml-1 h-4 w-4" />
               </Link>
@@ -288,14 +291,15 @@ export default function HomePage() {
               <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
                 <Award className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-bold mb-4">iCSE Coaching™ Gamma</h3>
+              <h3 className="text-xl font-bold mb-4">iCSE Coaching™ Gamma - Advanced Business English</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Advanced level program to perfect professional communication
-                skills and master meeting leadership.
+                Advanced level program to perfect <em>professional English communication</em>
+                skills and master meeting leadership for corporate success in Malaysia.
               </p>
               <Link
                 href="/programs"
                 className="text-[#ffc107] hover:text-[#e6af06] font-medium inline-flex items-center"
+                title="Advanced business English course Malaysia"
               >
                 Learn More <ChevronRight className="ml-1 h-4 w-4" />
               </Link>
@@ -307,14 +311,15 @@ export default function HomePage() {
               <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
                 <Headphones className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-bold mb-4">Active Listening</h3>
+              <h3 className="text-xl font-bold mb-4">Active Listening - English Comprehension</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Enhance comprehension and speaking rhythm through attentive
-                listening practices.
+                Enhance <strong>English comprehension</strong> and speaking rhythm through attentive
+                listening practices designed for Malaysian professionals.
               </p>
               <Link
                 href="/programs"
                 className="text-[#ffc107] hover:text-[#e6af06] font-medium inline-flex items-center"
+                title="English listening skills course Malaysia"
               >
                 Learn More <ChevronRight className="ml-1 h-4 w-4" />
               </Link>
@@ -324,14 +329,15 @@ export default function HomePage() {
               <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
                 <BookOpen className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-bold mb-4">Immersive Reading</h3>
+              <h3 className="text-xl font-bold mb-4">Immersive Reading - English Vocabulary</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Build vocabulary and perfect intonation through engaging reading
-                exercises.
+                Build <em>English vocabulary</em> and perfect intonation through engaging reading
+                exercises tailored for Malaysian business contexts.
               </p>
               <Link
                 href="/programs"
                 className="text-[#ffc107] hover:text-[#e6af06] font-medium inline-flex items-center"
+                title="English vocabulary building course Malaysia"
               >
                 Learn More <ChevronRight className="ml-1 h-4 w-4" />
               </Link>
@@ -341,9 +347,9 @@ export default function HomePage() {
               <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
                 <Globe className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-bold mb-4">Professional English</h3>
+              <h3 className="text-xl font-bold mb-4">Professional Business English Malaysia</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Master the specific English skills needed for corporate
+                Master the specific <strong>business English skills</strong> needed for corporate
                 environments and career advancement.
               </p>
               <Link
