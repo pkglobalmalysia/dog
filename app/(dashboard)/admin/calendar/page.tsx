@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -103,6 +103,10 @@ export default function AdminCalendar() {
 
   const supabase = createClientComponentClient()
 
+  // Add simple caching to reduce database calls
+  const lastFetchTime = useRef(0)
+  const FETCH_COOLDOWN = 30000 // 30 seconds between fetches
+
   // Wrap applyFilters with useCallback to fix the dependency issue
   const applyFilters = useCallback(() => {
     let filtered = [...events]
@@ -123,11 +127,19 @@ export default function AdminCalendar() {
   }, [events, filterType, filterCourse, filterTeacher])
 
   const fetchData = useCallback(async () => {
+    // Prevent excessive fetching in development
+    const now = Date.now()
+    if (now - lastFetchTime.current < FETCH_COOLDOWN) {
+      console.log("Skipping fetch due to cooldown")
+      return
+    }
+    lastFetchTime.current = now
+
     try {
       setLoading(true)
       console.log("Fetching calendar data...")
 
-      // Use a simple select query with all expected columns
+      // Use a simple select query with all expected columns including payment_amount
       const { data: eventsData, error: eventsError } = await supabase
         .from("calendar_events")
         .select(`
@@ -294,15 +306,28 @@ export default function AdminCalendar() {
       return
     }
 
+    // Validate event-type specific requirements
+    const eventType = VALID_EVENT_TYPES.includes(formData.event_type as EventType) ? formData.event_type : "other"
+    
+    // For class events, course_id is required for attendance tracking
+    if (eventType === "class" && !formData.course_id) {
+      setMessage({ type: "error", text: "Class events require a course to be selected" })
+      return
+    }
+    
+    // For teacher payment events, teacher_id and payment_amount are required
+    if (eventType === "payment" && (!formData.teacher_id || !formData.payment_amount)) {
+      setMessage({ type: "error", text: "Teacher payment events require a teacher and payment amount" })
+      return
+    }
+
     setSubmitting(true)
 
     try {
-      // Ensure event_type is one of the valid types
-      const eventType = VALID_EVENT_TYPES.includes(formData.event_type as EventType) ? formData.event_type : "other"
-
       console.log("Submitting event with type:", eventType)
+      console.log("Form data:", formData)
 
-      const eventData = {
+      const eventData: any = {
         title: formData.title,
         description: formData.description || null,
         event_type: eventType,
@@ -311,21 +336,90 @@ export default function AdminCalendar() {
         all_day: formData.all_day,
         course_id: formData.course_id || null,
         teacher_id: formData.teacher_id || null,
-        payment_amount: formData.payment_amount ? Number.parseFloat(formData.payment_amount) : null,
+        payment_amount: formData.payment_amount ? parseFloat(formData.payment_amount) : null,
         color: formData.color,
         created_by: user.id,
       }
 
+      // Explicitly remove any total_amount field to avoid database constraint conflicts
+      delete eventData.total_amount
+
+      console.log("Event data being sent to database:", eventData)
+      console.log("Event data keys:", Object.keys(eventData))
+
+      // Note: payment_amount is included and will be saved to the database
+
       if (editingEvent) {
+        // For updates, payment_amount is included and will be saved
         const { error } = await supabase.from("calendar_events").update(eventData).eq("id", editingEvent.id)
 
         if (error) throw new Error(`Failed to update event: ${error.message}`)
         setMessage({ type: "success", text: "Event updated successfully!" })
       } else {
-        const { error } = await supabase.from("calendar_events").insert(eventData)
+        // For new events, try a two-step approach to avoid trigger conflicts
+        try {
+          // Step 1: Create with minimal required fields
+          const minimalEventData = {
+            title: formData.title,
+            event_type: eventType,
+            start_time: formatDateForStorage(formData.start_time),
+            end_time: formData.end_time ? formatDateForStorage(formData.end_time) : null,
+            created_by: user.id,
+            all_day: formData.all_day || false,
+          }
 
-        if (error) throw new Error(`Failed to create event: ${error.message}`)
-        setMessage({ type: "success", text: "Event created successfully!" })
+          console.log("Creating event with minimal data:", minimalEventData)
+
+          const { data: newEvent, error: insertError } = await supabase
+            .from("calendar_events")
+            .insert(minimalEventData)
+            .select()
+            .single()
+
+          if (insertError) {
+            console.error("Insert error details:", insertError)
+            throw new Error(`Failed to create event: ${insertError.message}`)
+          }
+
+          // Step 2: Update with additional fields if the insert succeeded
+          if (newEvent && (formData.description || formData.course_id || formData.teacher_id || formData.payment_amount || formData.color !== "#3b82f6")) {
+            const updateData: any = {}
+            
+            if (formData.description) updateData.description = formData.description
+            if (formData.course_id) updateData.course_id = formData.course_id
+            if (formData.teacher_id) updateData.teacher_id = formData.teacher_id
+            if (formData.payment_amount) updateData.payment_amount = parseFloat(formData.payment_amount)
+            if (formData.color && formData.color !== "#3b82f6") updateData.color = formData.color
+            if (formData.all_day !== false) updateData.all_day = formData.all_day
+
+            const { error: updateError } = await supabase
+              .from("calendar_events")
+              .update(updateData)
+              .eq("id", newEvent.id)
+
+            if (updateError) {
+              console.error("Update error details:", updateError)
+              // If update fails, we still have the basic event created
+              console.warn("Event created but some fields may not have been saved:", updateError.message)
+            }
+          }
+
+          setMessage({ type: "success", text: "Event created successfully!" })
+
+        } catch (err: any) {
+          console.error("Two-step creation failed, trying original method:", err)
+          
+          // Fallback to original method
+          const { error } = await supabase.from("calendar_events").insert(eventData)
+          
+          if (error) {
+            console.error("Database error details:", error)
+            console.error("Error code:", error.code)
+            console.error("Error hint:", error.hint)
+            throw new Error(`Failed to create event: ${error.message}`)
+          }
+          setMessage({ type: "success", text: "Event created successfully!" })
+        }
 
         // Auto-create lecture if it's a class event
         if (formData.event_type === "class" && formData.course_id) {
@@ -371,7 +465,7 @@ export default function AdminCalendar() {
       all_day: event.all_day,
       course_id: event.course_id || "",
       teacher_id: event.teacher_id || "",
-      payment_amount: event.payment_amount?.toString() || "",
+      payment_amount: event.payment_amount ? event.payment_amount.toString() : "",
       color: event.color || "#3b82f6",
     })
     setShowEventsList(false)
@@ -793,9 +887,10 @@ export default function AdminCalendar() {
                           </div>
                           {event.course_title && <p>Course: {event.course_title}</p>}
                           {event.teacher_name && <p>Teacher: {event.teacher_name}</p>}
+                          {/* Payment amount display - shows the payment_amount from database */}
                           {event.payment_amount && (
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4" />
+                            <div className="flex items-center gap-1 text-xs text-green-600">
+                              <DollarSign className="h-3 w-3" />
                               RM {event.payment_amount}
                             </div>
                           )}

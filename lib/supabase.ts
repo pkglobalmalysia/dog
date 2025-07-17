@@ -77,13 +77,13 @@ export type CalendarEvent = {
   id: string
   title: string
   description?: string
-  event_type: "class" | "holiday" | "payment" | "other"
+  event_type: "class" | "assignment" | "exam" | "payment" | "holiday" | "other"
   start_time: string
   end_time?: string
   all_day?: boolean
   course_id?: string
   teacher_id?: string
-  payment_amount?: number
+  total_amount?: number
   color?: string
   created_by?: string
   lecture_id?: string

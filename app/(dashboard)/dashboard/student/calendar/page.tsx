@@ -15,7 +15,7 @@ type CalendarEvent = {
   id: string
   title: string
   description: string
-  event_type: "class" | "assignment" | "exam" | "holiday" | "other"
+  event_type: "class" | "assignment" | "exam" | "payment" | "holiday" | "other"
   start_time: string
   end_time: string
   course_title: string
@@ -33,82 +33,15 @@ export default function StudentCalendar() {
 
   const supabase = createClientComponentClient()
 
-  // Wrap createEventsFromDatabase with useCallback to fix the dependency issue
+  // Simplified: Fetch all relevant events from calendar_events table
   const createEventsFromDatabase = useCallback(async () => {
     try {
-      const events: CalendarEvent[] = []
-
-      // Get enrolled courses
+      // Get enrolled course IDs
       const { data: enrollments } = await supabase.from("enrollments").select("course_id").eq("student_id", user?.id)
+      const courseIds = enrollments?.map((e) => e.course_id) || []
 
-      if (enrollments && enrollments.length > 0) {
-        const courseIds = enrollments.map((e) => e.course_id)
-
-        // Fetch courses for class events
-        const { data: coursesData } = await supabase
-          .from("courses")
-          .select(`
-            id,
-            title,
-            description,
-            scheduled_time,
-            live_class_url,
-            profiles(full_name)
-          `)
-          .in("id", courseIds)
-
-        if (coursesData) {
-          coursesData.forEach((course) => {
-            // profiles is an array, get first element safely
-            const teacherProfile = Array.isArray(course.profiles) ? course.profiles[0] : undefined
-
-            events.push({
-              id: `course-${course.id}`,
-              title: course.title,
-              description: course.description || `Live class for ${course.title}`,
-              event_type: "class",
-              start_time: course.scheduled_time,
-              end_time: new Date(new Date(course.scheduled_time).getTime() + 60 * 60 * 1000).toISOString(),
-              course_title: course.title,
-              teacher_name: teacherProfile?.full_name || "Unknown Teacher",
-              live_class_url: course.live_class_url || "",
-            })
-          })
-        }
-
-        // Fetch assignments for assignment events
-        const { data: assignmentsData } = await supabase
-          .from("assignments")
-          .select(`
-            id,
-            title,
-            description,
-            due_date,
-            courses(title)
-          `)
-          .in("course_id", courseIds)
-
-        if (assignmentsData) {
-          assignmentsData.forEach((assignment) => {
-            // courses is an array, get first element safely
-            const course = Array.isArray(assignment.courses) ? assignment.courses[0] : undefined
-
-            events.push({
-              id: `assignment-${assignment.id}`,
-              title: assignment.title,
-              description: assignment.description || `Assignment due: ${assignment.title}`,
-              event_type: "assignment",
-              start_time: assignment.due_date,
-              end_time: assignment.due_date,
-              course_title: course?.title || "Unknown Course",
-              teacher_name: "", // fill if you want
-            })
-          })
-        }
-      }
-
-      // Fetch holiday and other public events from calendar_events (visible to all students)
-      const { data: holidayEvents } = await supabase
+      // Fetch all relevant events from calendar_events table
+      let query = supabase
         .from("calendar_events")
         .select(`
           id,
@@ -116,32 +49,61 @@ export default function StudentCalendar() {
           description,
           event_type,
           start_time,
-          end_time
+          end_time,
+          course_id,
+          teacher_id,
+          courses(title),
+          profiles!calendar_events_teacher_id_fkey(full_name)
         `)
-        .in("event_type", ["holiday", "other"])
         .order("start_time", { ascending: true })
 
-      if (holidayEvents) {
-        holidayEvents.forEach((event) => {
-          events.push({
-            id: `holiday-${event.id}`,
-            title: event.title,
-            description: event.description || "",
-            event_type: event.event_type as "holiday" | "other",
-            start_time: event.start_time,
-            end_time: event.end_time || event.start_time,
-            course_title: "",
-            teacher_name: "",
-          })
-        })
+      // Students see:
+      // 1. Events for their enrolled courses (class, assignment, exam)
+      // 2. Public events (holiday, other)
+      if (courseIds.length > 0) {
+        query = query.or(`course_id.in.(${courseIds.join(",")}),event_type.in.(holiday,other)`)
+      } else {
+        // If no enrolled courses, only show public events
+        query = query.in("event_type", ["holiday", "other"])
       }
 
-      setEvents(events)
+      const { data: eventsData, error } = await query
+
+      if (error) {
+        console.error("Error fetching calendar events:", error)
+        setEvents([])
+        return
+      }
+
+      // Transform the data
+      const transformedEvents: CalendarEvent[] = (eventsData || []).map((event) => {
+        // Handle course title (courses might be array or single object)
+        const course = Array.isArray(event.courses) ? event.courses[0] : event.courses
+        const courseTitle = course?.title || ""
+
+        // Handle teacher name (profiles might be array or single object)  
+        const teacher = Array.isArray(event.profiles) ? event.profiles[0] : event.profiles
+        const teacherName = teacher?.full_name || ""
+
+        return {
+          id: event.id,
+          title: event.title,
+          description: event.description || "",
+          event_type: event.event_type as "class" | "assignment" | "exam" | "payment" | "holiday" | "other",
+          start_time: event.start_time,
+          end_time: event.end_time || event.start_time,
+          course_title: courseTitle,
+          teacher_name: teacherName,
+          live_class_url: "", // You can add this to calendar_events table if needed
+        }
+      })
+
+      setEvents(transformedEvents)
     } catch (error) {
       console.error("Error creating events from database:", error)
       setEvents([])
     }
-  }, [user?.id, supabase, setEvents])
+  }, [user?.id, supabase])
 
   const fetchEvents = useCallback(async () => {
     if (!user) return

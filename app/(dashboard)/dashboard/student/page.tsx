@@ -12,6 +12,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { ProgressCircle } from "@/components/dashboard/progress-circle";
 import { UpcomingClassCard } from "@/components/dashboard/upcoming-class-card";
 import { CourseProgressRow } from "@/components/dashboard/course-progress-row";
+import CalendarEventsView from "@/components/calendar-events-view";
 import { BookOpen, Clock, FileText, Video, CheckCircle } from "lucide-react";
 import { isFuture, format } from "date-fns";
 
@@ -590,6 +591,13 @@ export default function StudentDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Calendar Events Section */}
+      <CalendarEventsView 
+        userRole="student" 
+        userId={user?.id || ""} 
+        courseIds={courses.map(course => course.id)}
+      />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

@@ -10,6 +10,7 @@ import { BookOpen, Users, Calendar, FileText, Video, DollarSign, Award, Play } f
 import { format } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
+import CalendarEventsView from "@/components/calendar-events-view"
 
 type Course = {
   id: string
@@ -488,6 +489,13 @@ export default function TeacherDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Calendar Events Section */}
+      <CalendarEventsView 
+        userRole="teacher" 
+        userId={user?.id || ""} 
+        teacherId={user?.id || ""}
+      />
 
       {/* My Courses */}
       <Card className="border-0 shadow-xl glass-effect">
