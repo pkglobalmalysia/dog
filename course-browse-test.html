@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Browse Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #e8f5e8; border-color: #4caf50; }
+        .error { background: #ffe8e8; border-color: #f44336; }
+        .warning { background: #fff3cd; border-color: #ffc107; }
+        .info { background: #e8f4f8; border-color: #2196f3; }
+        button { 
+            background: #2196f3; color: white; padding: 10px 20px; 
+            border: none; border-radius: 4px; cursor: pointer; margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        .button-disabled { background: #ccc !important; cursor: not-allowed !important; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Course Browse Functionality Test</h1>
+        <p>This test verifies that students can browse all courses created by admins in the database.</p>
+        
+        <div class="test-section info">
+            <h3>📋 Test Plan</h3>
+            <ol>
+                <li>Check if courses exist in database</li>
+                <li>Test the /courses page (shows all courses from database)</li>
+                <li>Test student dashboard "Browse Courses" link</li>
+                <li>Test enrollment request functionality</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Test Results</h3>
+            <div id="results">
+                <p>Click the tests below to run them...</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Tests</h3>
+            <button onclick="testCoursesAPI()">1. Test Courses API</button>
+            <button onclick="testCoursesPage()">2. Test /courses Page</button>
+            <button onclick="testStudentDashboard()">3. Test Student Dashboard</button>
+            <button onclick="runAllTests()">🚀 Run All Tests</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📱 Quick Links</h3>
+            <div>
+                <a href="http://localhost:3002/courses" target="_blank" style="color: #2196f3;">📖 Browse Courses Page</a><br><br>
+                <a href="http://localhost:3002/login" target="_blank" style="color: #2196f3;">🔑 Login Page</a><br><br>
+                <a href="http://localhost:3002/dashboard/admin/courses" target="_blank" style="color: #2196f3;">👨‍💼 Admin Courses</a><br><br>
+                <a href="http://localhost:3002/dashboard/student" target="_blank" style="color: #2196f3;">👨‍🎓 Student Dashboard</a>
+            </div>
+        </div>
+
+        <div class="test-section warning">
+            <h3>📝 Test Credentials</h3>
+            <pre>
+Admin: ceo@pkibs.com / PKibs@@11
+Student: sofeaqistina@spectrum2u.com / studentsophie
+Teacher: teacher@example.com / teacher123
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        let supabase;
+
+        // Initialize Supabase
+        (async () => {
+            const { createClient } = await import('https://cdn.skypack.dev/@supabase/supabase-js@2');
+            supabase = createClient(
+                'https://xkrrwzawpmhexzqqoxmv.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrcnJ3emF3cG1oZXh6cXFveG12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ0OTA5MzIsImV4cCI6MjA1MDA2NjkzMn0.FO_WBQKGbftIK0CtKEBKVQMqDWNxgdHgmZVKTkLCSSE'
+            );
+            log('✅ Supabase client initialized');
+        })();
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.style.margin = '5px 0';
+            div.style.padding = '8px';
+            div.style.borderRadius = '4px';
+            
+            switch(type) {
+                case 'success':
+                    div.style.background = '#e8f5e8';
+                    div.style.color = '#2e7d32';
+                    break;
+                case 'error':
+                    div.style.background = '#ffe8e8';
+                    div.style.color = '#c62828';
+                    break;
+                case 'warning':
+                    div.style.background = '#fff3cd';
+                    div.style.color = '#f57c00';
+                    break;
+                default:
+                    div.style.background = '#e8f4f8';
+                    div.style.color = '#1565c0';
+            }
+            
+            div.innerHTML = `[${timestamp}] ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testCoursesAPI() {
+            try {
+                log('🔍 Testing courses API...');
+                
+                if (!supabase) {
+                    log('❌ Supabase not initialized yet', 'error');
+                    return;
+                }
+
+                const { data: courses, error } = await supabase
+                    .from('courses')
+                    .select(`
+                        id,
+                        title,
+                        description,
+                        scheduled_time,
+                        teacher_id,
+                        status,
+                        profiles(full_name)
+                    `)
+                    .eq('status', 'active')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    log(`❌ Error fetching courses: ${error.message}`, 'error');
+                    return;
+                }
+
+                log(`✅ Found ${courses?.length || 0} active courses in database`, 'success');
+                
+                if (courses && courses.length > 0) {
+                    courses.forEach((course, index) => {
+                        const teacherName = Array.isArray(course.profiles) ? 
+                            course.profiles[0]?.full_name : course.profiles?.full_name;
+                        log(`   ${index + 1}. "${course.title}" by ${teacherName || 'No teacher'}`);
+                    });
+                } else {
+                    log('⚠️ No courses found. Create some courses as admin first.', 'warning');
+                }
+
+            } catch (error) {
+                log(`❌ Unexpected error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCoursesPage() {
+            try {
+                log('🌐 Testing /courses page...');
+                
+                const response = await fetch('http://localhost:3002/courses');
+                if (response.ok) {
+                    log('✅ /courses page is accessible', 'success');
+                    log('📱 Check the browser tab for the courses page');
+                } else {
+                    log(`❌ /courses page returned status: ${response.status}`, 'error');
+                }
+                
+                // Open the page
+                window.open('http://localhost:3002/courses', '_blank');
+                
+            } catch (error) {
+                log(`❌ Error testing courses page: ${error.message}`, 'error');
+            }
+        }
+
+        async function testStudentDashboard() {
+            log('👨‍🎓 Testing student dashboard...');
+            log('📱 Opening student dashboard in new tab');
+            log('⚠️ You need to login as student first: sofeaqistina@spectrum2u.com / studentsophie', 'warning');
+            window.open('http://localhost:3002/dashboard/student', '_blank');
+        }
+
+        async function runAllTests() {
+            log('🚀 Running all tests...', 'info');
+            await testCoursesAPI();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testCoursesPage();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testStudentDashboard();
+            log('✅ All tests completed!', 'success');
+        }
+
+        // Clear results on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('results').innerHTML = '<p>Ready to run tests...</p>';
+        });
+    </script>
+</body>
+</html>

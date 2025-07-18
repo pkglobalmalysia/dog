@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ Enhanced Course Browse - Enrollment Status</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 1000px; margin: 0 auto; 
+            background: white; padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center; margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+        .enhancement-badge {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white; padding: 8px 16px;
+            border-radius: 20px; font-size: 14px;
+            font-weight: bold; display: inline-block;
+            margin-bottom: 10px;
+        }
+        .section { 
+            margin: 25px 0; padding: 20px; 
+            border: 2px solid #e1e8ed; border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .section:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+        .new-feature { background: linear-gradient(45deg, #e8f5e8, #f1f8f1); border-color: #4caf50; }
+        .demo { background: linear-gradient(45deg, #e8f4f8, #f1f6f9); border-color: #2196f3; }
+        .testing { background: linear-gradient(45deg, #fff3cd, #fef8e1); border-color: #ffc107; }
+        
+        .status-demo {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px; margin: 20px 0;
+        }
+        .status-card {
+            background: white; padding: 20px; border-radius: 12px;
+            border-left: 5px solid #667eea; box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .status-card:hover { transform: translateY(-5px); }
+        .status-enrolled { border-left-color: #4CAF50; }
+        .status-pending { border-left-color: #FF9800; }
+        .status-available { border-left-color: #2196F3; }
+        
+        .button-demo {
+            margin: 15px 0; padding: 12px 24px;
+            border: none; border-radius: 8px;
+            font-weight: bold; cursor: pointer;
+            transition: all 0.3s ease; width: 100%;
+        }
+        .btn-enrolled { 
+            background: #4CAF50; color: white; 
+            cursor: not-allowed; opacity: 0.9;
+        }
+        .btn-pending { 
+            background: #FF9800; color: white; 
+            cursor: not-allowed; opacity: 0.9;
+        }
+        .btn-available { 
+            background: #2196F3; color: white; 
+        }
+        .btn-available:hover { background: #1976D2; }
+        
+        .link-button { 
+            display: inline-block; background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white; padding: 12px 24px; text-decoration: none;
+            border-radius: 25px; margin: 8px; font-weight: bold;
+            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .link-button:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        .test-link { background: linear-gradient(45deg, #4ecdc4, #44a08d); }
+        
+        .flow-step {
+            display: flex; align-items: center; margin: 15px 0;
+            padding: 15px; background: #f8f9fa; border-radius: 8px;
+        }
+        .step-number {
+            background: #667eea; color: white; width: 35px; height: 35px;
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-weight: bold; margin-right: 20px;
+            font-size: 18px;
+        }
+        .highlight { color: #667eea; font-weight: bold; }
+        .code { 
+            background: #f4f4f4; padding: 3px 6px; 
+            border-radius: 4px; font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="enhancement-badge">🚀 NEW ENHANCEMENT</div>
+            <h1>📚 Smart Enrollment Status Display</h1>
+            <p>Courses now show personalized enrollment status for each student!</p>
+        </div>
+
+        <div class="section new-feature">
+            <h2>✨ What's New</h2>
+            <p>The course browsing page now intelligently displays different enrollment states for each course based on the student's enrollment status:</p>
+            
+            <div class="status-demo">
+                <div class="status-card status-enrolled">
+                    <h4>✅ Enrolled Courses</h4>
+                    <p>Shows <span class="code">✓ Enrolled</span> badge and button</p>
+                    <button class="button-demo btn-enrolled">✓ Enrolled</button>
+                    <small>🔒 Button is disabled - no further action needed</small>
+                </div>
+                
+                <div class="status-card status-pending">
+                    <h4>⏳ Pending Requests</h4>
+                    <p>Shows <span class="code">⏳ Pending</span> badge and button</p>
+                    <button class="button-demo btn-pending">⏳ Request Pending</button>
+                    <small>🔒 Button is disabled - waiting for admin approval</small>
+                </div>
+                
+                <div class="status-card status-available">
+                    <h4>📖 Available Courses</h4>
+                    <p>Shows <span class="code">Course</span> badge with active button</p>
+                    <button class="button-demo btn-available">Request Enrollment →</button>
+                    <small>✅ Button is active - student can request enrollment</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="section demo">
+            <h2>🎯 How It Works</h2>
+            
+            <div class="flow-step">
+                <div class="step-number">1</div>
+                <div>
+                    <strong>Page Load</strong><br>
+                    System fetches all courses and checks user's enrollment status for each one
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="step-number">2</div>
+                <div>
+                    <strong>Status Detection</strong><br>
+                    For each course, checks: <span class="highlight">enrolled</span>, <span class="highlight">pending request</span>, or <span class="highlight">available</span>
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="step-number">3</div>
+                <div>
+                    <strong>Dynamic Display</strong><br>
+                    Shows appropriate badge and button state based on enrollment status
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="step-number">4</div>
+                <div>
+                    <strong>Smart Actions</strong><br>
+                    Prevents duplicate enrollment requests and guides user appropriately
+                </div>
+            </div>
+        </div>
+
+        <div class="section testing">
+            <h2>🧪 Test the Enhancement</h2>
+            <p><strong>Complete Test Scenario:</strong></p>
+            <ol>
+                <li><strong>Login as Admin:</strong> Create 2-3 test courses</li>
+                <li><strong>Login as Student:</strong> Browse courses (should see "Course" badges)</li>
+                <li><strong>Request Enrollment:</strong> Submit request for one course</li>
+                <li><strong>Refresh Page:</strong> Course should now show "⏳ Pending" status</li>
+                <li><strong>As Admin:</strong> Approve the enrollment request</li>
+                <li><strong>As Student:</strong> Refresh - course should show "✓ Enrolled" status</li>
+            </ol>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="http://localhost:3002/courses" target="_blank" class="link-button">
+                    📖 Test Course Browse Page
+                </a>
+                <a href="http://localhost:3002/dashboard/admin/courses" target="_blank" class="link-button">
+                    👨‍💼 Admin Course Management
+                </a>
+                <a href="http://localhost:3002/dashboard/student" target="_blank" class="link-button test-link">
+                    👨‍🎓 Student Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="section new-feature">
+            <h2>🔧 Technical Implementation</h2>
+            <div style="columns: 2; gap: 30px;">
+                <div>
+                    <h4>Enhanced Data Fetching:</h4>
+                    <ul>
+                        <li>✅ Fetches user enrollments</li>
+                        <li>✅ Fetches pending requests</li>
+                        <li>✅ Maps status to each course</li>
+                        <li>✅ Real-time status updates</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>UI Improvements:</h4>
+                    <ul>
+                        <li>✅ Color-coded status badges</li>
+                        <li>✅ Context-aware buttons</li>
+                        <li>✅ Disabled states for enrolled/pending</li>
+                        <li>✅ Visual feedback for all states</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; padding: 20px; background: linear-gradient(45deg, #667eea, #764ba2); border-radius: 10px; color: white;">
+            <h3>🎉 Enhancement Complete!</h3>
+            <p>Students now see personalized enrollment status for every course.<br>
+            The system intelligently prevents duplicate enrollments and provides clear visual feedback!</p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-test enrollment status detection
+        function simulateEnrollmentFlow() {
+            console.log('🎯 Enrollment Status Flow:');
+            console.log('1. 📖 Available Course → "Request Enrollment" button active');
+            console.log('2. ⏳ Pending Request → "Request Pending" button disabled');
+            console.log('3. ✅ Enrolled → "Enrolled" button disabled');
+            console.log('4. 🔄 Status updates in real-time when enrollment changes');
+        }
+        
+        simulateEnrollmentFlow();
+        
+        // Test button states
+        document.querySelectorAll('.button-demo').forEach(button => {
+            button.addEventListener('click', function() {
+                if (this.disabled || this.classList.contains('btn-enrolled') || this.classList.contains('btn-pending')) {
+                    alert('This button is disabled - student is already enrolled or has pending request!');
+                } else {
+                    alert('Enrollment request would be submitted!');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

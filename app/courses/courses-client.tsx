@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import Link from "next/link"
 import Image from "next/image"
 import { BookOpen, Users, Calendar, Clock, Star, ArrowRight } from "lucide-react"
@@ -15,95 +16,201 @@ type Course = {
   id: string
   title: string
   description: string
-  price: number
-  duration: string
-  level: string
   teacher_name: string
   scheduled_time: string
   student_count: number
-  rating: number
-  image_url?: string
+  status: string
+  max_students: number
+  live_class_url: string
+  teacher_id: string
+  isEnrolled?: boolean
+  enrollmentStatus?: 'none' | 'pending' | 'enrolled'
 }
 
 export default function CoursesClient() {
   const { user, isLoading } = useAuth()
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all')
+  const [enrollmentStatus, setEnrollmentStatus] = useState<'none' | 'pending' | 'enrolled'>('none')
+
+  const supabase = createClientComponentClient()
 
   const fetchCourses = useCallback(async () => {
     try {
       setLoading(true)
       
-      // Mock data for now - replace with actual Supabase query
-      const mockCourses: Course[] = [
-        {
-          id: '1',
-          title: 'iCSE Alpha - Beginner English Speaking Course',
-          description: 'Foundation level English speaking program designed to build confidence and overcome the fear of speaking English in professional settings.',
-          price: 1200,
-          duration: '3 months',
-          level: 'beginner',
-          teacher_name: 'Sarah Johnson',
-          scheduled_time: '2025-02-01T09:00:00Z',
-          student_count: 45,
-          rating: 4.9,
-          image_url: '/courses/alpha.jpg'
-        },
-        {
-          id: '2',
-          title: 'iCSE Beta - Intermediate English Speaking Course',
-          description: 'Intermediate level program to enhance fluency and master speaking rhythms for professional communication in Malaysian workplaces.',
-          price: 1800,
-          duration: '4 months',
-          level: 'intermediate',
-          teacher_name: 'Michael Chen',
-          scheduled_time: '2025-02-15T10:00:00Z',
-          student_count: 38,
-          rating: 4.8,
-          image_url: '/courses/beta.jpg'
-        },
-        {
-          id: '3',
-          title: 'iCSE Gamma - Advanced Business English Course',
-          description: 'Advanced level program to perfect professional communication skills and master meeting leadership for corporate success.',
-          price: 2500,
-          duration: '6 months',
-          level: 'advanced',
-          teacher_name: 'Dr. Priya Sharma',
-          scheduled_time: '2025-03-01T14:00:00Z',
-          student_count: 28,
-          rating: 4.9,
-          image_url: '/courses/gamma.jpg'
+      // Fetch all active courses from the database
+      const { data: coursesData, error: coursesError } = await supabase
+        .from("courses")
+        .select(`
+          id,
+          title,
+          description,
+          scheduled_time,
+          live_class_url,
+          teacher_id,
+          max_students,
+          status,
+          profiles(full_name),
+          enrollments(count)
+        `)
+        .eq("status", "active")
+        .order("scheduled_time", { ascending: true })
+
+      if (coursesError) {
+        console.error("Error fetching courses:", coursesError)
+        return
+      }
+
+      // Get user's enrollments and enrollment requests if user is logged in
+      let userEnrollments: any[] = []
+      let userEnrollmentRequests: any[] = []
+
+      if (user) {
+        // Fetch user's enrollments
+        const { data: enrollmentsData } = await supabase
+          .from("enrollments")
+          .select("course_id")
+          .eq("student_id", user.id)
+
+        userEnrollments = enrollmentsData || []
+
+        // Fetch user's pending enrollment requests
+        const { data: requestsData } = await supabase
+          .from("enrollment_requests")
+          .select("course_id, status")
+          .eq("student_id", user.id)
+          .eq("status", "pending")
+
+        userEnrollmentRequests = requestsData || []
+      }
+
+      const formattedCourses: Course[] = (coursesData || []).map((course) => {
+        const teacherProfile = Array.isArray(course.profiles) ? course.profiles[0] : course.profiles
+        const enrollmentCount = Array.isArray(course.enrollments) ? course.enrollments.length : 0
+
+        // Check enrollment status for this course
+        const isEnrolled = userEnrollments.some(enrollment => enrollment.course_id === course.id)
+        const hasPendingRequest = userEnrollmentRequests.some(request => request.course_id === course.id)
+
+        let enrollmentStatus: 'none' | 'pending' | 'enrolled' = 'none'
+        if (isEnrolled) {
+          enrollmentStatus = 'enrolled'
+        } else if (hasPendingRequest) {
+          enrollmentStatus = 'pending'
         }
-      ]
+
+        return {
+          id: course.id,
+          title: course.title,
+          description: course.description,
+          teacher_name: teacherProfile?.full_name || "No Teacher Assigned",
+          scheduled_time: course.scheduled_time,
+          student_count: enrollmentCount,
+          status: course.status || "active",
+          max_students: course.max_students || 30,
+          live_class_url: course.live_class_url || "",
+          teacher_id: course.teacher_id || "",
+          isEnrolled: isEnrolled,
+          enrollmentStatus: enrollmentStatus,
+        }
+      })
       
-      setCourses(mockCourses)
+      setCourses(formattedCourses)
     } catch (error) {
       console.error('Error fetching courses:', error)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [supabase, user])
+
+  const checkEnrollmentStatus = useCallback(async () => {
+    if (!user) return
+
+    try {
+      // Check if user has any pending enrollment requests
+      const { data: pendingRequests } = await supabase
+        .from("enrollment_requests")
+        .select("id")
+        .eq("student_id", user.id)
+        .eq("status", "pending")
+
+      if (pendingRequests && pendingRequests.length > 0) {
+        setEnrollmentStatus('pending')
+        return
+      }
+
+      // Check if user is enrolled in any courses
+      const { data: enrollments } = await supabase
+        .from("enrollments")
+        .select("id")
+        .eq("student_id", user.id)
+
+      if (enrollments && enrollments.length > 0) {
+        setEnrollmentStatus('enrolled')
+      } else {
+        setEnrollmentStatus('none')
+      }
+    } catch (error) {
+      console.error('Error checking enrollment status:', error)
+    }
+  }, [user, supabase])
 
   useEffect(() => {
     fetchCourses()
-  }, [fetchCourses])
+    if (user) {
+      checkEnrollmentStatus()
+    }
+  }, [fetchCourses, checkEnrollmentStatus, user])
 
-  const filteredCourses = courses.filter(course => 
-    filter === 'all' || course.level === filter
-  )
+  const handleEnrollment = async (courseId: string) => {
+    if (!user) {
+      // Redirect to login/signup
+      window.location.href = '/signup/student'
+      return
+    }
 
-  const getLevelBadgeColor = (level: string) => {
-    switch (level) {
-      case 'beginner':
-        return 'bg-green-100 text-green-800'
-      case 'intermediate':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'advanced':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
+    // Find the course to check its enrollment status
+    const course = courses.find(c => c.id === courseId)
+    if (!course) {
+      alert("Course not found!")
+      return
+    }
+
+    if (course.enrollmentStatus === 'enrolled') {
+      alert("You are already enrolled in this course!")
+      return
+    }
+
+    if (course.enrollmentStatus === 'pending') {
+      alert("You have already requested enrollment for this course!")
+      return
+    }
+
+    try {
+      // Create enrollment request
+      const { error } = await supabase
+        .from("enrollment_requests")
+        .insert({
+          student_id: user.id,
+          course_id: courseId,
+          status: "pending",
+          requested_at: new Date().toISOString(),
+        })
+
+      if (error) {
+        console.error("Error creating enrollment request:", error)
+        alert("Failed to submit enrollment request. Please try again.")
+        return
+      }
+
+      alert("Enrollment request submitted successfully! You will be notified once approved.")
+      
+      // Refresh courses to update enrollment status
+      fetchCourses()
+    } catch (error) {
+      console.error("Error handling enrollment:", error)
+      alert("An error occurred. Please try again.")
     }
   }
 
@@ -174,22 +281,11 @@ export default function CoursesClient() {
       {/* Filter Section */}
       <section className="py-8 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-center">
-            <div className="flex gap-2 p-1 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-              {(['all', 'beginner', 'intermediate', 'advanced'] as const).map((level) => (
-                <button
-                  key={level}
-                  onClick={() => setFilter(level)}
-                  className={`px-4 py-2 rounded-md font-medium capitalize transition-all ${
-                    filter === level
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  {level === 'all' ? 'All Courses' : `${level} Level`}
-                </button>
-              ))}
-            </div>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-2">Available Courses</h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Browse all courses created by our administrators and request enrollment
+            </p>
           </div>
         </div>
       </section>
@@ -207,25 +303,31 @@ export default function CoursesClient() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredCourses.map((course) => (
+            {courses.map((course) => (
               <Card key={course.id} className="border-0 shadow-lg hover:shadow-xl transition-shadow group">
                 <div className="relative overflow-hidden rounded-t-lg">
-                  <Image
-                    src={course.image_url || '/courses/default.jpg'}
-                    alt={course.title}
-                    width={400}
-                    height={200}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                  <div className="w-full h-48 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                    <BookOpen className="h-16 w-16 text-blue-600" />
+                  </div>
                   <div className="absolute top-4 left-4">
-                    <Badge className={`${getLevelBadgeColor(course.level)} font-medium`}>
-                      {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
-                    </Badge>
+                    {course.enrollmentStatus === 'enrolled' ? (
+                      <Badge className="bg-green-100 text-green-800 font-medium">
+                        ✓ Enrolled
+                      </Badge>
+                    ) : course.enrollmentStatus === 'pending' ? (
+                      <Badge className="bg-yellow-100 text-yellow-800 font-medium">
+                        ⏳ Pending
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-blue-100 text-blue-800 font-medium">
+                        Course
+                      </Badge>
+                    )}
                   </div>
                   <div className="absolute top-4 right-4">
                     <div className="flex items-center gap-1 bg-white/90 px-2 py-1 rounded-full">
-                      <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                      <span className="text-xs font-medium">{course.rating}</span>
+                      <Users className="h-3 w-3 text-blue-500" />
+                      <span className="text-xs font-medium">{course.student_count}/{course.max_students}</span>
                     </div>
                   </div>
                 </div>
@@ -241,7 +343,7 @@ export default function CoursesClient() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-gray-500" />
-                      <span>{course.duration}</span>
+                      <span>Ongoing</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-gray-500" />
@@ -252,10 +354,7 @@ export default function CoursesClient() {
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       <Calendar className="h-4 w-4 inline mr-1" />
-                      Starts {format(new Date(course.scheduled_time), 'MMM dd')}
-                    </div>
-                    <div className="text-lg font-bold text-blue-600">
-                      RM {course.price.toLocaleString()}
+                      {course.scheduled_time ? format(new Date(course.scheduled_time), 'MMM dd, yyyy') : 'TBA'}
                     </div>
                   </div>
 
@@ -265,12 +364,29 @@ export default function CoursesClient() {
 
                   <div className="pt-2">
                     {user ? (
-                      <Button asChild className="w-full">
-                        <Link href={`/signup/student?course=${course.id}`}>
-                          Enroll in Course
+                      course.enrollmentStatus === 'enrolled' ? (
+                        <Button 
+                          className="w-full bg-green-600 hover:bg-green-700"
+                          disabled
+                        >
+                          ✓ Enrolled
+                        </Button>
+                      ) : course.enrollmentStatus === 'pending' ? (
+                        <Button 
+                          className="w-full bg-yellow-600 hover:bg-yellow-700"
+                          disabled
+                        >
+                          ⏳ Request Pending
+                        </Button>
+                      ) : (
+                        <Button 
+                          onClick={() => handleEnrollment(course.id)}
+                          className="w-full"
+                        >
+                          Request Enrollment
                           <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                      </Button>
+                        </Button>
+                      )
                     ) : (
                       <Button asChild className="w-full">
                         <Link href="/signup/student">
@@ -285,14 +401,14 @@ export default function CoursesClient() {
             ))}
           </div>
 
-          {filteredCourses.length === 0 && (
+          {courses.length === 0 && (
             <div className="text-center py-12">
               <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                No courses found
+                No courses available
               </h3>
               <p className="text-gray-500">
-                Try adjusting your filter or check back later for new courses.
+                Check back later for new courses created by administrators.
               </p>
             </div>
           )}
