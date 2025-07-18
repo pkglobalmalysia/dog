@@ -8,8 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import Link from "next/link"
-import Image from "next/image"
-import { BookOpen, Users, Calendar, Clock, Star, ArrowRight } from "lucide-react"
+import { BookOpen, Users, Calendar, Clock, ArrowRight } from "lucide-react"
 import { format } from "date-fns"
 
 type Course = {
@@ -31,7 +30,6 @@ export default function CoursesClient() {
   const { user, isLoading } = useAuth()
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
-  const [enrollmentStatus, setEnrollmentStatus] = useState<'none' | 'pending' | 'enrolled'>('none')
 
   const supabase = createClientComponentClient()
 
@@ -124,44 +122,9 @@ export default function CoursesClient() {
     }
   }, [supabase, user])
 
-  const checkEnrollmentStatus = useCallback(async () => {
-    if (!user) return
-
-    try {
-      // Check if user has any pending enrollment requests
-      const { data: pendingRequests } = await supabase
-        .from("enrollment_requests")
-        .select("id")
-        .eq("student_id", user.id)
-        .eq("status", "pending")
-
-      if (pendingRequests && pendingRequests.length > 0) {
-        setEnrollmentStatus('pending')
-        return
-      }
-
-      // Check if user is enrolled in any courses
-      const { data: enrollments } = await supabase
-        .from("enrollments")
-        .select("id")
-        .eq("student_id", user.id)
-
-      if (enrollments && enrollments.length > 0) {
-        setEnrollmentStatus('enrolled')
-      } else {
-        setEnrollmentStatus('none')
-      }
-    } catch (error) {
-      console.error('Error checking enrollment status:', error)
-    }
-  }, [user, supabase])
-
   useEffect(() => {
     fetchCourses()
-    if (user) {
-      checkEnrollmentStatus()
-    }
-  }, [fetchCourses, checkEnrollmentStatus, user])
+  }, [fetchCourses, user])
 
   const handleEnrollment = async (courseId: string) => {
     if (!user) {
