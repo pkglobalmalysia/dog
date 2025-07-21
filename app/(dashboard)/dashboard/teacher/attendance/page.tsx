@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useSupabase } from "@/hooks/use-supabase"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,7 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CheckCircle, XCircle, Clock, AlertCircle, Users } from "lucide-react"
 import { format } from "date-fns"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useCallback } from "react"
 type Course = {
   id: string
   title: string
@@ -42,10 +41,8 @@ export default function TeacherAttendancePage() {
   const [attendanceLoading, setAttendanceLoading] = useState(false)
   const [message, setMessage] = useState<Message | null>(null)
 
-  const supabase = createClientComponentClient({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  })
+  // Create supabase client only once
+  const supabase = useSupabase()
 
 
   useEffect(() => {
@@ -56,7 +53,7 @@ export default function TeacherAttendancePage() {
   }, [message])
 
 const fetchCourses = useCallback(async () => {
-  if (!user) return;
+  if (!user?.id) return;
 
   try {
     setLoading(true);
@@ -84,7 +81,7 @@ const fetchCourses = useCallback(async () => {
 
     setCourses(coursesWithCounts);
 
-    if (coursesWithCounts.length > 0) {
+    if (coursesWithCounts.length > 0 && !selectedCourse) {
       setSelectedCourse(coursesWithCounts[0].id);
     }
   } catch (error: any) {
@@ -93,11 +90,13 @@ const fetchCourses = useCallback(async () => {
   } finally {
     setLoading(false);
   }
-}, [user, supabase]);
+}, [user?.id, supabase, selectedCourse]);
 
 useEffect(() => {
-  fetchCourses();
-}, [user, fetchCourses]);
+  if (user?.id) {
+    fetchCourses();
+  }
+}, [user?.id, fetchCourses]);
 
 const fetchStudentsAndAttendance = useCallback(async () => {
   if (!selectedCourse || !selectedDate) return;
@@ -116,6 +115,11 @@ if (enrollmentError) {
 }
 
 const studentIds = enrollmentData.map((e) => e.student_id)
+
+if (studentIds.length === 0) {
+  setAttendance([]);
+  return;
+}
 
 const { data: profilesData, error: profilesError } = await supabase
   .from("profiles")
@@ -168,13 +172,13 @@ const studentsData =
 }, [selectedCourse, selectedDate, supabase]); 
 
    useEffect(() => {
-    if (selectedCourse) {
+    if (selectedCourse && selectedDate && !loading) {
       fetchStudentsAndAttendance()
     }
-  }, [selectedCourse, selectedDate, fetchStudentsAndAttendance])
+  }, [selectedCourse, selectedDate, loading, fetchStudentsAndAttendance])
 
-  const updateAttendance = async (studentId: string, status: "present" | "absent" | "late") => {
-    if (!user || !selectedCourse) return
+  const updateAttendance = useCallback(async (studentId: string, status: "present" | "absent" | "late") => {
+    if (!user?.id || !selectedCourse) return
 
     try {
       // First check if attendance record exists
@@ -229,7 +233,7 @@ const studentsData =
         text: error.message || `Failed to mark attendance as ${status}`,
       })
     }
-  }
+  }, [user?.id, selectedCourse, selectedDate, supabase])
 
   const getStatusIcon = (status: string) => {
     switch (status) {

@@ -4,7 +4,7 @@
 import type React from "react"
 import { useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useSupabase } from "@/hooks/use-supabase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -31,17 +31,64 @@ export default function StudentCalendar() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedEvents, setSelectedEvents] = useState<CalendarEvent[]>([])
 
-  const supabase = createClientComponentClient()
+  const supabase = useSupabase()
 
   // Simplified: Fetch all relevant events from calendar_events table
   const createEventsFromDatabase = useCallback(async () => {
     try {
+      console.log("Fetching student calendar events for user:", user?.id)
+      
       // Get enrolled course IDs
-      const { data: enrollments } = await supabase.from("enrollments").select("course_id").eq("student_id", user?.id)
-      const courseIds = enrollments?.map((e) => e.course_id) || []
+      const { data: enrollments, error: enrollmentError } = await supabase
+        .from("enrollments")
+        .select("course_id")
+        .eq("student_id", user?.id)
 
-      // Fetch all relevant events from calendar_events table
-      let query = supabase
+      if (enrollmentError) {
+        console.error("Error fetching enrollments:", enrollmentError)
+        return
+      }
+
+      const courseIds = enrollments?.map((e) => e.course_id) || []
+      console.log("Student enrolled course IDs:", courseIds)
+
+      // Fetch events that students should see:
+      // 1. Events for their enrolled courses (class, assignment, exam)
+      // 2. Public events (holiday, other) - visible to everyone
+      // 3. General announcements and system-wide events
+
+      let eventsData: any[] = []
+
+      // Fetch course-specific events (class, assignment, exam)
+      if (courseIds.length > 0) {
+        const { data: courseEvents, error: courseEventsError } = await supabase
+          .from("calendar_events")
+          .select(`
+            id,
+            title,
+            description,
+            event_type,
+            start_time,
+            end_time,
+            course_id,
+            teacher_id,
+            courses(title),
+            profiles!calendar_events_teacher_id_fkey(full_name)
+          `)
+          .in("course_id", courseIds)
+          .in("event_type", ["class", "assignment", "exam"])
+          .order("start_time", { ascending: true })
+
+        if (courseEventsError) {
+          console.error("Error fetching course events:", courseEventsError)
+        } else {
+          eventsData = [...eventsData, ...(courseEvents || [])]
+          console.log("Fetched course-specific events:", courseEvents?.length || 0)
+        }
+      }
+
+      // Fetch public events (holiday, other) - visible to all students and teachers
+      const { data: publicEvents, error: publicEventsError } = await supabase
         .from("calendar_events")
         .select(`
           id,
@@ -55,35 +102,27 @@ export default function StudentCalendar() {
           courses(title),
           profiles!calendar_events_teacher_id_fkey(full_name)
         `)
+        .in("event_type", ["holiday", "other"])
         .order("start_time", { ascending: true })
 
-      // Students see:
-      // 1. Events for their enrolled courses (class, assignment, exam)
-      // 2. Public events (holiday, other)
-      if (courseIds.length > 0) {
-        query = query.or(`course_id.in.(${courseIds.join(",")}),event_type.in.(holiday,other)`)
+      if (publicEventsError) {
+        console.error("Error fetching public events:", publicEventsError)
       } else {
-        // If no enrolled courses, only show public events
-        query = query.in("event_type", ["holiday", "other"])
+        eventsData = [...eventsData, ...(publicEvents || [])]
+        console.log("Fetched public events:", publicEvents?.length || 0)
       }
 
-      const { data: eventsData, error } = await query
-
-      if (error) {
-        console.error("Error fetching calendar events:", error)
-        setEvents([])
-        return
-      }
+      console.log("Total events fetched for student:", eventsData.length)
 
       // Transform the data
-      const transformedEvents: CalendarEvent[] = (eventsData || []).map((event) => {
+      const transformedEvents: CalendarEvent[] = eventsData.map((event) => {
         // Handle course title (courses might be array or single object)
         const course = Array.isArray(event.courses) ? event.courses[0] : event.courses
-        const courseTitle = course?.title || ""
+        const courseTitle = course?.title || (event.event_type === 'holiday' || event.event_type === 'other' ? 'General' : 'Unknown Course')
 
         // Handle teacher name (profiles might be array or single object)  
         const teacher = Array.isArray(event.profiles) ? event.profiles[0] : event.profiles
-        const teacherName = teacher?.full_name || ""
+        const teacherName = teacher?.full_name || (event.event_type === 'holiday' || event.event_type === 'other' ? 'System' : 'Unknown Teacher')
 
         return {
           id: event.id,
@@ -97,6 +136,8 @@ export default function StudentCalendar() {
           live_class_url: "", // You can add this to calendar_events table if needed
         }
       })
+
+      console.log("Transformed events for student:", transformedEvents.length)
 
       setEvents(transformedEvents)
     } catch (error) {

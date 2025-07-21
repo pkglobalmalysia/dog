@@ -14,6 +14,8 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { Session, User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/supabase";
 import { profileCache } from "@/lib/auth-cache";
+import { authRateLimiter } from "@/lib/auth-rate-limiter";
+import { authDebugger } from "@/lib/auth-debugger";
 
 type AuthContextType = {
   user: User | null;
@@ -29,6 +31,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   resetRateLimit: () => void; // Add this function
+  getRateLimitInfo: () => any; // Rate limit information
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Track initialization to prevent multiple calls
   const authListenerRef = useRef<{ data?: { subscription?: any } } | null>(null);
   const initAttempted = useRef(false);
+  const profileFetchInProgress = useRef(false);
   
   // Rate limiting for login attempts
   const lastLoginAttempt = useRef(0);
@@ -59,13 +63,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = useCallback(
     async (userId: string): Promise<Profile | null> => {
+      // Prevent concurrent profile fetches for the same user
+      if (profileFetchInProgress.current) {
+        console.log("🔄 Profile fetch already in progress, skipping...");
+        return null;
+      }
+
       // Check cache first
       const cached = profileCache.get(userId);
       if (cached) {
+        console.log("✨ Profile cache hit for user:", userId);
         return cached;
       }
 
       try {
+        profileFetchInProgress.current = true;
+        console.log("📡 Fetching profile for user:", userId);
+        
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -79,10 +93,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Cache the result
         profileCache.set(userId, data);
+        console.log("✅ Profile fetched and cached:", data);
         return data as Profile;
       } catch (error) {
         console.error("Error fetching profile:", error);
         return null;
+      } finally {
+        profileFetchInProgress.current = false;
       }
     },
     [supabase]
@@ -105,6 +122,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loginAttemptCount.current = 0;
     firstAttemptTime.current = 0;
     lastLoginAttempt.current = 0;
+    authRateLimiter.reset();
+    console.log("🔄 Rate limiting manually reset");
   }, []);
 
   // Initialize auth only once using useEffect
@@ -118,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     const initializeAuth = async () => {
       try {
+        authDebugger.log('session_check', 'Getting initial session')
         console.log("📡 Getting initial session...");
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -131,12 +151,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user || null);
         
         if (session?.user) {
+          authDebugger.log('session_check', 'User found in session, fetching profile')
           console.log("👤 User found, fetching profile...");
           try {
             const profileData = await fetchProfile(session.user.id);
             setProfile(profileData);
             console.log("✅ Profile set:", profileData);
           } catch (profileError) {
+            authDebugger.log('error', `Profile fetch error in initializeAuth: ${profileError}`)
             console.error("❌ Profile fetch error:", profileError);
           }
         }
@@ -144,12 +166,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Set up auth state change listener for future changes
         console.log("🔔 Setting up auth listener...");
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          authDebugger.log('session_check', `Auth state change - Event: ${event}, Has session: ${!!session}`)
           console.log("🔄 Auth state change:", event, session ? `has session for ${session.user?.email}` : "no session");
           
           setSession(session);
           setUser(session?.user || null);
           
           if (session?.user) {
+            authDebugger.log('session_check', 'User found in auth state change, fetching profile')
             try {
               const profileData = await fetchProfile(session.user.id);
               setProfile(profileData);
@@ -185,43 +209,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase, fetchProfile]);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
+      authDebugger.log('attempt', `Login attempt for ${email}`, new Error().stack)
       console.log("🔐 SignIn: Starting login process...");
+      
+      // Check rate limiting first
+      const rateLimitCheck = authRateLimiter.isRateLimited();
+      if (rateLimitCheck.limited) {
+        authDebugger.log('rate_limit', `Rate limited: ${rateLimitCheck.message}`);
+        console.warn("🚫 Rate limited:", rateLimitCheck.message);
+        return { 
+          error: { 
+            message: rateLimitCheck.message || "Rate limited. Please wait before trying again." 
+          } 
+        }
+      }
       
       const now = Date.now();
       
+      // Legacy rate limiting (keeping as backup)
       // Reset attempt count if more than a minute has passed
       if (now - firstAttemptTime.current > MINUTE_COOLDOWN) {
         loginAttemptCount.current = 0;
         firstAttemptTime.current = now;
       }
       
-      // Check if we've exceeded attempts in the last minute
-      if (loginAttemptCount.current >= MAX_ATTEMPTS_PER_MINUTE) {
-        const timeUntilReset = Math.ceil((MINUTE_COOLDOWN - (now - firstAttemptTime.current)) / 1000);
-        console.warn(`🚫 Too many login attempts. Need to wait ${timeUntilReset} seconds.`);
-        return { 
-          error: { 
-            message: `Too many login attempts. Please wait ${timeUntilReset} seconds before trying again.` 
-          } 
-        };
-      }
-      
-      // Check basic rate limiting between attempts
+      // Check basic rate limiting between attempts (prevent rapid clicking)
       if (now - lastLoginAttempt.current < LOGIN_COOLDOWN) {
         const remainingTime = Math.ceil((LOGIN_COOLDOWN - (now - lastLoginAttempt.current)) / 1000);
         console.warn(`⏰ Rate limit: Need to wait ${remainingTime} seconds between attempts.`);
         return { 
           error: { 
-            message: `Please wait ${remainingTime} seconds before trying again.` 
+            message: `Please wait ${remainingTime} seconds between login attempts.` 
           } 
         };
       }
       
-      // Record this attempt
+      // Record this attempt in both systems
       lastLoginAttempt.current = now;
       loginAttemptCount.current += 1;
+      authRateLimiter.recordAttempt();
       
       // Set first attempt time if this is the first attempt in this window
       if (loginAttemptCount.current === 1) {
@@ -245,14 +273,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("❌ SignIn: Login failed:", error);
         
         // Handle specific error types
-        if (error.message?.includes('rate limit') || error.message?.includes('Too many')) {
-          console.error("🚫 Supabase rate limit hit! Blocking further attempts for 2 minutes.");
-          // Block further attempts for 2 minutes when we hit Supabase rate limit
+        if (error.message?.includes('rate limit') || 
+            error.message?.includes('Too many') ||
+            error.message?.includes('Request rate limit reached')) {
+          authDebugger.log('rate_limit', `Supabase rate limit hit: ${error.message}`);
+          console.error("🚫 Supabase rate limit hit! Implementing extended lockout.");
+          
+          // Record Supabase rate limit (this creates a longer lockout)
+          authRateLimiter.recordSupabaseRateLimit();
+          
+          // Block further attempts for 10 minutes when we hit Supabase rate limit
           firstAttemptTime.current = now;
           loginAttemptCount.current = MAX_ATTEMPTS_PER_MINUTE;
+          
           return { 
             error: { 
-              message: "Rate limit reached. Please wait 2 minutes before trying again." 
+              message: "Supabase rate limit reached. Please wait 10 minutes before trying again. This is to prevent account lockout." 
             } 
           };
         }
@@ -277,11 +313,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (data.user && data.session) {
+        authDebugger.log('success', `Login successful for ${email}`)
         console.log("✅ SignIn: Login successful, updating state...");
         
         // Reset rate limiting on successful login
         loginAttemptCount.current = 0;
         firstAttemptTime.current = 0;
+        authRateLimiter.recordSuccess();
         console.log("🎉 Rate limiting reset after successful login");
         
         // Note: Don't manually update state here - let the auth listener handle it
@@ -296,9 +334,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("❌ SignIn: Exception:", err);
       return { error: err };
     }
-  };
+  }, [supabase]);
 
-  const signUp = async (
+  const signUp = useCallback(async (
     email: string,
     password: string,
     userData: Partial<Profile>
@@ -326,24 +364,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Signup error:", err);
       return { error: err };
     }
-  };
+  }, [supabase]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
+      authDebugger.log('attempt', 'User signing out');
       // Reset rate limiting on signout
       loginAttemptCount.current = 0;
       firstAttemptTime.current = 0;
+      authRateLimiter.reset();
       console.log("🧹 Rate limiting reset on signout");
       
       if (supabase) {
         await supabase.auth.signOut();
+        authDebugger.log('success', 'User signed out successfully');
       } else {
+        authDebugger.log('error', 'Supabase client not initialized on signout');
         console.error("Supabase client is not initialized.");
       }
     } catch (error) {
+      authDebugger.log('error', `Sign out error: ${error}`);
       console.error("Sign out error:", error);
     }
-  };
+  }, [supabase]);
+
+  const getRateLimitInfo = useCallback(() => {
+    const status = authRateLimiter.getStatus();
+    const rateLimitCheck = authRateLimiter.isRateLimited();
+    
+    return {
+      isRateLimited: rateLimitCheck.limited,
+      remainingTime: rateLimitCheck.remainingTime,
+      message: rateLimitCheck.message,
+      attempts: status.attempts,
+      windowStart: status.windowStart,
+      lockedUntil: status.lockedUntil
+    };
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -356,6 +413,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refreshProfile,
       resetRateLimit,
+      getRateLimitInfo,
     }),
     [
       user,
@@ -368,6 +426,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refreshProfile,
       resetRateLimit,
+      getRateLimitInfo,
     ]
   );
 

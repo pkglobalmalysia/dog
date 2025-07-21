@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useSupabase } from "@/hooks/use-supabase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -60,10 +60,7 @@ export default function TeacherDashboard() {
   })
   const [loading, setLoading] = useState(true)
 
-  const supabase = createClientComponentClient({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  })
+  const supabase = useSupabase()
 
   const fetchTeacherData = useCallback(async () => {
     if (!user) {

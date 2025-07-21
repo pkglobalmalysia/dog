@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useSupabase } from "@/hooks/use-supabase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -56,18 +56,50 @@ type Message = {
 // Helper functions for proper date handling
 const formatDateForInput = (dateString: string) => {
   if (!dateString) return ""
-  const date = new Date(dateString)
-  // Convert to local timezone for datetime-local input
-  const offset = date.getTimezoneOffset()
-  const localDate = new Date(date.getTime() - offset * 60 * 1000)
-  return localDate.toISOString().slice(0, 16)
+  try {
+    // Parse the ISO string and format for datetime-local input
+    const date = new Date(dateString)
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      console.warn("Invalid date string:", dateString)
+      return ""
+    }
+    
+    // Format as YYYY-MM-DDTHH:MM for datetime-local input
+    // This preserves the local timezone interpretation
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+  } catch (error) {
+    console.error("Error formatting date for input:", error)
+    return ""
+  }
 }
 
 const formatDateForStorage = (localDateString: string) => {
   if (!localDateString) return ""
-  // Create date from local datetime-local input and convert to ISO
-  const localDate = new Date(localDateString)
-  return localDate.toISOString()
+  try {
+    // Create date object from the datetime-local input
+    // The browser treats this as local time
+    const localDate = new Date(localDateString)
+    
+    // Check if the date is valid
+    if (isNaN(localDate.getTime())) {
+      console.warn("Invalid local date string:", localDateString)
+      return ""
+    }
+    
+    // Convert to ISO string for storage
+    return localDate.toISOString()
+  } catch (error) {
+    console.error("Error formatting date for storage:", error)
+    return ""
+  }
 }
 
 export default function AdminCalendar() {
@@ -101,7 +133,7 @@ export default function AdminCalendar() {
     color: "#3b82f6",
   })
 
-  const supabase = createClientComponentClient()
+  const supabase = useSupabase()
 
   // Add simple caching to reduce database calls
   const lastFetchTime = useRef(0)
@@ -297,12 +329,47 @@ export default function AdminCalendar() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title || !formData.start_time) {
-      setMessage({ type: "error", text: "Please fill in required fields" })
+      setMessage({ type: "error", text: "Please fill in required fields (Title and Start Time)" })
       return
     }
 
     if (!user?.id) {
       setMessage({ type: "error", text: "User not authenticated" })
+      return
+    }
+
+    // Validate date formats and values
+    try {
+      const startDate = new Date(formData.start_time)
+      if (isNaN(startDate.getTime())) {
+        setMessage({ type: "error", text: "Invalid start time format" })
+        return
+      }
+
+      if (formData.end_time) {
+        const endDate = new Date(formData.end_time)
+        if (isNaN(endDate.getTime())) {
+          setMessage({ type: "error", text: "Invalid end time format" })
+          return
+        }
+
+        if (endDate <= startDate) {
+          setMessage({ type: "error", text: "End time must be after start time" })
+          return
+        }
+      }
+
+      // Check if start time is not too far in the past (more than 1 year ago)
+      const oneYearAgo = new Date()
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
+      if (startDate < oneYearAgo) {
+        setMessage({ type: "error", text: "Start time cannot be more than 1 year in the past" })
+        return
+      }
+
+    } catch (error) {
+      console.error("Date validation error:", error)
+      setMessage({ type: "error", text: "Invalid date/time values" })
       return
     }
 
@@ -512,6 +579,40 @@ export default function AdminCalendar() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
+    
+    // Special handling for date/time inputs
+    if (name === 'start_time' || name === 'end_time') {
+      // Validate the datetime-local input format
+      if (value && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) {
+        console.warn(`Invalid datetime format for ${name}:`, value)
+        return
+      }
+      
+      // If setting end_time, ensure it's after start_time
+      if (name === 'end_time' && value && formData.start_time) {
+        const startDate = new Date(formData.start_time)
+        const endDate = new Date(value)
+        
+        if (endDate <= startDate) {
+          setMessage({ type: "error", text: "End time must be after start time" })
+          return
+        }
+      }
+      
+      // If setting start_time and end_time exists, validate order
+      if (name === 'start_time' && value && formData.end_time) {
+        const startDate = new Date(value)
+        const endDate = new Date(formData.end_time)
+        
+        if (endDate <= startDate) {
+          setMessage({ type: "error", text: "Start time must be before end time" })
+          // Clear end_time to avoid confusion
+          setFormData((prev) => ({ ...prev, [name]: value, end_time: "" }))
+          return
+        }
+      }
+    }
+    
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
@@ -751,7 +852,23 @@ export default function AdminCalendar() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="start_time">Start Time *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="start_time">Start Time *</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const now = new Date()
+                        // Round to next 15 minutes for convenience
+                        const minutes = Math.ceil(now.getMinutes() / 15) * 15
+                        now.setMinutes(minutes, 0, 0)
+                        setFormData(prev => ({ ...prev, start_time: formatDateForInput(now.toISOString()) }))
+                      }}
+                    >
+                      Now
+                    </Button>
+                  </div>
                   <Input
                     id="start_time"
                     name="start_time"
@@ -759,17 +876,43 @@ export default function AdminCalendar() {
                     value={formData.start_time}
                     onChange={handleInputChange}
                     required
+                    min={new Date().toISOString().slice(0, 16)} // Prevent dates too far in the past
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Select the date and time when the event starts
+                  </p>
                 </div>
                 <div>
-                  <Label htmlFor="end_time">End Time</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="end_time">End Time</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (formData.start_time) {
+                          const startDate = new Date(formData.start_time)
+                          const endDate = new Date(startDate.getTime() + (60 * 60 * 1000)) // Add 1 hour
+                          setFormData(prev => ({ ...prev, end_time: formatDateForInput(endDate.toISOString()) }))
+                        } else {
+                          setMessage({ type: "error", text: "Please set start time first" })
+                        }
+                      }}
+                    >
+                      +1hr
+                    </Button>
+                  </div>
                   <Input
                     id="end_time"
                     name="end_time"
                     type="datetime-local"
                     value={formData.end_time}
                     onChange={handleInputChange}
+                    min={formData.start_time || undefined} // End time must be after start time
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Optional: When the event ends
+                  </p>
                 </div>
               </div>
 

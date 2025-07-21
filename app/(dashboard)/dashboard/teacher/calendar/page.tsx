@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useSupabase } from "@/hooks/use-supabase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -33,6 +33,7 @@ export default function TeacherCalendar() {
   const [futureEvents, setFutureEvents] = useState<CalendarEvent[]>([])
   const [pastCompletedEvents, setPastCompletedEvents] = useState<CalendarEvent[]>([])
   const [holidayEvents, setHolidayEvents] = useState<CalendarEvent[]>([])
+  const [allCalendarEvents, setAllCalendarEvents] = useState<CalendarEvent[]>([]) // For calendar view
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null)
@@ -44,17 +45,17 @@ export default function TeacherCalendar() {
   const [calendarMonth, setCalendarMonth] = useState(new Date())
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar")
 
-  const supabase = createClientComponentClient({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  })
+  const supabase = useSupabase()
 
   // Wrap fetchTodayEvents with useCallback to fix the dependency issue
   const fetchTodayEvents = useCallback(async () => {
+    console.log("fetchTodayEvents called for user:", user?.id)
     try {
       const today = new Date()
       const startOfToday = startOfDay(today)
       const endOfToday = endOfDay(today)
+
+      console.log("Date range:", startOfToday.toISOString(), "to", endOfToday.toISOString())
 
       const { data: eventsData, error } = await supabase
         .from("calendar_events")
@@ -74,6 +75,9 @@ export default function TeacherCalendar() {
         return
       }
 
+      console.log("Today's events raw data:", eventsData)
+      console.log("Found", eventsData?.length || 0, "today's events")
+
       if (eventsData) {
         const formattedEvents = eventsData.map((event) => ({
           id: event.id,
@@ -89,15 +93,17 @@ export default function TeacherCalendar() {
           attendance_status: event.teacher_class_attendance?.[0]?.status || "not_started",
           attendance_id: event.teacher_class_attendance?.[0]?.id,
         }))
+        console.log("Formatted today's events:", formattedEvents)
         setTodayEvents(formattedEvents)
       }
     } catch (error) {
       console.error("Error fetching today's events:", error)
     }
-  }, [supabase])
+  }, [supabase, user?.id])
 
   // Fetch future events (upcoming classes beyond today)
   const fetchFutureEvents = useCallback(async () => {
+    console.log("fetchFutureEvents called for user:", user?.id)
     try {
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
@@ -106,6 +112,8 @@ export default function TeacherCalendar() {
       // Get events for next 30 days
       const next30Days = new Date()
       next30Days.setDate(next30Days.getDate() + 30)
+
+      console.log("Future events date range:", startOfTomorrow.toISOString(), "to", next30Days.toISOString())
 
       const { data: eventsData, error } = await supabase
         .from("calendar_events")
@@ -125,6 +133,9 @@ export default function TeacherCalendar() {
         return
       }
 
+      console.log("Future events raw data:", eventsData)
+      console.log("Found", eventsData?.length || 0, "future events")
+
       if (eventsData) {
         const formattedEvents = eventsData.map((event) => ({
           id: event.id,
@@ -140,6 +151,7 @@ export default function TeacherCalendar() {
           attendance_status: event.teacher_class_attendance?.[0]?.status || "scheduled",
           attendance_id: event.teacher_class_attendance?.[0]?.id,
         }))
+        console.log("Formatted future events:", formattedEvents)
         setFutureEvents(formattedEvents)
       }
     } catch (error) {
@@ -147,48 +159,237 @@ export default function TeacherCalendar() {
     }
   }, [supabase, user?.id])
 
-  // Fetch holiday events (visible to all teachers)
+  // Fetch holiday events and general announcements (visible to all teachers)
   const fetchHolidayEvents = useCallback(async () => {
     try {
-      const { data: eventsData, error } = await supabase
+      console.log("Fetching holiday and general events for teacher")
+      
+      // Get all public events (holidays, general announcements)
+      const { data: holidayData, error: holidayError } = await supabase
         .from("calendar_events")
         .select(`
-          id,
-          title,
-          description,
-          event_type,
-          start_time,
-          end_time,
-          color
+          *,
+          courses(title),
+          profiles!calendar_events_teacher_id_fkey(full_name)
         `)
         .in("event_type", ["holiday", "other"])
-        .gte("start_time", new Date().toISOString()) // Only upcoming events
         .order("start_time", { ascending: true })
-        .limit(5) // Show next 5 upcoming holidays
 
-      if (error) {
-        console.error("Error fetching holiday events:", error)
+      if (holidayError) {
+        console.error("Error fetching holiday events:", holidayError)
         return
       }
 
-      if (eventsData) {
-        const formattedEvents = eventsData.map((event) => ({
+      // Get teacher's courses for course-specific events
+      const { data: teacherCourses } = await supabase
+        .from("courses")
+        .select("id")
+        .eq("teacher_id", user?.id)
+
+      const courseIds = teacherCourses?.map(c => c.id) || []
+
+      // Get course-specific events for teacher's courses (assignments, exams)
+      let courseEvents: any[] = []
+      if (courseIds.length > 0) {
+        const { data: courseEventsData, error: courseEventsError } = await supabase
+          .from("calendar_events")
+          .select(`
+            *,
+            courses(title),
+            profiles!calendar_events_teacher_id_fkey(full_name)
+          `)
+          .in("course_id", courseIds)
+          .in("event_type", ["assignment", "exam"])
+          .order("start_time", { ascending: true })
+
+        if (courseEventsError) {
+          console.error("Error fetching course events:", courseEventsError)
+        } else {
+          courseEvents = courseEventsData || []
+        }
+      }
+
+      // Get payment events specific to this teacher
+      const { data: paymentEvents, error: paymentError } = await supabase
+        .from("calendar_events")
+        .select(`
+          *,
+          courses(title),
+          profiles!calendar_events_teacher_id_fkey(full_name)
+        `)
+        .eq("teacher_id", user?.id)
+        .eq("event_type", "payment")
+        .order("start_time", { ascending: true })
+
+      if (paymentError) {
+        console.error("Error fetching payment events:", paymentError)
+      }
+
+      // Combine all events
+      const allEvents = [
+        ...(holidayData || []),
+        ...courseEvents,
+        ...(paymentEvents || [])
+      ]
+
+      const formattedEvents = allEvents.map((event) => {
+        const course = Array.isArray(event.courses) ? event.courses[0] : event.courses
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const teacher = Array.isArray(event.profiles) ? event.profiles[0] : event.profiles
+        
+        return {
           id: event.id,
           title: event.title,
           description: event.description || "",
           event_type: event.event_type,
           start_time: event.start_time,
           end_time: event.end_time || event.start_time,
-          course_title: "",
-          payment_amount: 0,
+          course_title: course?.title || (event.event_type === 'holiday' || event.event_type === 'other' ? 'General' : 'Unknown'),
+          payment_amount: event.payment_amount || 0,
+          live_class_url: "",
           color: event.color || getEventColor(event.event_type).bg,
-        }))
-        setHolidayEvents(formattedEvents)
-      }
+        }
+      })
+
+      console.log("Total general events for teacher:", formattedEvents.length)
+      setHolidayEvents(formattedEvents)
     } catch (error) {
       console.error("Error fetching holiday events:", error)
     }
-  }, [supabase])
+  }, [supabase, user?.id])
+
+  // Fetch all events for calendar view
+  const fetchAllCalendarEvents = useCallback(async () => {
+    try {
+      if (!user?.id) {
+        console.log("fetchAllCalendarEvents: No user ID")
+        return []
+      }
+      
+      console.log("Fetching all calendar events for teacher:", user.id)
+      
+      // Get teacher's courses
+      const { data: teacherCourses, error: coursesError } = await supabase
+        .from("courses")
+        .select("id")
+        .eq("teacher_id", user.id)
+      
+      if (coursesError) {
+        console.error("Error fetching teacher courses:", coursesError)
+      }
+      
+      const courseIds = teacherCourses?.map(c => c.id) || []
+      console.log("Teacher courses:", courseIds)
+      
+      let allEvents: any[] = []
+      
+      // 1. Get classes assigned to this teacher
+      console.log("Fetching class events...")
+      const { data: classEvents, error: classError } = await supabase
+        .from("calendar_events")
+        .select(`
+          *,
+          courses(title, live_class_url),
+          teacher_class_attendance(id, status)
+        `)
+        .eq("teacher_id", user.id)
+        .eq("event_type", "class")
+      
+      if (classError) {
+        console.error("Error fetching class events:", classError)
+      } else {
+        console.log("Found class events:", classEvents?.length || 0)
+        if (classEvents) allEvents = [...allEvents, ...classEvents]
+      }
+      
+      // 2. Get payment events for this teacher
+      console.log("Fetching payment events...")
+      const { data: paymentEvents, error: paymentError } = await supabase
+        .from("calendar_events")
+        .select(`
+          *,
+          courses(title),
+          profiles!calendar_events_teacher_id_fkey(full_name)
+        `)
+        .eq("teacher_id", user.id)
+        .eq("event_type", "payment")
+      
+      if (paymentError) {
+        console.error("Error fetching payment events:", paymentError)
+      } else {
+        console.log("Found payment events:", paymentEvents?.length || 0)
+        if (paymentEvents) allEvents = [...allEvents, ...paymentEvents]
+      }
+      
+      // 3. Get course-specific events (assignments, exams) for teacher's courses
+      if (courseIds.length > 0) {
+        console.log("Fetching course-specific events...")
+        const { data: courseEvents, error: courseError } = await supabase
+          .from("calendar_events")
+          .select(`
+            *,
+            courses(title),
+            profiles!calendar_events_teacher_id_fkey(full_name)
+          `)
+          .in("course_id", courseIds)
+          .in("event_type", ["assignment", "exam"])
+        
+        if (courseError) {
+          console.error("Error fetching course events:", courseError)
+        } else {
+          console.log("Found course events:", courseEvents?.length || 0)
+          if (courseEvents) allEvents = [...allEvents, ...courseEvents]
+        }
+      }
+      
+      // 4. Get public events (holidays, general announcements)
+      console.log("Fetching public events...")
+      const { data: publicEvents, error: publicError } = await supabase
+        .from("calendar_events")
+        .select(`
+          *,
+          courses(title),
+          profiles!calendar_events_teacher_id_fkey(full_name)
+        `)
+        .in("event_type", ["holiday", "other"])
+      
+      if (publicError) {
+        console.error("Error fetching public events:", publicError)
+      } else {
+        console.log("Found public events:", publicEvents?.length || 0)
+        if (publicEvents) allEvents = [...allEvents, ...publicEvents]
+      }
+      
+      console.log("Total events for teacher calendar:", allEvents.length)
+      
+      const formattedEvents = allEvents.map((event) => {
+        const course = Array.isArray(event.courses) ? event.courses[0] : event.courses
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const teacher = Array.isArray(event.profiles) ? event.profiles[0] : event.profiles
+        
+        return {
+          id: event.id,
+          title: event.title,
+          description: event.description || "",
+          event_type: event.event_type,
+          start_time: event.start_time,
+          end_time: event.end_time || event.start_time,
+          course_title: course?.title || (event.event_type === 'holiday' || event.event_type === 'other' ? 'General' : 'Unknown'),
+          payment_amount: event.payment_amount || 150,
+          live_class_url: course?.live_class_url || "",
+          color: event.color || getEventColor(event.event_type).bg,
+          attendance_status: event.teacher_class_attendance?.[0]?.status || "scheduled",
+          attendance_id: event.teacher_class_attendance?.[0]?.id,
+        }
+      })
+      
+      console.log("Formatted events:", formattedEvents)
+      return formattedEvents
+    } catch (error) {
+      console.error("Error fetching all calendar events:", error)
+      return []
+    }
+  }, [supabase, user?.id])
 
   // Wrap fetchPastCompletedEvents with useCallback to fix the dependency issue
   const fetchPastCompletedEvents = useCallback(async () => {
@@ -237,7 +438,7 @@ export default function TeacherCalendar() {
     } finally {
       setLoading(false)
     }
-  }, [supabase])
+  }, [supabase, user?.id])
 
   // Wrap fetchEarnings with useCallback to fix the dependency issue
   const fetchEarnings = useCallback(async () => {
@@ -292,14 +493,25 @@ export default function TeacherCalendar() {
 
   // Fixed useEffect with all dependencies
   useEffect(() => {
+    console.log("Teacher Calendar useEffect - User:", user?.id)
+    console.log("Teacher Calendar useEffect - User role:", user?.user_metadata?.role)
     if (user) {
+      console.log("Fetching events for teacher:", user.id)
       fetchTodayEvents()
       fetchFutureEvents()
       fetchPastCompletedEvents()
       fetchEarnings()
       fetchHolidayEvents()
+      
+      // Fetch all events for calendar view
+      fetchAllCalendarEvents().then(events => {
+        console.log("All calendar events loaded:", events.length)
+        setAllCalendarEvents(events)
+      })
+    } else {
+      console.log("No user found in teacher calendar")
     }
-  }, [user, currentMonth, fetchTodayEvents, fetchFutureEvents, fetchPastCompletedEvents, fetchEarnings, fetchHolidayEvents])
+  }, [user, currentMonth, fetchTodayEvents, fetchFutureEvents, fetchPastCompletedEvents, fetchEarnings, fetchHolidayEvents, fetchAllCalendarEvents])
 
   // Clear message after 5 seconds
   useEffect(() => {
@@ -309,11 +521,11 @@ export default function TeacherCalendar() {
     }
   }, [message])
 
-  // Update selected events when date changes
+  // Update selected events when date changes - use all calendar events
   useEffect(() => {
-    const dayEvents = futureEvents.filter((event) => isSameDay(new Date(event.start_time), selectedDate))
+    const dayEvents = allCalendarEvents.filter((event) => isSameDay(new Date(event.start_time), selectedDate))
     setSelectedEvents(dayEvents)
-  }, [futureEvents, selectedDate])
+  }, [allCalendarEvents, selectedDate])
 
   // Calendar view functions
   const getEventColor = (type: string) => {
@@ -349,7 +561,7 @@ export default function TeacherCalendar() {
 
     // Add days of the month
     days.forEach((day, i) => {
-      const dayEvents = futureEvents.filter((event) => isSameDay(new Date(event.start_time), day))
+      const dayEvents = allCalendarEvents.filter((event) => isSameDay(new Date(event.start_time), day))
       const isCurrentDay = isToday(day)
       const isSelected = isSameDay(day, selectedDate)
 
@@ -452,8 +664,57 @@ export default function TeacherCalendar() {
     try {
       setSubmitting(eventId)
       
+      // First, get the calendar event details to find corresponding lecture
+      const { data: eventData, error: eventError } = await supabase
+        .from("calendar_events")
+        .select("*")
+        .eq("id", eventId)
+        .single()
+
+      if (eventError) {
+        throw new Error(`Failed to fetch event details: ${eventError.message}`)
+      }
+
+      // Try to find corresponding lecture based on course_id and date
+      let lectureId = null
+      if (eventData.course_id) {
+        const eventDate = new Date(eventData.start_time)
+        const dateStr = format(eventDate, 'yyyy-MM-dd')
+        
+        const { data: lectureData } = await supabase
+          .from("lectures")
+          .select("id")
+          .eq("course_id", eventData.course_id)
+          .gte("date", `${dateStr}T00:00:00.000Z`)
+          .lte("date", `${dateStr}T23:59:59.999Z`)
+          .single()
+        
+        if (lectureData) {
+          lectureId = lectureData.id
+        } else {
+          // If no lecture exists, create one
+          console.log("Creating new lecture for calendar event")
+          const { data: newLecture, error: lectureCreateError } = await supabase
+            .from("lectures")
+            .insert({
+              title: eventData.title,
+              description: eventData.description || "",
+              date: eventData.start_time,
+              course_id: eventData.course_id,
+            })
+            .select("id")
+            .single()
+
+          if (lectureCreateError) {
+            console.error("Failed to create lecture:", lectureCreateError)
+          } else if (newLecture) {
+            lectureId = newLecture.id
+          }
+        }
+      }
+
+      // Update/create teacher_class_attendance record (for calendar functionality)
       if (attendanceId) {
-        // Update existing attendance record
         const { data, error } = await supabase
           .from("teacher_class_attendance")
           .update({
@@ -466,12 +727,11 @@ export default function TeacherCalendar() {
           .select()
 
         if (error) {
-          console.error("Supabase error updating attendance:", error)
+          console.error("Supabase error updating teacher_class_attendance:", error)
           throw new Error(error.message || "Failed to update attendance record")
         }
-        console.log("Updated attendance record:", data)
+        console.log("Updated teacher_class_attendance record:", data)
       } else {
-        // Create new attendance record
         const { data, error } = await supabase
           .from("teacher_class_attendance")
           .insert({
@@ -486,10 +746,63 @@ export default function TeacherCalendar() {
           .select()
 
         if (error) {
-          console.error("Supabase error creating attendance:", error)
+          console.error("Supabase error creating teacher_class_attendance:", error)
           throw new Error(error.message || "Failed to create attendance record")
         }
-        console.log("Created attendance record:", data)
+        console.log("Created teacher_class_attendance record:", data)
+      }
+
+      // ALSO create/update lecture_attendance record (for admin salary management)
+      if (lectureId) {
+        // Check if lecture_attendance record already exists
+        const { data: existingLectureAttendance } = await supabase
+          .from("lecture_attendance")
+          .select("id, status")
+          .eq("teacher_id", user?.id)
+          .eq("lecture_id", lectureId)
+          .single()
+
+        if (existingLectureAttendance) {
+          // Update existing lecture_attendance
+          if (existingLectureAttendance.status !== "completed" && existingLectureAttendance.status !== "approved") {
+            const { error: updateError } = await supabase
+              .from("lecture_attendance")
+              .update({
+                status: "completed",
+                completed_at: new Date().toISOString(),
+                base_amount: 150,
+                total_amount: 150,
+              })
+              .eq("id", existingLectureAttendance.id)
+
+            if (updateError) {
+              console.error("Failed to update lecture_attendance:", updateError)
+            } else {
+              console.log("Updated lecture_attendance record for admin visibility")
+            }
+          }
+        } else {
+          // Create new lecture_attendance record
+          const { error: insertError } = await supabase
+            .from("lecture_attendance")
+            .insert({
+              lecture_id: lectureId,
+              teacher_id: user?.id,
+              status: "completed",
+              completed_at: new Date().toISOString(),
+              base_amount: 150,
+              bonus_amount: 0,
+              total_amount: 150,
+            })
+
+          if (insertError) {
+            console.error("Failed to create lecture_attendance:", insertError)
+          } else {
+            console.log("Created lecture_attendance record for admin visibility")
+          }
+        }
+      } else {
+        console.warn("No lecture found for calendar event, admin won't see this for salary approval")
       }
 
       setMessage({ type: "success", text: "Class marked as completed! Waiting for admin approval for salary payment." })

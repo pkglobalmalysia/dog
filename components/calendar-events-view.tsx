@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useEffect, useState, useCallback } from "react"
+import { useSupabase } from "@/hooks/use-supabase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, DollarSign, BookOpen, User } from "lucide-react"
@@ -52,52 +52,205 @@ export default function CalendarEventsView({ userRole, userId, courseIds, teache
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClientComponentClient()
+  const supabase = useSupabase()
 
-  useEffect(() => {
-    fetchEvents()
-  }, [userRole, userId, courseIds, teacherId])
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
+      console.log("Fetching events for", userRole, "with userId:", userId)
 
-      let query = supabase
-        .from("calendar_events")
-        .select(`
-          id,
-          title,
-          description,
-          event_type,
-          start_time,
-          end_time,
-          all_day,
-          course_id,
-          teacher_id,
-          payment_amount,
-          color
-        `)
-        .order("start_time", { ascending: true })
+      let allEvents: any[] = []
 
-      // Filter events based on user role
-      if (userRole === "student" && courseIds && courseIds.length > 0) {
-        // Students see events for their enrolled courses, assignments, exams, and holidays
-        query = query.or(`course_id.in.(${courseIds.join(",")}),event_type.in.(assignment,exam,holiday)`)
+      if (userRole === "student") {
+        // Students see:
+        // 1. Events for their enrolled courses (class, assignment, exam)
+        // 2. Public events (holiday, other)
+        
+        if (courseIds && courseIds.length > 0) {
+          // Course-specific events
+          const { data: courseEvents, error: courseError } = await supabase
+            .from("calendar_events")
+            .select(`
+              id,
+              title,
+              description,
+              event_type,
+              start_time,
+              end_time,
+              all_day,
+              course_id,
+              teacher_id,
+              payment_amount,
+              color
+            `)
+            .in("course_id", courseIds)
+            .in("event_type", ["class", "assignment", "exam"])
+            .order("start_time", { ascending: true })
+
+          if (courseError) {
+            console.error("Error fetching course events:", courseError)
+          } else {
+            allEvents = [...allEvents, ...(courseEvents || [])]
+          }
+        }
+
+        // Public events for students
+        const { data: publicEvents, error: publicError } = await supabase
+          .from("calendar_events")
+          .select(`
+            id,
+            title,
+            description,
+            event_type,
+            start_time,
+            end_time,
+            all_day,
+            course_id,
+            teacher_id,
+            payment_amount,
+            color
+          `)
+          .in("event_type", ["holiday", "other"])
+          .order("start_time", { ascending: true })
+
+        if (publicError) {
+          console.error("Error fetching public events:", publicError)
+        } else {
+          allEvents = [...allEvents, ...(publicEvents || [])]
+        }
+
       } else if (userRole === "teacher" && teacherId) {
-        // Teachers see events where they are the teacher, plus holidays and general announcements
-        query = query.or(`teacher_id.eq.${teacherId},event_type.in.(holiday,other)`)
+        // Teachers see:
+        // 1. Classes assigned to them
+        // 2. Payment events for them  
+        // 3. Course events for their courses (assignments, exams)
+        // 4. Public events (holidays, general announcements)
+
+        // Classes assigned to teacher
+        const { data: classEvents, error: classError } = await supabase
+          .from("calendar_events")
+          .select(`
+            id,
+            title,
+            description,
+            event_type,
+            start_time,
+            end_time,
+            all_day,
+            course_id,
+            teacher_id,
+            payment_amount,
+            color
+          `)
+          .eq("teacher_id", teacherId)
+          .eq("event_type", "class")
+          .order("start_time", { ascending: true })
+
+        if (classError) {
+          console.error("Error fetching class events:", classError)
+        } else {
+          allEvents = [...allEvents, ...(classEvents || [])]
+        }
+
+        // Payment events for teacher
+        const { data: paymentEvents, error: paymentError } = await supabase
+          .from("calendar_events")
+          .select(`
+            id,
+            title,
+            description,
+            event_type,
+            start_time,
+            end_time,
+            all_day,
+            course_id,
+            teacher_id,
+            payment_amount,
+            color
+          `)
+          .eq("teacher_id", teacherId)
+          .eq("event_type", "payment")
+          .order("start_time", { ascending: true })
+
+        if (paymentError) {
+          console.error("Error fetching payment events:", paymentError)
+        } else {
+          allEvents = [...allEvents, ...(paymentEvents || [])]
+        }
+
+        // Get teacher's courses
+        const { data: teacherCourses } = await supabase
+          .from("courses")
+          .select("id")
+          .eq("teacher_id", teacherId)
+        
+        const teacherCourseIds = teacherCourses?.map(c => c.id) || []
+
+        // Course events for teacher's courses
+        if (teacherCourseIds.length > 0) {
+          const { data: courseEvents, error: courseError } = await supabase
+            .from("calendar_events")
+            .select(`
+              id,
+              title,
+              description,
+              event_type,
+              start_time,
+              end_time,
+              all_day,
+              course_id,
+              teacher_id,
+              payment_amount,
+              color
+            `)
+            .in("course_id", teacherCourseIds)
+            .in("event_type", ["assignment", "exam"])
+            .order("start_time", { ascending: true })
+
+          if (courseError) {
+            console.error("Error fetching course events:", courseError)
+          } else {
+            allEvents = [...allEvents, ...(courseEvents || [])]
+          }
+        }
+
+        // Public events for teachers
+        const { data: publicEvents, error: publicError } = await supabase
+          .from("calendar_events")
+          .select(`
+            id,
+            title,
+            description,
+            event_type,
+            start_time,
+            end_time,
+            all_day,
+            course_id,
+            teacher_id,
+            payment_amount,
+            color
+          `)
+          .in("event_type", ["holiday", "other"])
+          .order("start_time", { ascending: true })
+
+        if (publicError) {
+          console.error("Error fetching public events:", publicError)
+        } else {
+          allEvents = [...allEvents, ...(publicEvents || [])]
+        }
       }
 
-      const { data: eventsData, error: eventsError } = await query
+      console.log("Total events fetched:", allEvents.length)
 
-      if (eventsError) {
-        throw new Error(`Failed to fetch events: ${eventsError.message}`)
-      }
+      // Remove duplicates based on ID
+      const uniqueEvents = allEvents.filter((event, index, self) => 
+        index === self.findIndex(e => e.id === event.id)
+      )
 
       // Fetch related course and teacher information
       const eventsWithRelations = await Promise.all(
-        (eventsData || []).map(async (event: any) => {
+        uniqueEvents.map(async (event: any) => {
           let course_title = ""
           let teacher_name = ""
 
@@ -138,7 +291,11 @@ export default function CalendarEventsView({ userRole, userId, courseIds, teache
     } finally {
       setLoading(false)
     }
-  }
+  }, [userRole, userId, courseIds, teacherId, supabase])
+
+  useEffect(() => {
+    fetchEvents()
+  }, [fetchEvents])
 
   if (loading) {
     return (
