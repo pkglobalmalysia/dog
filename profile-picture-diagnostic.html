@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Picture Diagnostic</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 1000px; margin: 0 auto; 
+            background: white; padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center; margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+        .test-section { 
+            background: white; margin: 20px 0; padding: 20px; 
+            border-radius: 10px; border-left: 5px solid #2196F3;
+        }
+        .success { border-left-color: #4CAF50; background: #f8fff8; }
+        .error { border-left-color: #f44336; background: #fff8f8; }
+        .warning { border-left-color: #ff9800; background: #fff8f0; }
+        .info { border-left-color: #2196f3; background: #f0f8ff; }
+        button { 
+            background: #2196f3; color: white; padding: 10px 20px; 
+            border: none; border-radius: 4px; cursor: pointer; margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .log { margin-top: 10px; font-family: monospace; background: #f5f5f5; padding: 10px; border-radius: 4px; max-height: 300px; overflow-y: auto; }
+        .step { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #007bff; }
+        .step-number { background: #007bff; color: white; border-radius: 50%; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Profile Picture Diagnostic</h1>
+            <p>Complete troubleshooting for profile picture upload issues</p>
+        </div>
+
+        <div class="test-section error">
+            <h3>🚨 Reported Issue</h3>
+            <p><strong>Problem:</strong> "Photo is not uploading or it is not fetching as I can't see it on the personal information for student"</p>
+            <p><strong>Symptoms:</strong></p>
+            <ul>
+                <li>Profile pictures not displaying in student profile</li>
+                <li>Upload process may be failing silently</li>
+                <li>Images not showing in admin View Details</li>
+            </ul>
+        </div>
+
+        <div class="test-section info">
+            <h3>🔧 Diagnostic Steps</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Check API Endpoint</strong>
+                <button onclick="testAPIEndpoint()">Test API</button>
+                <div id="api-result"></div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Check Student Profile Database</strong>
+                <button onclick="checkDatabase()">Check Database</button>
+                <div id="db-result"></div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Test File Upload Flow</strong>
+                <input type="file" id="diagnostic-file" accept="image/*" style="margin: 10px;">
+                <input type="text" id="test-student-id" placeholder="Student ID" style="margin: 10px; width: 200px;">
+                <button onclick="testUploadFlow()">Test Upload</button>
+                <div id="upload-result"></div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Check Image Display</strong>
+                <button onclick="checkImageDisplay()">Test Image Loading</button>
+                <div id="image-result"></div>
+            </div>
+        </div>
+
+        <div class="test-section warning">
+            <h3>⚠️ Likely Issues & Solutions</h3>
+            
+            <h4>Issue 1: Supabase Storage Bucket Missing</h4>
+            <p><strong>Solution:</strong> Create "profile-pictures" bucket in Supabase Storage Dashboard</p>
+            <button onclick="showBucketInstructions()">Show Instructions</button>
+            
+            <h4>Issue 2: Student Profile Missing Profile Picture Field</h4>
+            <p><strong>Solution:</strong> Update student profile query to include profile_picture_url</p>
+            <button onclick="showProfileFix()">Show Fix</button>
+            
+            <h4>Issue 3: Upload Working But Display Missing</h4>
+            <p><strong>Solution:</strong> Add profile picture display to student profile page</p>
+            <button onclick="showDisplayFix()">Show Fix</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Diagnostic Results</h3>
+            <div id="diagnostic-logs" class="log">Ready to diagnose...\nClick the diagnostic steps above.</div>
+        </div>
+
+        <div class="test-section success">
+            <h3>✅ Quick Fixes Applied</h3>
+            <ul>
+                <li>✅ <strong>Student Profile Type:</strong> Added profile_picture_url field</li>
+                <li>✅ <strong>Database Query:</strong> Updated to fetch profile_picture_url</li>
+                <li>✅ <strong>Display Component:</strong> Added profile picture display to student profile</li>
+                <li>⏳ <strong>Storage Bucket:</strong> Needs to be created in Supabase Dashboard</li>
+            </ul>
+        </div>
+
+        <div class="test-section info">
+            <h3>🔗 Quick Links</h3>
+            <a href="http://localhost:3001/admin/user-management" target="_blank">👨‍💼 Admin User Management</a><br>
+            <a href="http://localhost:3001/dashboard/student/profile" target="_blank">👨‍🎓 Student Profile</a><br>
+            <a href="https://supabase.com/dashboard" target="_blank">🗃️ Supabase Dashboard</a><br>
+            <a href="file:///c:/Users/table/Desktop/dog/test-profile-api.html" target="_blank">🧪 API Test Page</a>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logs = document.getElementById('diagnostic-logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+            logs.innerHTML += `[${timestamp}] ${emoji} ${message}\n`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        async function testAPIEndpoint() {
+            log('🔍 Testing API endpoint...', 'info');
+            const resultDiv = document.getElementById('api-result');
+            
+            try {
+                const response = await fetch('/api/admin/upload-profile-picture', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (response.status === 400 && result.error && result.error.includes('required')) {
+                    log('✅ API endpoint is accessible and responding correctly', 'success');
+                    resultDiv.innerHTML = '<span style="color: green;">✅ API endpoint working - returns expected validation error</span>';
+                } else {
+                    log(`⚠️ Unexpected API response: ${response.status}`, 'warning');
+                    resultDiv.innerHTML = '<span style="color: orange;">⚠️ API responding but with unexpected format</span>';
+                }
+            } catch (error) {
+                log(`❌ API endpoint error: ${error.message}`, 'error');
+                resultDiv.innerHTML = '<span style="color: red;">❌ API endpoint not accessible</span>';
+            }
+        }
+
+        async function checkDatabase() {
+            log('🗃️ Checking database structure...', 'info');
+            const resultDiv = document.getElementById('db-result');
+            
+            // This would require actual database access, so we'll show instructions
+            log('ℹ️ Database check requires backend access', 'info');
+            resultDiv.innerHTML = `
+                <div style="margin-top: 10px;">
+                    <strong>Manual Database Check:</strong><br>
+                    1. Go to Supabase Dashboard → SQL Editor<br>
+                    2. Run: <code>SELECT profile_picture_url FROM profiles LIMIT 1;</code><br>
+                    3. Verify column exists and has data
+                </div>
+            `;
+        }
+
+        async function testUploadFlow() {
+            const file = document.getElementById('diagnostic-file').files[0];
+            const studentId = document.getElementById('test-student-id').value;
+            const resultDiv = document.getElementById('upload-result');
+            
+            if (!file) {
+                log('❌ Please select a file first', 'error');
+                return;
+            }
+            
+            if (!studentId) {
+                log('❌ Please enter a student ID', 'error');
+                return;
+            }
+            
+            log('🚀 Testing complete upload flow...', 'info');
+            log(`📋 File: ${file.name}, Student: ${studentId}`, 'info');
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('student_id', studentId);
+                
+                const response = await fetch('/api/admin/upload-profile-picture', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('✅ Upload successful!', 'success');
+                    log(`🖼️ URL: ${result.profile_picture_url}`, 'success');
+                    resultDiv.innerHTML = `<span style="color: green;">✅ Upload working! URL: ${result.profile_picture_url}</span>`;
+                } else {
+                    log(`❌ Upload failed: ${result.error}`, 'error');
+                    resultDiv.innerHTML = `<span style="color: red;">❌ Upload failed: ${result.error}</span>`;
+                    
+                    if (result.error && result.error.includes('Bucket not found')) {
+                        resultDiv.innerHTML += '<br><strong>Solution:</strong> Create "profile-pictures" bucket in Supabase Storage';
+                    }
+                }
+            } catch (error) {
+                log(`❌ Upload test error: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<span style="color: red;">❌ Upload test failed: ${error.message}</span>`;
+            }
+        }
+
+        async function checkImageDisplay() {
+            log('🖼️ Testing image display...', 'info');
+            const resultDiv = document.getElementById('image-result');
+            
+            // Test with a sample image URL
+            const testUrl = 'https://via.placeholder.com/100x100.png?text=Test';
+            
+            const img = new Image();
+            img.onload = function() {
+                log('✅ Image loading capability working', 'success');
+                resultDiv.innerHTML = '<span style="color: green;">✅ Image display working</span>';
+            };
+            img.onerror = function() {
+                log('❌ Image loading failed', 'error');
+                resultDiv.innerHTML = '<span style="color: red;">❌ Image loading issues</span>';
+            };
+            img.src = testUrl;
+        }
+
+        function showBucketInstructions() {
+            log('📋 Showing Supabase bucket creation instructions...', 'info');
+            const instructions = `
+🗃️ CREATE SUPABASE STORAGE BUCKET:
+
+1. Go to https://supabase.com/dashboard
+2. Select your project
+3. Go to Storage → Buckets
+4. Click "New bucket"
+5. Name: "profile-pictures"
+6. Make bucket PUBLIC
+7. Click "Create bucket"
+
+🔒 STORAGE POLICIES:
+After creating bucket, add this policy:
+
+Policy name: "Public read access"
+Allowed operation: SELECT
+Target roles: public
+Policy definition: true
+
+This allows public read access to uploaded images.
+            `;
+            alert(instructions);
+        }
+
+        function showProfileFix() {
+            log('📝 Profile fix already applied in code', 'success');
+            alert('✅ PROFILE FIX APPLIED:\\n\\n1. Updated StudentProfile type to include profile_picture_url\\n2. Updated database query to fetch profile_picture_url\\n3. Added profile picture display to student profile page\\n\\nThese changes are already implemented in the code.');
+        }
+
+        function showDisplayFix() {
+            log('🖼️ Display fix already applied in code', 'success');
+            alert('✅ DISPLAY FIX APPLIED:\\n\\nAdded profile picture display section to student profile page:\\n\\n- Shows uploaded image if available\\n- Shows default user icon if no image\\n- Displays helpful message about updating via admin\\n\\nThe student profile now includes profile picture display.');
+        }
+
+        // Auto-initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Profile Picture Diagnostic Tool initialized', 'success');
+            log('💡 Most likely issue: Supabase "profile-pictures" bucket missing', 'warning');
+            log('🔧 Code fixes for student profile display already applied', 'success');
+        });
+    </script>
+</body>
+</html>

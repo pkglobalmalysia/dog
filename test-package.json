@@ -1,0 +1,7 @@
+{
+  "name": "lms-admin-test",
+  "scripts": {
+    "test:admin": "npx ts-node test-admin-portal.ts",
+    "test:admin-headless": "HEADLESS=true npx ts-node test-admin-portal.ts"
+  }
+}

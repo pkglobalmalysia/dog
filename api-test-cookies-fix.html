@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Enhanced Student Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        .test-section { background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .success { color: #22c55e; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .info { color: #3b82f6; font-weight: bold; }
+        button { padding: 10px 20px; margin: 5px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        button:disabled { background: #9ca3af; cursor: not-allowed; }
+        #results { background: #1f2937; color: #f9fafb; padding: 15px; border-radius: 6px; margin-top: 10px; max-height: 400px; overflow-y: auto; }
+        .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🧪 API Test - Enhanced Student Management</h1>
+    
+    <div class="warning">
+        <strong>⚠️ COOKIES ERROR FIX APPLIED</strong><br>
+        Updated all API routes to use the correct Next.js 15 cookies pattern:<br>
+        <code>cookies: async () => await cookies()</code>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 Test Enhanced Student Management APIs</h2>
+        <p>Click the buttons below to test each API endpoint:</p>
+        
+        <button onclick="testCourses()">Test Get Courses</button>
+        <button onclick="testStudentPayments()">Test Student Payments</button>
+        <button onclick="testAddPayment()">Test Add Payment</button>
+        <button onclick="testApprovePayment()">Test Approve Payment</button>
+        <button onclick="testAssignCourse()">Test Assign Course</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <div class="test-section info">
+        <h2>🔧 FIXED ISSUES</h2>
+        <ul>
+            <li>✅ <strong>nextCookies.get is not a function:</strong> Fixed cookies implementation in all APIs</li>
+            <li>✅ <strong>Dynamic params error:</strong> Fixed async params handling</li>
+            <li>✅ <strong>API route compatibility:</strong> Updated all routes for Next.js 15</li>
+        </ul>
+    </div>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ef4444' : type === 'success' ? '#22c55e' : '#60a5fa';
+            results.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testCourses() {
+            log('🎓 Testing Get Courses API...');
+            try {
+                const response = await fetch('/api/admin/courses', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Courses API Success: Found ${data.courses?.length || 0} courses`, 'success');
+                    log(`📋 Response: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    log(`❌ Courses API Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Courses API Failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testStudentPayments() {
+            log('💰 Testing Student Payments API...');
+            // Use a dummy student ID for testing
+            const testStudentId = 'test-student-123';
+            
+            try {
+                const response = await fetch(`/api/admin/student-payments/${testStudentId}`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Student Payments API Success: Found ${data.payments?.length || 0} payments`, 'success');
+                    log(`📋 Response: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    log(`❌ Student Payments API Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Student Payments API Failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAddPayment() {
+            log('💳 Testing Add Payment API...');
+            
+            try {
+                const response = await fetch('/api/admin/add-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        student_id: 'test-student-123',
+                        amount: 100.00,
+                        payment_method: 'cash',
+                        admin_notes: 'Test payment from API test'
+                    })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Add Payment API Success: Payment added`, 'success');
+                    log(`📋 Response: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    log(`❌ Add Payment API Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Add Payment API Failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testApprovePayment() {
+            log('✅ Testing Approve Payment API...');
+            
+            try {
+                const response = await fetch('/api/admin/approve-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        payment_id: 'test-payment-123',
+                        action: 'approve',
+                        admin_notes: 'Test approval from API test'
+                    })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Approve Payment API Success: Payment approved`, 'success');
+                    log(`📋 Response: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    log(`❌ Approve Payment API Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Approve Payment API Failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAssignCourse() {
+            log('🎓 Testing Assign Course API...');
+            
+            try {
+                const response = await fetch('/api/admin/assign-course', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        student_id: 'test-student-123',
+                        course_id: 'test-course-123',
+                        enrollment_status: 'active',
+                        payment_status: 'pending'
+                    })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Assign Course API Success: Course assigned`, 'success');
+                    log(`📋 Response: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    log(`❌ Assign Course API Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Assign Course API Failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run a quick test on page load
+        log('🧪 API Test Page Loaded - Ready for testing!');
+        log('🔧 All cookies errors have been fixed!');
+        log('📋 Click buttons above to test each API endpoint');
+    </script>
+</body>
+</html>

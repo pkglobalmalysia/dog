@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .loading { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 15px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Student Management System - Debug Test</h1>
+    <p>This page will help you test the API endpoints to see what's working and what's not.</p>
+
+    <div class="test-section" id="database-check">
+        <h3>Test 0: Check Database Tables</h3>
+        <p><strong>First:</strong> Run the SQL script in Supabase to create/verify all tables</p>
+        <button onclick="checkTables()">Check Table Status</button>
+        <div id="database-result"></div>
+    </div>
+
+    <div class="test-section" id="courses-test">
+        <h3>Test 1: Load Available Courses</h3>
+        <p><strong>Note:</strong> Now fetching from 'courses' table</p>
+        <button onclick="testLoadCourses()">Test Load Courses API</button>
+        <div id="courses-result"></div>
+    </div>
+
+    <div class="test-section" id="payments-test">
+        <h3>Test 2: Test Manual Payment</h3>
+        <p>First, you need a student ID. Check your Supabase profiles table to get a real student ID.</p>
+        <input type="text" id="student-id" placeholder="Enter student ID (UUID)" style="width: 300px; padding: 5px;">
+        <br><br>
+        <input type="number" id="payment-amount" placeholder="Payment amount" style="width: 150px; padding: 5px;">
+        <select id="payment-method" style="padding: 5px;">
+            <option value="cash">Cash</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="online">Online</option>
+        </select>
+        <br><br>
+        <input type="text" id="payment-notes" placeholder="Admin notes (optional)" style="width: 300px; padding: 5px;">
+        <br><br>
+        <button onclick="testAddPayment()">Test Add Manual Payment</button>
+        <div id="payment-result"></div>
+    </div>
+
+    <div class="test-section" id="enrollments-test">
+        <h3>Test 3: Test Student Enrollments</h3>
+        <input type="text" id="enrollment-student-id" placeholder="Enter student ID (UUID)" style="width: 300px; padding: 5px;">
+        <button onclick="testLoadEnrollments()">Test Load Student Enrollments</button>
+        <div id="enrollment-result"></div>
+    </div>
+
+    <div class="test-section" id="student-payments-test">
+        <h3>Test 4: Test Student Payments</h3>
+        <input type="text" id="payments-student-id" placeholder="Enter student ID (UUID)" style="width: 300px; padding: 5px;">
+        <button onclick="testLoadStudentPayments()">Test Load Student Payments</button>
+        <div id="student-payments-result"></div>
+    </div>
+
+    <script>
+        // Test 0: Check database tables
+        async function checkTables() {
+            const resultDiv = document.getElementById('database-result');
+            resultDiv.innerHTML = '<div class="loading">Checking database tables...</div>';
+            
+            const tablesToCheck = ['profiles', 'courses', 'student_enrollments', 'student_payments'];
+            let results = [];
+            
+            for (const table of tablesToCheck) {
+                try {
+                    // This is a simple way to check if tables exist by trying to fetch from them
+                    const response = await fetch(`/api/admin/check-table?table=${table}`, { 
+                        credentials: 'include' 
+                    });
+                    
+                    if (response.ok) {
+                        results.push(`✅ ${table}: EXISTS`);
+                    } else {
+                        results.push(`❌ ${table}: ERROR (${response.status})`);
+                    }
+                } catch (error) {
+                    results.push(`❌ ${table}: ERROR (${error.message})`);
+                }
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="success">
+                    <h4>Database Tables Status:</h4>
+                    <pre>${results.join('\n')}</pre>
+                    <p><strong>Note:</strong> If any tables show errors, run the SQL script first!</p>
+                </div>
+            `;
+        }
+
+        // Test 1: Load Courses
+        async function testLoadCourses() {
+            const resultDiv = document.getElementById('courses-result');
+            resultDiv.innerHTML = '<div class="loading">Loading courses...</div>';
+            
+            try {
+                const response = await fetch('/api/admin/courses', { 
+                    credentials: 'include' 
+                });
+                const data = await response.json();
+                
+                console.log('Courses API Response:', data);
+                
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Success! Found ${data.courses.length} courses:</h4>
+                            <pre>${JSON.stringify(data.courses, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Failed to load courses:</h4>
+                            <p>Error: ${data.error || data.message || 'Unknown error'}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Courses test error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error:</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Test 2: Add Manual Payment
+        async function testAddPayment() {
+            const studentId = document.getElementById('student-id').value;
+            const amount = document.getElementById('payment-amount').value;
+            const method = document.getElementById('payment-method').value;
+            const notes = document.getElementById('payment-notes').value;
+            const resultDiv = document.getElementById('payment-result');
+
+            if (!studentId || !amount) {
+                resultDiv.innerHTML = '<div class="error">Please enter both student ID and payment amount</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading">Adding payment...</div>';
+            
+            try {
+                const response = await fetch('/api/admin/add-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        student_id: studentId,
+                        amount: parseFloat(amount),
+                        payment_method: method,
+                        admin_notes: notes,
+                        payment_status: 'approved'
+                    })
+                });
+
+                const data = await response.json();
+                console.log('Payment API Response:', data);
+
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Payment added successfully!</h4>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Failed to add payment:</h4>
+                            <p>Error: ${data.error || data.message || 'Unknown error'}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Payment test error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error:</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Test 3: Load Student Enrollments
+        async function testLoadEnrollments() {
+            const studentId = document.getElementById('enrollment-student-id').value;
+            const resultDiv = document.getElementById('enrollment-result');
+
+            if (!studentId) {
+                resultDiv.innerHTML = '<div class="error">Please enter a student ID</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading">Loading enrollments...</div>';
+            
+            try {
+                const response = await fetch(`/api/admin/student-enrollments/${studentId}`, { 
+                    credentials: 'include' 
+                });
+                const data = await response.json();
+                
+                console.log('Enrollments API Response:', data);
+                
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Success! Found ${data.enrollments.length} enrollments:</h4>
+                            <pre>${JSON.stringify(data.enrollments, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Failed to load enrollments:</h4>
+                            <p>Error: ${data.error || data.message || 'Unknown error'}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Enrollments test error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error:</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Test 4: Load Student Payments
+        async function testLoadStudentPayments() {
+            const studentId = document.getElementById('payments-student-id').value;
+            const resultDiv = document.getElementById('student-payments-result');
+
+            if (!studentId) {
+                resultDiv.innerHTML = '<div class="error">Please enter a student ID</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading">Loading student payments...</div>';
+            
+            try {
+                const response = await fetch(`/api/admin/student-payments/${studentId}`, { 
+                    credentials: 'include' 
+                });
+                const data = await response.json();
+                
+                console.log('Student Payments API Response:', data);
+                
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Success! Found ${data.payments.length} payments:</h4>
+                            <pre>${JSON.stringify(data.payments, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Failed to load student payments:</h4>
+                            <p>Error: ${data.error || data.message || 'Unknown error'}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Student Payments test error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error:</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Instructions
+        window.onload = function() {
+            console.log('Student Management Debug Test loaded');
+            console.log('Instructions:');
+            console.log('1. First run the SQL script in Supabase to create all tables');
+            console.log('2. Test each API endpoint one by one');
+            console.log('3. Check browser console for detailed logs');
+            console.log('4. Make sure you are logged in as admin');
+        };
+    </script>
+</body>
+</html>

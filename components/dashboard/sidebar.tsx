@@ -17,7 +17,6 @@ import {
   GraduationCap,
   Video,
   Clock,
-  DollarSign,
   ChevronRight,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
@@ -102,11 +101,6 @@ export function Sidebar({ role }: SidebarProps) {
       href: "/dashboard/teacher/calendar",
       icon: Calendar,
     },
-    {
-      title: "Salary",
-      href: "/dashboard/teacher/salary",
-      icon: DollarSign,
-    },
   ]
 
   const adminLinks = [
@@ -114,6 +108,11 @@ export function Sidebar({ role }: SidebarProps) {
       title: "Dashboard",
       href: "/admin",
       icon: LayoutDashboard,
+    },
+    {
+      title: "User Management",
+      href: "/admin/user-management",
+      icon: Users,
     },
     {
       title: "Courses",
@@ -129,11 +128,6 @@ export function Sidebar({ role }: SidebarProps) {
       title: "Calendar",
       href: "/admin/calendar",
       icon: Calendar,
-    },
-    {
-      title: "Salary Management",
-      href: "/admin/salary-management",
-      icon: DollarSign,
     },
   ]
 

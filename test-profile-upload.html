@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Picture Upload Test</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 1000px; margin: 0 auto; 
+            background: white; padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center; margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+        .test-section { 
+            background: white; margin: 20px 0; padding: 20px; 
+            border-radius: 10px; border-left: 5px solid #2196F3;
+        }
+        .success { border-left-color: #4CAF50; background: #f8fff8; }
+        .error { border-left-color: #f44336; background: #fff8f8; }
+        .warning { border-left-color: #ff9800; background: #fff8f0; }
+        .info { border-left-color: #2196f3; background: #f0f8ff; }
+        button { 
+            background: #2196f3; color: white; padding: 10px 20px; 
+            border: none; border-radius: 4px; cursor: pointer; margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        .button-disabled { background: #ccc !important; cursor: not-allowed !important; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .log { margin-top: 10px; font-family: monospace; background: #f5f5f5; padding: 10px; border-radius: 4px; }
+        .upload-demo { 
+            border: 2px dashed #ccc; padding: 20px; text-align: center; 
+            border-radius: 8px; margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 Profile Picture Upload Test</h1>
+            <p>Test student profile picture upload functionality with Supabase Storage</p>
+        </div>
+
+        <div class="test-section info">
+            <h3>📋 Profile Picture Upload Components</h3>
+            <ol>
+                <li><strong>Storage Bucket:</strong> profile-pictures bucket in Supabase Storage</li>
+                <li><strong>Upload API:</strong> /api/admin/upload-profile-picture</li>
+                <li><strong>Database Update:</strong> Updates profiles.profile_picture_url</li>
+                <li><strong>Frontend:</strong> Admin User Management > View Details > Upload Photo</li>
+            </ol>
+        </div>
+
+        <div class="test-section warning">
+            <h3>🧪 Testing Steps</h3>
+            <ol>
+                <li><strong>Storage Test:</strong> Check if profile-pictures bucket exists</li>
+                <li><strong>Upload Test:</strong> Test file upload to storage bucket</li>
+                <li><strong>Database Test:</strong> Verify profile URL update in database</li>
+                <li><strong>UI Test:</strong> Test upload from admin panel</li>
+            </ol>
+            
+            <button onclick="testStorageBucket()">1. Test Storage Bucket</button>
+            <button onclick="simulateUpload()">2. Simulate Upload Process</button>
+            <button onclick="openAdminPanel()">3. Open Admin Panel</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📤 Upload Demo</h3>
+            <div class="upload-demo">
+                <input type="file" id="demo-file" accept="image/*" style="display: none;">
+                <p>🖼️ Select an image file to test upload</p>
+                <button onclick="document.getElementById('demo-file').click()">Choose File</button>
+                <p id="file-info" style="margin-top: 10px; color: #666;"></p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Test Results</h3>
+            <div id="results" class="log">Click buttons above to run tests...</div>
+        </div>
+
+        <div class="test-section success">
+            <h3>✅ Expected Workflow</h3>
+            <ol>
+                <li><strong>Admin Access:</strong> Login as admin at <code>http://localhost:3001/admin/user-management</code></li>
+                <li><strong>Select Student:</strong> Click "View Details" on any student</li>
+                <li><strong>Upload Photo:</strong> Click "Upload Photo" button and select image file</li>
+                <li><strong>Process:</strong> File uploads to Supabase Storage and URL saved to database</li>
+                <li><strong>Display:</strong> Profile picture should display in View Details modal</li>
+            </ol>
+        </div>
+
+        <div class="test-section warning">
+            <h3>🔧 Troubleshooting</h3>
+            <ul>
+                <li><strong>Bucket not found:</strong> Create profile-pictures bucket in Supabase Storage</li>
+                <li><strong>Upload fails:</strong> Check storage policies and bucket permissions</li>
+                <li><strong>Image not displaying:</strong> Verify public URL access and CORS settings</li>
+                <li><strong>Database not updating:</strong> Check profiles table and RLS policies</li>
+            </ul>
+            
+            <h4>🛠️ Manual Bucket Setup</h4>
+            <ol>
+                <li>Go to Supabase Dashboard → Storage</li>
+                <li>Create new bucket: <code>profile-pictures</code></li>
+                <li>Set bucket to <strong>Public</strong></li>
+                <li>Add storage policy for public read access</li>
+            </ol>
+        </div>
+
+        <div class="test-section info">
+            <h3>🔗 Quick Links</h3>
+            <a href="http://localhost:3001/login" target="_blank" style="color: #2196f3;">🔑 Admin Login</a><br><br>
+            <a href="http://localhost:3001/admin/user-management" target="_blank" style="color: #2196f3;">👨‍💼 User Management</a><br><br>
+            <a href="https://supabase.com/dashboard" target="_blank" style="color: #2196f3;">🗃️ Supabase Dashboard</a>
+        </div>
+
+        <div class="test-section warning">
+            <h3>📝 Test Credentials</h3>
+            <pre>
+Admin: ceo@pkibs.com / PKibs@@11
+Student: sofeaqistina@spectrum2u.com / studentsophie
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+            results.innerHTML += `[${timestamp}] ${emoji} ${message}\n`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        // File selection handler
+        document.getElementById('demo-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const fileInfo = document.getElementById('file-info');
+            
+            if (file) {
+                const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+                fileInfo.innerHTML = `Selected: ${file.name} (${sizeInMB} MB, ${file.type})`;
+                
+                if (file.size > 5 * 1024 * 1024) {
+                    fileInfo.style.color = '#f44336';
+                    fileInfo.innerHTML += ' ⚠️ Too large (max 5MB)';
+                } else if (!file.type.startsWith('image/')) {
+                    fileInfo.style.color = '#f44336';
+                    fileInfo.innerHTML += ' ⚠️ Not an image file';
+                } else {
+                    fileInfo.style.color = '#4CAF50';
+                    fileInfo.innerHTML += ' ✅ Valid image file';
+                }
+            }
+        });
+
+        async function testStorageBucket() {
+            log('🔍 Testing Supabase Storage bucket...', 'info');
+            
+            try {
+                // This would require Supabase client setup
+                log('ℹ️ Storage bucket test requires Supabase client configuration', 'info');
+                log('📋 Manual check: Go to Supabase Dashboard → Storage → Buckets', 'info');
+                log('🎯 Look for "profile-pictures" bucket with public access', 'info');
+            } catch (error) {
+                log(`❌ Storage test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function simulateUpload() {
+            log('🧪 Simulating upload process...', 'info');
+            
+            const uploadSteps = [
+                '1. File validation (type, size)',
+                '2. Generate unique filename with timestamp',
+                '3. Upload to Supabase Storage bucket',
+                '4. Get public URL from storage',
+                '5. Update profiles table with new URL',
+                '6. Return success response to frontend'
+            ];
+            
+            uploadSteps.forEach((step, index) => {
+                setTimeout(() => {
+                    log(`📤 ${step}`, 'info');
+                }, index * 500);
+            });
+            
+            setTimeout(() => {
+                log('✅ Upload simulation complete', 'success');
+                log('ℹ️ Test actual upload in admin panel', 'info');
+            }, uploadSteps.length * 500);
+        }
+
+        function openAdminPanel() {
+            log('🔗 Opening admin user management panel...', 'info');
+            window.open('http://localhost:3001/admin/user-management', '_blank');
+            log('ℹ️ Test profile picture upload in the opened panel', 'info');
+            log('📝 Steps: Select student → View Details → Upload Photo', 'info');
+        }
+
+        // Auto-run initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Profile Picture Upload Test initialized', 'success');
+            log('💡 Click buttons above to run tests', 'info');
+            log('📸 Select a test image file in the upload demo above', 'info');
+        });
+    </script>
+</body>
+</html>

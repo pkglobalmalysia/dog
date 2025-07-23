@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Design Issues Report - User Management</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f8f9fa; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 40px; border-radius: 12px; text-align: center; margin-bottom: 30px; }
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .summary-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; }
+        .summary-card h3 { margin: 0 0 10px 0; color: #666; font-size: 0.9em; text-transform: uppercase; }
+        .summary-card .value { font-size: 2.5em; font-weight: bold; margin: 10px 0; }
+        .critical { color: #e74c3c; }
+        .major { color: #f39c12; }
+        .minor { color: #3498db; }
+        .total { color: #9b59b6; }
+        .issues { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 30px; }
+        .issues-header { background: #f8f9fa; padding: 25px; border-bottom: 1px solid #e9ecef; }
+        .issue-item { padding: 20px 25px; border-bottom: 1px solid #f1f3f4; }
+        .issue-item:last-child { border-bottom: none; }
+        .issue-header { display: flex; align-items: center; margin-bottom: 10px; }
+        .severity-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; text-transform: uppercase; margin-right: 15px; }
+        .severity-critical { background: #fee; color: #e74c3c; border: 1px solid #e74c3c; }
+        .severity-major { background: #fff8e1; color: #f39c12; border: 1px solid #f39c12; }
+        .severity-minor { background: #e3f2fd; color: #3498db; border: 1px solid #3498db; }
+        .issue-category { background: #f8f9fa; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; color: #666; }
+        .issue-description { color: #333; margin: 10px 0; font-size: 1.1em; }
+        .issue-suggestion { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db; margin-top: 10px; }
+        .recommendations { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 25px; }
+        .recommendations h2 { margin-top: 0; color: #333; }
+        .recommendations ul { padding-left: 0; list-style: none; }
+        .recommendations li { background: #f8f9fa; margin-bottom: 12px; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 UI Design Issues Report</h1>
+            <p>User Management Interface - Course Assignment Focus</p>
+            <p><small>Generated on 23/7/2025, 3:24:19 pm</small></p>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <h3>Total Issues</h3>
+                <div class="value total">0</div>
+            </div>
+            <div class="summary-card">
+                <h3>Critical</h3>
+                <div class="value critical">0</div>
+            </div>
+            <div class="summary-card">
+                <h3>Major</h3>
+                <div class="value major">0</div>
+            </div>
+            <div class="summary-card">
+                <h3>Minor</h3>
+                <div class="value minor">0</div>
+            </div>
+        </div>
+
+        <div class="issues">
+            <div class="issues-header">
+                <h2>🐛 Detected Issues</h2>
+            </div>
+            
+        </div>
+
+        
+    </div>
+</body>
+</html>

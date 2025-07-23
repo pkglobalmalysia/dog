@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Database Diagnosis - Enhanced Student Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        .test-section { background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .success { color: #22c55e; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .warning { color: #f59e0b; font-weight: bold; }
+        .info { color: #3b82f6; font-weight: bold; }
+        button { padding: 10px 20px; margin: 5px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        button:disabled { background: #9ca3af; cursor: not-allowed; }
+        #results { background: #1f2937; color: #f9fafb; padding: 15px; border-radius: 6px; margin-top: 10px; max-height: 400px; overflow-y: auto; }
+        .sql-box { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 15px; border-radius: 6px; margin: 10px 0; }
+        .copy-btn { background: #10b981; font-size: 12px; padding: 5px 10px; }
+        pre { margin: 0; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Database Diagnosis - Enhanced Student Management</h1>
+    
+    <div class="test-section error">
+        <h2>❌ MANUAL PAYMENT ERROR DIAGNOSIS</h2>
+        <p>You're getting <code>nextCookies.get is not a function</code> when trying to add manual payments.</p>
+        <p><strong>Most likely cause:</strong> Missing database tables for the enhanced student management system.</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Database Test</h2>
+        <p>Click the button below to test your database and find out exactly what's missing:</p>
+        
+        <button onclick="testDatabase()" id="testBtn">🔍 Test Database Tables</button>
+        <button onclick="copySetupSQL()" class="copy-btn">📋 Copy Setup SQL</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <div class="test-section info">
+        <h2>📋 SETUP INSTRUCTIONS</h2>
+        <p>If tables are missing, follow these steps:</p>
+        <ol>
+            <li>Go to your <strong>Supabase Dashboard</strong></li>
+            <li>Navigate to <strong>SQL Editor</strong></li>
+            <li>Click <strong>"Copy Setup SQL"</strong> button above</li>
+            <li>Paste the SQL and run it</li>
+            <li>Come back and test the manual payment again</li>
+        </ol>
+    </div>
+
+    <div class="sql-box" id="sqlBox" style="display: none;">
+        <h3>📄 Setup SQL Script</h3>
+        <p>Copy this entire script and run it in your Supabase SQL Editor:</p>
+        <pre id="sqlContent">Loading...</pre>
+        <button onclick="copyToClipboard()" class="copy-btn">📋 Copy to Clipboard</button>
+    </div>
+
+    <script>
+        const results = document.getElementById('results');
+        const sqlBox = document.getElementById('sqlBox');
+        const sqlContent = document.getElementById('sqlContent');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ef4444' : type === 'success' ? '#22c55e' : type === 'warning' ? '#f59e0b' : '#60a5fa';
+            results.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testDatabase() {
+            const testBtn = document.getElementById('testBtn');
+            testBtn.disabled = true;
+            testBtn.textContent = '🔄 Testing...';
+            
+            results.innerHTML = '';
+            log('🔍 Starting database diagnosis...');
+            
+            try {
+                const response = await fetch('/api/admin/test-database', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    log('✅ Database test completed successfully', 'success');
+                    
+                    // Show test results
+                    data.results.tests.forEach(test => {
+                        const status = test.status === 'EXISTS' || test.status === 'SUCCESS' ? 'success' : 
+                                     test.status === 'MISSING' || test.status === 'FAILED' ? 'error' : 'warning';
+                        log(`${test.test}: ${test.status} ${test.error ? '- ' + test.error : ''}`, status);
+                    });
+                    
+                    // Show summary
+                    log('📊 SUMMARY:', 'info');
+                    log(`✅ Working: ${data.results.summary.working}/${data.results.summary.total_tests}`, 'success');
+                    log(`❌ Missing/Failed: ${data.results.summary.missing_or_failed}/${data.results.summary.total_tests}`, 'error');
+                    log(`🎯 Database Ready: ${data.results.summary.database_ready ? 'YES' : 'NO'}`, 
+                        data.results.summary.database_ready ? 'success' : 'error');
+                    log(`💡 Recommendation: ${data.results.summary.recommendation}`, 'info');
+                    
+                    if (!data.results.summary.database_ready) {
+                        log('🔧 SOLUTION: Run the setup SQL script to create missing tables', 'warning');
+                        sqlBox.style.display = 'block';
+                        loadSetupSQL();
+                    } else {
+                        log('🎉 Your database is ready! The error might be due to authentication or other issues.', 'success');
+                    }
+                } else {
+                    log(`❌ Database test failed: ${data.error}`, 'error');
+                    log(`💡 ${data.recommendation}`, 'info');
+                    sqlBox.style.display = 'block';
+                    loadSetupSQL();
+                }
+            } catch (error) {
+                log(`❌ Test request failed: ${error.message}`, 'error');
+                log('💡 This might indicate a connection issue or missing API endpoint', 'warning');
+                sqlBox.style.display = 'block';
+                loadSetupSQL();
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = '🔍 Test Database Tables';
+            }
+        }
+
+        function copySetupSQL() {
+            sqlBox.style.display = 'block';
+            loadSetupSQL();
+        }
+
+        async function loadSetupSQL() {
+            try {
+                const response = await fetch('/setup-enhanced-student-management.sql');
+                const sql = await response.text();
+                sqlContent.textContent = sql;
+                log('📄 Setup SQL loaded and ready to copy', 'info');
+            } catch (error) {
+                sqlContent.textContent = 'Error loading SQL file. Please check that setup-enhanced-student-management.sql exists in your project root.';
+                log('❌ Could not load setup SQL file', 'error');
+            }
+        }
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(sqlContent.textContent).then(() => {
+                log('📋 Setup SQL copied to clipboard!', 'success');
+                alert('✅ SQL script copied to clipboard!\\n\\nNow go to your Supabase SQL Editor and paste it.');
+            }).catch(err => {
+                log('❌ Failed to copy to clipboard', 'error');
+                console.error('Copy failed:', err);
+            });
+        }
+
+        // Auto-run test on page load
+        log('🧪 Database Diagnosis Tool Loaded');
+        log('👆 Click "Test Database Tables" to check what\'s missing');
+    </script>
+</body>
+</html>
