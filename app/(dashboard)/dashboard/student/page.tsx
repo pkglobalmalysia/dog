@@ -455,22 +455,22 @@ export default function StudentDashboard() {
       )}
 
       {/* Overall Performance */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Overall performance</CardTitle>
-            <p className="text-sm text-gray-500">Course completion rate</p>
+            <CardTitle className="text-base sm:text-lg">Overall performance</CardTitle>
+            <p className="text-xs sm:text-sm text-gray-500">Course completion rate</p>
           </CardHeader>
-          <CardContent className="flex justify-center pt-4">
+          <CardContent className="flex justify-center pt-2 sm:pt-4">
             <ProgressCircle
               value={completionRate}
-              size={160}
+              size={120}
               label="PRO LEARNER"
             />
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <StatCard
             title="Total enrolled courses"
             value={courses.length}
@@ -509,14 +509,14 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Upcoming Classes */}
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming classes</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Upcoming classes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1">
+            <div className="space-y-2 sm:space-y-3">
               {upcomingClasses.slice(0, 3).map((course) => (
                 <UpcomingClassCard
                   key={course.id}
@@ -528,7 +528,7 @@ export default function StudentDashboard() {
                 />
               ))}
               {upcomingClasses.length === 0 && (
-                <p className="text-center text-gray-500 py-4">
+                <p className="text-center text-gray-500 py-4 text-sm">
                   No upcoming classes
                 </p>
               )}
@@ -538,14 +538,14 @@ export default function StudentDashboard() {
 
         {/* Assignments */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Assignment</CardTitle>
-            <Button variant="outline" size="sm" asChild>
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <CardTitle className="text-base sm:text-lg">Assignment</CardTitle>
+            <Button variant="outline" size="sm" asChild className="self-start sm:self-auto">
               <Link href="/dashboard/student/assignments">View All</Link>
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {assignments.slice(0, 3).map((assignment) => (
                 <div
                   key={assignment.id}
@@ -643,11 +643,11 @@ export default function StudentDashboard() {
 
       {/* Course Progress */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Total courses ({courses.length})</CardTitle>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <CardTitle className="text-base sm:text-lg">Total courses ({courses.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-1">
+          <div className="space-y-2 sm:space-y-3">
             {courses.map((course) => (
               <CourseProgressRow
                 key={course.id}
@@ -660,7 +660,7 @@ export default function StudentDashboard() {
               />
             ))}
             {courses.length === 0 && (
-              <p className="text-center text-gray-500 py-4">
+              <p className="text-center text-gray-500 py-4 text-sm">
                 No courses enrolled
               </p>
             )}

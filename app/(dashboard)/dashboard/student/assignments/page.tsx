@@ -498,10 +498,10 @@ export default function StudentAssignments() {
   }
 
   return (
-    <div className="space-y-6 mx-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold">My Assignments</h1>
-        <p className="text-muted-foreground mt-2">
+    <div className="space-y-4 sm:space-y-6 mx-4 sm:mx-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+        <h1 className="text-xl sm:text-2xl font-bold">My Assignments</h1>
+        <p className="text-muted-foreground mt-2 text-sm sm:text-base">
           View and submit your course assignments
         </p>
       </div>
@@ -517,25 +517,27 @@ export default function StudentAssignments() {
         </Alert>
       )}
 
-      <div className="grid gap-6">
+      <div className="grid gap-4 sm:gap-6">
         {assignments.length > 0 ? (
           assignments.map((assignment) => (
             <Card key={assignment.id}>
               <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>{assignment.title}</CardTitle>
-                    <CardDescription>{assignment.course_title}</CardDescription>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base sm:text-lg">{assignment.title}</CardTitle>
+                    <CardDescription className="text-sm">{assignment.course_title}</CardDescription>
                   </div>
-                  {getStatusBadge(assignment)}
+                  <div className="self-start sm:self-auto">
+                    {getStatusBadge(assignment)}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm">{assignment.description}</p>
 
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
+                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span>
                       Due: {format(new Date(assignment.due_date), "PPP p")}
                     </span>
@@ -546,8 +548,8 @@ export default function StudentAssignments() {
                 </div>
 
                 {assignment.submission ? (
-                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-4">
-                    <h4 className="font-medium mb-2">Your Submission</h4>
+                  <div className="bg-gray-50 dark:bg-gray-800 p-3 sm:p-4 rounded-lg space-y-4">
+                    <h4 className="font-medium mb-2 text-sm sm:text-base">Your Submission</h4>
                     <div className="space-y-2 text-sm">
                       <p>
                         <strong>Submitted:</strong>{" "}

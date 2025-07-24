@@ -43,6 +43,7 @@ type PaymentRecord = {
   payment_status: 'pending' | 'approved' | 'rejected'
   created_at: string
   admin_notes: string | null
+  payment_method?: string
   course_title?: string
 }
 
@@ -89,13 +90,17 @@ export default function StudentProfile() {
       setFullName(profileData.full_name);
     }
 
-    // Fetch course enrollments
+    // Fetch course enrollments - Using main enrollments table
     const { data: enrollmentData } = await supabase
       .from("enrollments")
       .select(`
         course_id,
         enrolled_at,
-        courses(title, profiles(full_name))
+        courses(
+          title, 
+          teacher_id,
+          teacher:profiles!courses_teacher_id_fkey(full_name)
+        )
       `)
       .eq("student_id", user.id)
       .order("enrolled_at", { ascending: false });
@@ -103,7 +108,7 @@ export default function StudentProfile() {
     if (enrollmentData) {
       const formattedEnrollments = enrollmentData.map((enrollment) => {
         const course = Array.isArray(enrollment.courses) ? enrollment.courses[0] : enrollment.courses;
-        const teacherProfile = Array.isArray(course?.profiles) ? course?.profiles[0] : course?.profiles;
+        const teacherProfile = Array.isArray(course?.teacher) ? course?.teacher[0] : course?.teacher;
 
         return {
           course_id: enrollment.course_id,
@@ -143,7 +148,7 @@ export default function StudentProfile() {
       setGrades(formattedGrades);
     }
 
-    // Fetch payment history
+    // Fetch payment history using direct student_id reference (after schema fix)
     const { data: paymentData } = await supabase
       .from("student_payments")
       .select(`
@@ -154,7 +159,7 @@ export default function StudentProfile() {
         created_at,
         admin_notes,
         course_id,
-        courses(title)
+        payment_method
       `)
       .eq("student_id", user.id)
       .order("created_at", { ascending: false });
@@ -167,7 +172,7 @@ export default function StudentProfile() {
         payment_status: payment.payment_status as 'pending' | 'approved' | 'rejected',
         created_at: payment.created_at,
         admin_notes: payment.admin_notes,
-        course_title: payment.courses?.[0]?.title || "General Payment"
+        course_title: payment.course_id ? "Course Payment" : "General Payment"
       }));
       setPayments(formattedPayments);
     }

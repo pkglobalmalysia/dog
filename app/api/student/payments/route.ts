@@ -43,12 +43,28 @@ export async function POST(request: NextRequest) {
       .from('payment-receipts')
       .getPublicUrl(fileName)
 
-    // Create payment record
+    // Get the student's enrollment for this course (if course_id provided)
+    let enrollment_id = null;
+    if (course_id) {
+      const { data: enrollment } = await supabase
+        .from('student_enrollments')
+        .select('id')
+        .eq('student_id', session.user.id)
+        .eq('course_id', course_id)
+        .single();
+      
+      if (enrollment) {
+        enrollment_id = enrollment.id;
+      }
+    }
+
+    // Create payment record with both student_id and enrollment_id
     const { data: paymentData, error: paymentError } = await supabase
       .from('student_payments')
       .insert({
-        student_id: session.user.id,
-        course_id: course_id || null,
+        student_id: session.user.id,        // Direct student reference
+        enrollment_id: enrollment_id,       // Enrollment reference (if course specified)
+        course_id: course_id || null,       // Direct course reference
         amount: parseFloat(amount),
         receipt_url: publicUrl,
         payment_status: 'pending',
@@ -92,7 +108,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    // Fetch user's payment history
+    // Fetch user's payment history using direct student_id reference
     const { data: payments, error: paymentsError } = await supabase
       .from('student_payments')
       .select(`

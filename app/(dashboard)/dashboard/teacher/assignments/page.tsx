@@ -872,14 +872,14 @@ const fetchData = useCallback(async () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Assignments</h1>
-            <p className="text-muted-foreground mt-2">Create and manage assignments for your students</p>
+            <h1 className="text-xl sm:text-2xl font-bold">Assignments</h1>
+            <p className="text-muted-foreground mt-2 text-sm sm:text-base">Create and manage assignments for your students</p>
           </div>
-          <Button onClick={() => setIsCreating(true)}>
+          <Button onClick={() => setIsCreating(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Create Assignment
           </Button>
