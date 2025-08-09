@@ -159,14 +159,7 @@ export default function FeaturedEventsCarousel({
                     )}
 
                     <div className="flex flex-wrap gap-4">
-                      <motion.a
-                        href={`/events/${events[currentIndex].id}`}
-                        className="bg-gradient-to-r from-yellow-400 to-yellow-400 hover:from-yellow-400 hover:to-yellow-700 text-white font-medium px-6 py-3 rounded-md transition-all duration-200"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        Learn More
-                      </motion.a>
+                      
                     </div>
                   </div>
                 </div>

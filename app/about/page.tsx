@@ -463,16 +463,28 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Logo/Image block on the left */}
-            <motion.div variants={scaleIn} className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 to-yellow-400 rounded-xl blur-lg opacity-30 animate-pulse"></div>
-              <div className="relative rounded-lg overflow-hidden shadow-xl flex items-center justify-center bg-white dark:bg-slate-800 p-10">
-                <Image
-                  src="/logo.png" // 🔁 Replace this with your actual logo path
-                  alt="PKIBS Logo"
-                  width={300}
-                  height={300}
-                  className="w-auto h-40 object-contain"
-                />
+            <motion.div
+              variants={scaleIn}
+              className="flex justify-center items-center"
+            >
+              <div className="relative flex flex-col items-center">
+                {/* Glowing vertical gradient bar behind image */}
+                <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+                  <div className=" bg-gradient-to-b from-yellow-400 via-yellow-200 to-yellow-400 blur-2xl opacity-40 animate-pulse rounded-[4rem]" />
+                </div>
+                {/* Cylindrical/vertical image with border and shadow */}
+                <div className="relative z-10 overflow-hidden border-4 border-yellow-400 shadow-xl w-96 h-96 flex items-center justify-center bg-white dark:bg-gray-900 rounded-[4rem]">
+                  <Image
+                    src="/logo.png"
+                    alt="Dato' Dr. Paaram Singh"
+                    width={480}
+                    height={480}
+                    className="w-full h-full object-cover object-top"
+                    priority
+                  />
+                </div>
+                {/* Decorative accent below image */}
+                <div className="mt-4 w-28 h-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-400 opacity-80" />
               </div>
             </motion.div>
 
@@ -589,18 +601,99 @@ export default function AboutPage() {
                 </div>
               </div>
             </motion.div>
-            <motion.div variants={scaleIn} className="order-1 md:order-2">
-              <div className="relative">
-                <div className="absolute  bg-gradient-to-r from-yellow-400 to-yellow-400 rounded-full blur-lg opacity-30 animate-pulse"></div>
-                <div className="relative rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-xl w-64 h-64 mx-auto">
+            <motion.div
+              variants={scaleIn}
+              className="order-1 md:order-2 flex justify-center items-center"
+            >
+              <div className="relative flex flex-col items-center">
+                {/* Glowing vertical gradient bar behind image */}
+                <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+                  <div className="w-56 h-96 bg-gradient-to-b from-yellow-400 via-yellow-200 to-yellow-400 blur-2xl opacity-40 animate-pulse rounded-[4rem]" />
+                </div>
+                {/* Cylindrical/vertical image with border and shadow */}
+                <div className="relative z-10 overflow-hidden border-4 border-yellow-400 shadow-xl w-56 h-96 flex items-center justify-center bg-white dark:bg-gray-900 rounded-[4rem]">
                   <Image
-                    src="/chairman.jpeg"
-                    alt="Dr. Paaram Singh"
-                    width={400}
-                    height={400}
-                    className="w-full h-full object-fit"
+                    src="/chairman-min.png"
+                    alt="Dato' Dr. Paaram Singh"
+                    width={300}
+                    height={480}
+                    className="w-full h-full object-cover object-top"
+                    priority
                   />
                 </div>
+                {/* Decorative accent below image */}
+                <div className="mt-4 w-28 h-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-400 opacity-80" />
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </AnimatedSection>
+
+      {/* here create a section for the Honorary Advisor Profile but switch the images and the content */}
+
+      <AnimatedSection className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div variants={fadeIn} className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              Prof. Dr. Zuraidah Mohd Don - iCSE Coaching™ Honorary Advisor
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-yellow-400 mx-auto mb-6"></div>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <motion.div variants={scaleIn} className="order-2 md:order-1">
+              <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-xl relative">
+                <div className="absolute -top-5 -left-5 w-10 h-10 text-5xl text-yellow-400 opacity-30"></div>
+                <p className="text-gray-700 dark:text-gray-300 mb-6 italic">
+                  Prof. Dr. Zuraidah Mohd Don is Malaysia’s foremost linguist
+                  and a distinguished authority in English language education,
+                  policy, and planning. With a PhD in Linguistics from the
+                  University of Edinburgh, she has more than 35 years of
+                  academic and strategic leadership in universities and
+                  government-linked education initiatives. As honorary advisor
+                  Prof. lends her extensive expertise to support the nationwide
+                  mission of transforming English communication habits across
+                  key sectors.
+                </p>
+                <div className="bg-yellow-100 dark:bg-yellow-900/30 rounded-md p-4 mb-6 italic text-gray-800 dark:text-yellow-100 text-base">
+                  “True confidence in English begins when we shift from
+                  fear-based learning to purpose-driven speaking. iCSE Coaching
+                  provides this breakthrough.”
+                </div>
+                <div className="flex items-center">
+                  <div className="flex-1">
+                    <h4 className="font-bold text-lg">
+                      Prof. Dr. Zuraidah Mohd Don
+                    </h4>
+                    <p className="text-yellow-400 dark:text-yellow-400">
+                      Honorary Advisor
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div
+              variants={scaleIn}
+              className="order-1 md:order-2 flex justify-center items-center"
+            >
+              <div className="relative flex flex-col items-center">
+                {/* Glowing vertical gradient bar behind image */}
+                <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+                  <div className="w-56 h-96 bg-gradient-to-b from-yellow-400 via-yellow-200 to-yellow-400 blur-2xl opacity-40 animate-pulse rounded-[4rem]" />
+                </div>
+                {/* Cylindrical/vertical image with border and shadow */}
+                <div className="relative z-10 overflow-hidden border-4 border-yellow-400 shadow-xl w-56 h-96 flex items-center justify-center bg-white dark:bg-gray-900 rounded-[4rem]">
+                  <Image
+                    src="/zuraidah-min.png"
+                    alt="Prof. Dr. Zuraidah Mohd Don"
+                    width={300}
+                    height={480}
+                    className="w-full h-full object-cover object-top"
+                    priority
+                  />
+                </div>
+                {/* Decorative accent below image */}
+                <div className="mt-4 w-28 h-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-400 opacity-80" />
               </div>
             </motion.div>
           </div>
@@ -899,89 +992,6 @@ export default function AboutPage() {
         </div>
       </AnimatedSection>
 
-      {/* Training Programs */}
-      <AnimatedSection className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">
-              Our Training Programs
-            </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-yellow-400 mx-auto mb-6"></div>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Our skill training programs are tailored towards real-life habits
-              and skills for income creation
-            </p>
-          </motion.div>
-
-          <motion.div
-            variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            {[
-              {
-                title: "AIR-COND SERVICING & REPAIRING",
-                icon: <Snowflake className="h-6 w-6 text-white" />,
-                description:
-                  "Learn professional air conditioning maintenance and repair techniques.",
-              },
-              {
-                title: "ELECTRICAL & SOLAR INSTALLATION",
-                icon: <Zap className="h-6 w-6 text-white" />,
-                description:
-                  "Master electrical systems and renewable energy installation.",
-              },
-              {
-                title: "AUTOMOTIVE REPAIRING",
-                icon: <Car className="h-6 w-6 text-white" />,
-                description:
-                  "Develop skills in diagnosing and repairing vehicle systems.",
-              },
-              {
-                title: "CUSTOMER SERVICE",
-                icon: <HeadphonesIcon className="h-6 w-6 text-white" />,
-                description:
-                  "Learn effective customer interaction and problem-solving techniques.",
-              },
-              {
-                title: "OFFICE ADMINISTRATION",
-                icon: <FileText className="h-6 w-6 text-white" />,
-                description:
-                  "Master essential administrative skills for modern offices.",
-              },
-              {
-                title: "RETAIL OPERATION",
-                icon: <ShoppingBag className="h-6 w-6 text-white" />,
-                description:
-                  "Develop expertise in retail management and operations.",
-              },
-            ].map((program, index) => (
-              <motion.div
-                key={index}
-                variants={scaleIn}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-300"
-              >
-                <div className="h-3 bg-gradient-to-r from-yellow-400 to-yellow-400"></div>
-                <div className="p-6">
-                  <div className="w-14 h-14 rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                    {program.icon}
-                  </div>
-                  <h3 className="text-xl font-bold mb-3 group-hover:text-yellow-400 dark:group-hover:text-yellow-400 transition-colors duration-300">
-                    {program.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">
-                    {program.description}
-                  </p>
-                  <div className="flex items-center text-yellow-400 dark:text-yellow-400 font-medium">
-                    <span>Skill Training Certificate</span>
-                    <ChevronRight className="ml-1 h-5 w-5 group-hover:ml-2 transition-all duration-300" />
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </AnimatedSection>
-
       {/* Methodologies */}
       <AnimatedSection className="py-20 bg-black text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1010,7 +1020,7 @@ export default function AboutPage() {
                 title: " i Can Speak English iCSE Coaching™",
                 icon: <MessageCircle className="h-6 w-6 text-yellow-900" />,
                 description:
-                  "Coaching program to build 100% confidence in English communication for professional settings.",
+                  "Coaching programs that will reinforce Lifetime Habits To Speak English Confidently And Compassionately.",
               },
               {
                 title: "Workforce Thought Systems Reinforcement Training",
@@ -1070,24 +1080,66 @@ export default function AboutPage() {
 
           <motion.div
             variants={staggerContainer}
-            className="grid md:grid-cols-2 gap-72"
+            className="grid md:grid-cols-2 gap-8"
           >
             <motion.div variants={scaleIn}>
-              <TeamMemberCard
-                image="/zuraidah.jpeg"
-                name="Prof Dr Zuraidah Mohd Don"
-                role="Expert in Applied Linguistics"
-                description="With over 25 years of experience in linguistics research, Prof. Zuraidah brings academic rigor to our teaching methodologies."
-              />
+              <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden group flex flex-col items-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                <div className="relative w-64 h-80 mt-6 mb-4 rounded-[2.5rem] overflow-hidden border-4 border-yellow-400 shadow-xl bg-gradient-to-br from-yellow-100 via-white to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+                  <Image
+                    src="/zuraidah-min.png"
+                    alt="Prof Dr Zuraidah Mohd Don"
+                    fill
+                    className="object-cover rounded-[2.5rem] transition-transform duration-500 group-hover:scale-105"
+                    style={{ objectPosition: "top" }}
+                    priority
+                  />
+                  {/* Decorative accent below image */}
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-400 opacity-80 z-20" />
+                </div>
+                <div className="p-8 text-center">
+                  <h3 className="text-2xl font-bold mb-2">
+                    Prof Dr Zuraidah Mohd Don
+                  </h3>
+                  <p className="text-yellow-400 dark:text-yellow-400 mb-3 font-medium">
+                    Expert in Applied Linguistics
+                  </p>
+                  <p className="text-gray-600 dark:text-gray-300 text-base">
+                    With over 25 years of experience in linguistics research,
+                    Prof. Zuraidah brings academic rigor to our teaching
+                    methodologies.
+                  </p>
+                </div>
+              </div>
             </motion.div>
 
             <motion.div variants={scaleIn}>
-              <TeamMemberCard
-                image="/anbu.jpeg"
-                name="Sr Anbuchuder"
-                role="Master Trainer and Program Developer"
-                description="The visionary behind our Chaarran and PARi Models, Sr. Anbuchuder has transformed English education through his innovative approaches."
-              />
+              <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden group flex flex-col items-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                <div className="relative w-64 h-80 mt-6 mb-4 rounded-[2.5rem] overflow-hidden border-4 border-yellow-400 shadow-xl bg-gradient-to-br from-yellow-100 via-white to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+                  <Image
+                    src="/anbu.jpeg"
+                    alt="Prof Anbu"
+                    fill
+                    className="object-cover rounded-[2.5rem] transition-transform duration-500 group-hover:scale-105"
+                    style={{ objectPosition: "top" }}
+                    priority
+                  />
+                  {/* Decorative accent below image */}
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-400 opacity-80 z-20" />
+                </div>
+                <div className="p-8 text-center">
+                  <h3 className="text-2xl font-bold mb-2">
+                    Prof Dr Zuraidah Mohd Don
+                  </h3>
+                  <p className="text-yellow-400 dark:text-yellow-400 mb-3 font-medium">
+                    Expert in Applied Linguistics
+                  </p>
+                  <p className="text-gray-600 dark:text-gray-300 text-base">
+                    With over 25 years of experience in linguistics research,
+                    Prof. Zuraidah brings academic rigor to our teaching
+                    methodologies.
+                  </p>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         </div>
@@ -1110,33 +1162,23 @@ export default function AboutPage() {
             {[
               {
                 number: 1,
-                title: "Escape fear of grammar mistakes",
-                description:
-                  "Our unique approach helps you overcome the fear of making mistakes while speaking English.",
+                title: "Berlandaskan Rukun Negara ke-5",
               },
               {
                 number: 2,
-                title: "Speak with confidence in meetings",
-                description:
-                  "Gain the skills to participate confidently in corporate meetings and discussions.",
+                title: "Lifetime Habits To Speak English Confidently And Compassionately",
               },
               {
                 number: 3,
-                title: "Master self-introduction",
-                description:
-                  "Learn to introduce yourself professionally and make a lasting first impression.",
+                title: "8 Compassion Elements Speaking Phrases",
               },
               {
                 number: 4,
-                title: "Enhance your listening skills",
-                description:
-                  "Improve your ability to understand and respond to English conversations in the workplace.",
+                title: "Zero Grammar Fear",
               },
               {
                 number: 5,
-                title: "Accelerate your career growth",
-                description:
-                  "Unlock new opportunities in your career with improved English communication skills.",
+                title: "Listening & Speaking Rhythm Reinforcement",
               },
             ].map((reason, index) => (
               <motion.div
@@ -1152,7 +1194,6 @@ export default function AboutPage() {
                   <h3 className="text-xl font-bold mb-3 text-black group-hover:text-black transition-colors duration-300">
                     {reason.title}
                   </h3>
-                  <p className="text-black/80">{reason.description}</p>
                 </div>
               </motion.div>
             ))}

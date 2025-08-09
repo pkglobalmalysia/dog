@@ -28,8 +28,8 @@ import {
 import TestimonialsSection from "@/components/testimonials";
 
 export default function HomePage() {
-  const {  isLoading } = useAuth();
-  const images = ["/flyer1.jpg", "/flyer2.jpg"];
+  const { isLoading } = useAuth();
+  const images = ["/flyer1.jpg", "/flyer2.jpg", "/flyer3.jpeg"];
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
 
   const scrollNext = useCallback(() => {
@@ -71,8 +71,8 @@ export default function HomePage() {
               <Image
                 src="/globe.jpeg"
                 alt="Company Logo"
-                  width={500}
-                      height={200}
+                width={500}
+                height={200}
                 className="w-64 h-40 object-cover "
               />
             </div>
@@ -84,17 +84,19 @@ export default function HomePage() {
 
         {/* Main Content */}
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl text-white md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            Learn English in Malaysia - <span className="text-[#ffc107]">Speak 100%</span>
-            <br />
-            <span className="text-[#ffc107]">Confidently</span>
+          <h1 className="text-3xl text-white md:text-3xl lg:text-5xl font-bold leading-tight mb-6">
+            iCSE Coaching™ -
+            <span className="text-[#ffc107]">
+              {" "}
+              Lifetime Habits To Speak English Confidently And Compassionately{" "}
+            </span>
           </h1>
-          <h2 className="text-2xl text-gray-300 mb-4 font-semibold">
-            #1 English Speaking Course in Malaysia | iCSE Coaching Program
-          </h2>
+
           <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-            Transform your career with Malaysia&apos;s most effective English speaking program. 
-            Join 10,000+ professionals who achieved fluency through our proven i Can Speak English (iCSE) methodology.
+            Malaysia's No.1 Trademark Model Approach to provide Lifetime Habit
+            to Speak English Confidently and Compassionately. iCSE Coaching™
+            enables each participant to gain Lifetime Habit in Speaking English
+            with Confidence & Compassion.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -121,8 +123,8 @@ export default function HomePage() {
                 <Image
                   src="/logo.png"
                   alt="International Certification"
-                    width={500}
-                      height={200}
+                  width={500}
+                  height={200}
                   className="w-36 h-36 object-contain"
                 />
               </div>
@@ -137,8 +139,8 @@ export default function HomePage() {
                 <Image
                   src="/hrd1.png"
                   alt="Registered Certification"
-                    width={500}
-                      height={200}
+                  width={500}
+                  height={200}
                   className="w-36 h-36 object-contain"
                 />
               </div>
@@ -160,7 +162,9 @@ export default function HomePage() {
                   <div className="min-w-full" key={index}>
                     <Image
                       src={src}
-                      alt={`iCSE Malaysia English Course - Professional Training Program ${index + 1}`}
+                      alt={`iCSE Malaysia English Course - Professional Training Program ${
+                        index + 1
+                      }`}
                       width={500}
                       height={200}
                       className="object-fit rounded-lg"
@@ -171,18 +175,25 @@ export default function HomePage() {
             </div>
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-2">
-                Learn English. <span className="text-[#ffc107]">Build Confidence.</span> Grow Career.
+                Learn English.{" "}
+                <span className="text-[#ffc107]">Build Confidence.</span> Grow
+                Career.
               </h2>
               <div className="w-20 h-1 bg-[#ffc107] mb-6"></div>
               <p className="text-gray-700 dark:text-gray-300 mb-6">
-                <strong>iCSE Malaysia</strong> is committed to transforming careers through our innovative 
-                <em> English speaking programs in Malaysia</em>. Our impact speaks volumes through the success 
-                of our 10,000+ students who have achieved 100% confidence in their professional English communication.
+                <strong>iCSE Malaysia</strong> is committed to transforming
+                careers through our innovative
+                <em> English speaking programs in Malaysia</em>. Our impact
+                speaks volumes through the success of our 10,000+ students who
+                have achieved 100% confidence in their professional English
+                communication.
               </p>
               <p className="text-gray-700 dark:text-gray-300 mb-8">
-                Using our revolutionary <strong>Chaarran and PARi Models</strong>, we help Malaysian professionals 
-                overcome the fear of making mistakes while speaking English, enabling them to excel in their 
-                corporate careers with <em>fluent English speaking skills</em>.
+                Using our revolutionary{" "}
+                <strong>Chaarran and PARi Models</strong>, we help Malaysian
+                professionals overcome the fear of making mistakes while
+                speaking English, enabling them to excel in their corporate
+                careers with <em>fluent English speaking skills</em>.
               </p>
               <Link
                 href="/about"
@@ -202,12 +213,14 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-              Why Choose iCSE Malaysia for English Learning?
+              Why Choose iCSE Coaching™
             </h2>
             <div className="w-24 h-1 bg-[#ffc107] mx-auto mb-6"></div>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Malaysia&apos;s #1 English speaking course with proven results. 
-              We transform careers through innovative English communication training programs.
+              Malaysia's #1 English iCSE Coaching™ that solely based on Rukun
+              Negara ke-5, “Kesopanan dan Kesisulaan”. Coaching program that are
+              free from grammar stress, free from vocabulary stress, focuses on
+              speaking phrases and focuses on speaking rythm
             </p>
           </div>
 
@@ -245,8 +258,9 @@ export default function HomePage() {
             </h2>
             <div className="w-24 h-1 bg-[#ffc107] mx-auto mb-6"></div>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Our comprehensive <strong>English speaking courses</strong> are designed specifically for 
-              Malaysian professionals to master English communication in workplace settings
+              Our comprehensive <strong>English speaking courses</strong> are
+              designed specifically for Malaysian professionals to master
+              English communication in workplace settings
             </p>
           </div>
 
@@ -255,11 +269,23 @@ export default function HomePage() {
               <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
                 <GraduationCap className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-bold mb-4">iCSE Coaching™ Alpha - Beginner English Course</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Foundation level <em>English speaking program</em> to build confidence and overcome the
-                fear of speaking English in professional settings. Perfect for beginners in Malaysia.
-              </p>
+              <h3 className="text-xl font-bold mb-4">
+                iCSE Coaching™ : Alpha Module{" "}
+              </h3>
+              <ul className="text-gray-600 dark:text-gray-400 mb-6 list-disc list-inside text-left space-y-2">
+                <li>
+                  Ability to identify <strong>Fear Thoughts Phrases</strong> &{" "}
+                  <strong>Compassion Thought Phrases</strong>
+                </li>
+                <li>
+                  Ability to speak English as an <strong>Energy Giver</strong>{" "}
+                  in Reciprocal Roles
+                </li>
+                <li>
+                  Ability to speak phrases to reflect meanings from{" "}
+                  <strong>Reading & Listening</strong> activities
+                </li>
+              </ul>
               <Link
                 href="/programs"
                 className="text-[#ffc107] hover:text-[#e6af06] font-medium inline-flex items-center"
@@ -273,11 +299,26 @@ export default function HomePage() {
               <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
                 <Users className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-bold mb-4">iCSE Coaching™ Beta - Intermediate English</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Intermediate level program to enhance <strong>English fluency</strong> and master
-                speaking rhythms for professional communication in Malaysian workplaces.
-              </p>
+              <h3 className="text-xl font-bold mb-4">
+                iCSE Coaching™ : Beta Module
+              </h3>
+              <ul className="text-gray-600 dark:text-gray-400 mb-6 list-disc list-inside text-left space-y-2">
+                <li>
+                  Ability to Speak English Confidently in{" "}
+                  <strong>3 Motives of Communication</strong> using precise
+                  phrases.
+                </li>
+                <li>
+                  Ability to Speak English Confidently using precise{" "}
+                  <strong>Speaking Rhythm</strong> for 3 Motives of
+                  Communication.
+                </li>
+                <li>
+                  Ability to Speak English Confidently by avoiding{" "}
+                  <strong>Fear Thought Phrases</strong> in 3 Motives of
+                  Communication.
+                </li>
+              </ul>
               <Link
                 href="/programs"
                 className="text-[#ffc107] hover:text-[#e6af06] font-medium inline-flex items-center"
@@ -291,70 +332,29 @@ export default function HomePage() {
               <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
                 <Award className="h-8 w-8" />
               </div>
-              <h3 className="text-xl font-bold mb-4">iCSE Coaching™ Gamma - Advanced Business English</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Advanced level program to perfect <em>professional English communication</em>
-                skills and master meeting leadership for corporate success in Malaysia.
-              </p>
+              <h3 className="text-xl font-bold mb-4">
+                iCSE Coaching™ : Gamma Module
+              </h3>
+              <ul className="text-gray-600 dark:text-gray-400 mb-6 list-disc list-inside text-left space-y-2">
+                <li>
+                  Ability to Speak English Confidently in{" "}
+                  <strong>Self Introduction</strong>.
+                </li>
+                <li>
+                  Ability to Speak English Confidently in{" "}
+                  <strong>Meetings & Formal situations</strong> for discussions
+                  and brainstorming.
+                </li>
+                <li>
+                  Ability to Speak English Confidently regarding{" "}
+                  <strong>experiences & traits</strong> for video resume and
+                  during interviews.
+                </li>
+              </ul>
               <Link
                 href="/programs"
                 className="text-[#ffc107] hover:text-[#e6af06] font-medium inline-flex items-center"
                 title="Advanced business English course Malaysia"
-              >
-                Learn More <ChevronRight className="ml-1 h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 mt-8">
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg text-center">
-              <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
-                <Headphones className="h-8 w-8" />
-              </div>
-              <h3 className="text-xl font-bold mb-4">Active Listening - English Comprehension</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Enhance <strong>English comprehension</strong> and speaking rhythm through attentive
-                listening practices designed for Malaysian professionals.
-              </p>
-              <Link
-                href="/programs"
-                className="text-[#ffc107] hover:text-[#e6af06] font-medium inline-flex items-center"
-                title="English listening skills course Malaysia"
-              >
-                Learn More <ChevronRight className="ml-1 h-4 w-4" />
-              </Link>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg text-center">
-              <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
-                <BookOpen className="h-8 w-8" />
-              </div>
-              <h3 className="text-xl font-bold mb-4">Immersive Reading - English Vocabulary</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Build <em>English vocabulary</em> and perfect intonation through engaging reading
-                exercises tailored for Malaysian business contexts.
-              </p>
-              <Link
-                href="/programs"
-                className="text-[#ffc107] hover:text-[#e6af06] font-medium inline-flex items-center"
-                title="English vocabulary building course Malaysia"
-              >
-                Learn More <ChevronRight className="ml-1 h-4 w-4" />
-              </Link>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg text-center">
-              <div className="w-16 h-16 rounded-full bg-[#ffc107] flex items-center justify-center text-[#0a2540] mx-auto mb-4">
-                <Globe className="h-8 w-8" />
-              </div>
-              <h3 className="text-xl font-bold mb-4">Professional Business English Malaysia</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Master the specific <strong>business English skills</strong> needed for corporate
-                environments and career advancement.
-              </p>
-              <Link
-                href="/programs"
-                className="text-[#ffc107] hover:text-[#e6af06] font-medium inline-flex items-center"
               >
                 Learn More <ChevronRight className="ml-1 h-4 w-4" />
               </Link>
@@ -443,7 +443,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-[#0a2540] mb-6">
-                What You will Gain at PK International
+                What you will gain from iCSE Coaching™{" "}
               </h2>
               <div className="space-y-6">
                 <div className="flex items-start">
@@ -452,13 +452,8 @@ export default function HomePage() {
                   </div>
                   <div className="ml-4">
                     <h3 className="text-xl font-bold text-[#0a2540]">
-                      Job-Ready Skills
+                      99% FREE FROM GRAMMAR STRESS{" "}
                     </h3>
-                    <p className="text-[#0a2540]/80">
-                      Develop practical English communication skills that
-                      employers value and that will help you advance in your
-                      career.
-                    </p>
                   </div>
                 </div>
 
@@ -468,12 +463,8 @@ export default function HomePage() {
                   </div>
                   <div className="ml-4">
                     <h3 className="text-xl font-bold text-[#0a2540]">
-                      Ongoing Support
+                      99% FREE FROM VOCABULARY STRESS
                     </h3>
-                    <p className="text-[#0a2540]/80">
-                      Access to our community of learners and continuous
-                      guidance from our expert trainers.
-                    </p>
                   </div>
                 </div>
 
@@ -483,12 +474,19 @@ export default function HomePage() {
                   </div>
                   <div className="ml-4">
                     <h3 className="text-xl font-bold text-[#0a2540]">
-                      Career Advancement
+                      80% FOCUSES ON SPEAKING PHRASES & RHYTHM
                     </h3>
-                    <p className="text-[#0a2540]/80">
-                      Unlock new opportunities and promotions with improved
-                      English communication skills.
-                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white flex items-center justify-center">
+                    <CheckCircle className="h-5 w-5 text-[#0a2540]" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-xl font-bold text-[#0a2540]">
+                      LIFETIME HABITS TO SPEAK ENGLISH WITH 100% CONFIDENCE
+                    </h3>
                   </div>
                 </div>
               </div>

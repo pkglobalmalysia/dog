@@ -172,13 +172,12 @@ export default function ProgramsPage() {
   const programs = [
     {
       id: "icse-alpha",
-      title: "iCSE Coaching™ Alpha",
+      title: "iCSE Coaching™ Alpha Module",
       subtitle: "Foundation level | Escape fear of speaking | Build confidence",
       features: [
-        "Overcome speaking anxiety",
-        "Master basic conversation skills",
-        "Build foundational vocabulary",
-        "Develop listening comprehension",
+        "Ability to identify Fear Thoughts Phrases & Compassion Thought Phrases",
+        "Ability to Speak English in the status of Energy Giver in Reciprocal Roles",
+        "Ability to Speak phrases to reflect meanings from Reading & Listening activities",
       ],
       duration: "4 weeks",
       price: "",
@@ -189,14 +188,13 @@ export default function ProgramsPage() {
     },
     {
       id: "icse-beta",
-      title: "iCSE Coaching™ Beta",
+      title: "iCSE Coaching™ Beta Module",
       subtitle:
         "Intermediate level | Master speaking rhythms | Enhance fluency",
       features: [
-        "Improve speech fluency",
-        "Expand professional vocabulary",
-        "Enhance presentation skills",
-        "Practice meeting participation",
+        "Ability to Speak English Confidently in 3 Motives of Communication using precise phrases",
+        "Ability to Speak English Confidently using precise Speaking Rhythm for 3 Motives of Communication",
+        "Ability to Speak English Confidently by avoiding Fear Thought Phrases in 3 Motives of Communication",
       ],
       duration: "8 weeks",
       price: "",
@@ -207,13 +205,12 @@ export default function ProgramsPage() {
     },
     {
       id: "icse-gamma",
-      title: "iCSE Coaching™ Gamma",
+      title: "iCSE Coaching™ Gamma Module",
       subtitle: "Advanced level | Professional communication | Meeting mastery",
       features: [
-        "Lead meetings confidently",
-        "Develop persuasive techniques",
-        "Master negotiation language",
-        "Perfect executive communication",
+        "Ability to Speak English Confidently in Self Introduction",
+        "Ability to Speak English Confidently in Meetings & Formal situations for Discussions and also Brainstorming",
+        "Ability to Speak English Confidently regarding experiences & traits for Video Resume also during interview",
       ],
       duration: "12 weeks",
       price: "",
@@ -282,12 +279,12 @@ export default function ProgramsPage() {
     description:
       "Speak English 100% Confidently with our specialized courses designed for both students and adults. Join thousands of successful learners who transformed their communication skills.",
     features: [
-      "Overcome speaking anxiety and build confidence",
-      "Master professional vocabulary and expressions",
-      "Learn to speak fluently in meetings and presentations",
-      "Gain confidence in everyday English conversations",
+      "Lifetime Habits To Speak English Confidently And Compassionately",
+      "Free From Grammar Stress",
+      "Free From Vocabulary Stress",
+      "Focuses On Speaking Phrases",
     ],
-    image: "/events/event3-1.jpeg",
+    image: "/events/event3-4.jpeg",
   };
 
   // Scroll to top on page load
@@ -603,10 +600,10 @@ export default function ProgramsPage() {
             </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-yellow-500 to-yellow-400 mx-auto mb-6"></div>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Our  i Can Speak English iCSE Coaching™ is designed to optimize your English speaking
-              skills, build your confidence, and empower you to excel in your
-              corporate career. Choose the level that best suits your needs and
-              goals.
+              Our i Can Speak English iCSE Coaching™ is designed to optimize
+              your English speaking skills, build your confidence, and empower
+              you to excel in your corporate career. Choose the level that best
+              suits your needs and goals.
             </p>
           </motion.div>
 
@@ -697,75 +694,9 @@ export default function ProgramsPage() {
         </div>
       </AnimatedSection>
 
-      {/* Technical Programs Section */}
-      <AnimatedSection
-        id="technical-programs"
-        className="py-20 bg-black text-white"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div variants={fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-              Technical Skills Programs
-            </h2>
-            <div className="w-24 h-1 bg-yellow-400 mx-auto mb-6"></div>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              In addition to our English programs, we offer technical skills
-              training to enhance your career prospects
-            </p>
-          </motion.div>
+   
 
-          <motion.div
-            variants={staggerContainer}
-            className="grid md:grid-cols-3 gap-8"
-          >
-            {programs
-              .filter((program) => program.category === "Technical Skills")
-              .map((program) => (
-                <motion.div
-                  key={program.id}
-                  variants={scaleIn}
-                  className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300"
-                >
-                  <h3 className="text-xl font-bold mb-3">{program.title}</h3>
-                  <div className="space-y-4 mb-6">
-                    <div>
-                      <p className="font-semibold text-yellow-400">Duration:</p>
-                      <p className="text-gray-300">{program.duration}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-yellow-400">
-                        Focus Areas:
-                      </p>
-                      <ul className="space-y-2 mt-2">
-                        {program.features.slice(0, 2).map((feature, index) => (
-                          <li key={index} className="flex items-start">
-                            <div className="bg-yellow-400/20 rounded-full p-1 mr-2 mt-0.5">
-                              <span className="text-yellow-400 text-xs">✓</span>
-                            </div>
-                            <span className="text-gray-300">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="text-xl font-bold text-white">
-                      {program.price}
-                    </div>
-                  </div>
-                  <Link
-                    href={`/programs/${program.id}`}
-                    className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-medium px-4 py-2 rounded-md transition-all duration-200 inline-flex items-center"
-                  >
-                    Learn More <ChevronRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </motion.div>
-              ))}
-          </motion.div>
-        </div>
-      </AnimatedSection>
-
-     <TestimonialsSection />
+      <TestimonialsSection />
 
       {/* CTA Section */}
       <AnimatedSection className="py-20 bg-black text-white">

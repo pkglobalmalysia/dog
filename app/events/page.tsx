@@ -109,7 +109,7 @@ export default function EventsPage() {
       location: "Grand Dorsett Subang Jaya",
       image: "/events/event1-1.jpeg",
       description:
-        "Our flagship 4-day intensive bootcamp designed to transform your English speaking confidence. Using our revolutionary Chaarran and PARi Models, you'll overcome speaking anxiety and develop lasting communication habits.",
+        "We had an insightful seminar and international luncheon at Grant Dorsett on the 10th February 2025 ! Our intensive seminar designed to transform your English speaking confidence. Using our revolutionary CHAARAN and PARi Models, you'll overcome speaking anxiety and develop lasting communication habits. So many valuable takeaways. A huge thank you to our speakers and attendees ",
       category: "Featured",
       highlights: [
         "Personalized coaching from certified trainers",
@@ -125,7 +125,7 @@ export default function EventsPage() {
       location: "SMK Petaling",
       image: "/events/event2-2.jpeg",
       description:
-        "An exclusive program designed for senior executives and leaders who need to communicate confidently in high-stakes international business settings. Master advanced communication techniques and leadership presence.",
+      "We had a wonderful time at SMK Petaling on March 20th for Seminar Program i Can Speak English Coaching (iCSE Coaching™) It was inspiring to see the students actively participating and improving their English speaking skills. A big thank you to SMK Petaling for hosting us!",
       category: "Featured",
       highlights: [
         "One-on-one coaching with industry experts",
@@ -141,7 +141,7 @@ export default function EventsPage() {
       location: "SVenue TBA",
       image: "/events/event3-5.jpeg",
       description:
-        "A one-day symposium focused on how English proficiency can accelerate your career growth. Learn from industry leaders and successful professionals about the impact of effective communication on career advancement.",
+      "We're thrilled to announce a significant milestone! On April 12th, at PK International Business School in Subang Jaya, we officially signed a Memorandum of Understanding (MOU) with the National Union of Bank Employees (NUBE) for our ICSE Coaching Program! This marks the beginning of an exciting partnership and we were delighted to kick off the very first coaching session with our dedicated NUBE trainees immediately after.",
       category: "Featured",
       highlights: [
         "Panel discussions with industry leaders",
