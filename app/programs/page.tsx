@@ -104,7 +104,6 @@ const AnimatedSection = ({
 type Program = {
   id: string;
   title: string;
-  subtitle: string;
   features: string[];
   duration: string;
   price: string;
@@ -125,7 +124,6 @@ const ProgramCard = ({ program }: { program: Program }) => {
         <h3 className="text-xl font-bold mb-2 group-hover:text-yellow-400 dark:group-hover:text-yellow-400 transition-colors duration-300">
           {program.title}
         </h3>
-        <p className="text-gray-500 mb-4">{program.subtitle}</p>
         <div className="space-y-3 mb-6">
           {program.features.map((feature, index) => (
             <div key={index} className="flex items-start">
@@ -173,7 +171,6 @@ export default function ProgramsPage() {
     {
       id: "icse-alpha",
       title: "iCSE Coaching™ Alpha Module",
-      subtitle: "Foundation level | Escape fear of speaking | Build confidence",
       features: [
         "Ability to identify Fear Thoughts Phrases & Compassion Thought Phrases",
         "Ability to Speak English in the status of Energy Giver in Reciprocal Roles",
@@ -189,8 +186,6 @@ export default function ProgramsPage() {
     {
       id: "icse-beta",
       title: "iCSE Coaching™ Beta Module",
-      subtitle:
-        "Intermediate level | Master speaking rhythms | Enhance fluency",
       features: [
         "Ability to Speak English Confidently in 3 Motives of Communication using precise phrases",
         "Ability to Speak English Confidently using precise Speaking Rhythm for 3 Motives of Communication",
@@ -206,7 +201,6 @@ export default function ProgramsPage() {
     {
       id: "icse-gamma",
       title: "iCSE Coaching™ Gamma Module",
-      subtitle: "Advanced level | Professional communication | Meeting mastery",
       features: [
         "Ability to Speak English Confidently in Self Introduction",
         "Ability to Speak English Confidently in Meetings & Formal situations for Discussions and also Brainstorming",
@@ -222,7 +216,6 @@ export default function ProgramsPage() {
     {
       id: "hvac",
       title: "Teknologi Penyejukbekuan dan Penyaman Udara",
-      subtitle: "Technical training | SKM Level 2-3 | HVAC systems",
       features: [
         "Installation techniques for HVAC systems",
         "Maintenance and troubleshooting",
@@ -239,7 +232,6 @@ export default function ProgramsPage() {
     {
       id: "electrical",
       title: "Teknologi Elektrik",
-      subtitle: "Technical training | SKM Level 2-4 | Electrical systems",
       features: [
         "Electrical wiring and installation",
         "Solar system setup and maintenance",
@@ -256,7 +248,6 @@ export default function ProgramsPage() {
     {
       id: "mechatronics",
       title: "Teknologi Mekatronik dan Automasi Industri",
-      subtitle: "Technical training | SKM Level 3-5 | Industrial automation",
       features: [
         "Robotics programming and control",
         "PLC systems implementation",
@@ -284,7 +275,7 @@ export default function ProgramsPage() {
       "Free From Vocabulary Stress",
       "Focuses On Speaking Phrases",
     ],
-    image: "/events/event3-4.jpeg",
+    image: "/events/event3-4.jpg",
   };
 
   // Scroll to top on page load
@@ -693,8 +684,6 @@ export default function ProgramsPage() {
           </motion.div>
         </div>
       </AnimatedSection>
-
-   
 
       <TestimonialsSection />
 

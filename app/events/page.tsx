@@ -111,12 +111,7 @@ export default function EventsPage() {
       description:
         "We had an insightful seminar and international luncheon at Grant Dorsett on the 10th February 2025 ! Our intensive seminar designed to transform your English speaking confidence. Using our revolutionary CHAARAN and PARi Models, you'll overcome speaking anxiety and develop lasting communication habits. So many valuable takeaways. A huge thank you to our speakers and attendees ",
       category: "Featured",
-      highlights: [
-        "Personalized coaching from certified trainers",
-        "Real-world business communication scenarios",
-        "Networking with professionals from various industries",
-        "Certificate of completion recognized by major corporations",
-      ],
+     
     },
     {
       id: "featured2",
@@ -127,12 +122,7 @@ export default function EventsPage() {
       description:
       "We had a wonderful time at SMK Petaling on March 20th for Seminar Program i Can Speak English Coaching (iCSE Coaching™) It was inspiring to see the students actively participating and improving their English speaking skills. A big thank you to SMK Petaling for hosting us!",
       category: "Featured",
-      highlights: [
-        "One-on-one coaching with industry experts",
-        "Advanced negotiation and presentation techniques",
-        "Cross-cultural communication strategies",
-        "Executive networking opportunities",
-      ],
+     
     },
     {
       id: "featured3",
@@ -143,12 +133,7 @@ export default function EventsPage() {
       description:
       "We're thrilled to announce a significant milestone! On April 12th, at PK International Business School in Subang Jaya, we officially signed a Memorandum of Understanding (MOU) with the National Union of Bank Employees (NUBE) for our ICSE Coaching Program! This marks the beginning of an exciting partnership and we were delighted to kick off the very first coaching session with our dedicated NUBE trainees immediately after.",
       category: "Featured",
-      highlights: [
-        "Panel discussions with industry leaders",
-        "Career advancement workshops",
-        "Resume and interview skills in English",
-        "Networking lunch with recruiters and HR professionals",
-      ],
+     
     },
   ];
 

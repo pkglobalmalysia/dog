@@ -67,13 +67,13 @@ export default function HomePage() {
         {/* Left Logo */}
         <div className="absolute left-8 top-8 hidden lg:block z-20">
           <div className="text-center">
-            <div className="w-64 h-40 mx-16  flex items-center justify-center mb-3 overflow-hidden ">
+            <div className="w-64  h-40 mx-16  flex items-center justify-center mb-3 overflow-hidden ">
               <Image
-                src="/globe.jpeg"
+                src="/globe.png"
                 alt="Company Logo"
                 width={500}
                 height={200}
-                className="w-64 h-40 object-cover "
+                className="w-64 h-40 object-fit "
               />
             </div>
             <div className="text-white text-md font-bold tracking-wide">
@@ -407,14 +407,25 @@ export default function HomePage() {
 
             {/* Logos / Certificates */}
             <div className="flex flex-col items-center gap-6 md:items-start">
-              <div className="   bg-white rounded-full shadow-xl  flex items-center justify-center">
-                <Image
-                  src="/hrd1.png"
-                  alt="HRD Corp Logo"
-                  width={200}
-                  height={100}
-                  className="object-contain h-auto"
-                />
+              <div className="flex flex-row gap-4">
+                <div className="bg-white rounded-full shadow-xl flex items-center justify-center">
+                  <Image
+                    src="/hrd1.png"
+                    alt="HRD Corp Logo"
+                    width={200}
+                    height={100}
+                    className="object-contain h-auto"
+                  />
+                </div>
+                <div>
+                  <Image
+                    src="/hrd3.png"
+                    alt="HRD Corp Certificate"
+                    width={200}
+                    height={100}
+                    className="object-contain bg-white rounded-full h-auto"
+                  />
+                </div>
               </div>
               <div className=" p-4 rounded-xl shadow-xl w-64 h-40 flex items-center justify-center">
                 <Image
@@ -629,19 +640,19 @@ export default function HomePage() {
                     <div className="flex items-center mb-1">
                       <span className="font-medium w-28">For Support:</span>
                       <a
-                        href="mailto:ceo@pkibs.com"
+                        href="mailto:admin@pkibs.com"
                         className=" hover:underline"
                       >
-                        support@pkibs.com
+                        admin@pkibs.com
                       </a>
                     </div>
                     <div className="flex items-center">
                       <span className="font-medium w-28">For Admin:</span>
                       <a
-                        href="mailto:ceo@pkibs.com"
+                        href="mailto:admin@pkibs.com"
                         className=" hover:underline"
                       >
-                        ceo@pkibs.com
+                        admin@pkibs.com
                       </a>
                     </div>
                   </div>
